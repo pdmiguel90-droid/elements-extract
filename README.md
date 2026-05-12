@@ -64,8 +64,8 @@ sudo pacman -S qt5-base cmake base-devel ffmpeg
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/tuusuario/ffmpeg-extractor.git
-cd ffmpeg-extractor
+git clone https://github.com/pdmiguel90-droid/elements-extract.git
+cd elements-extract
 
 # Crear directorio de build
 mkdir build && cd build
@@ -82,10 +82,10 @@ make -j$(nproc)
 
 ```bash
 # Copiar el binario
-sudo cp build/FFmpegExtractor /usr/local/bin/ffmpeg-extractor
+sudo cp build/FFmpegExtractor /usr/local/bin/elements-extract
 
 # Registrar en el menú de aplicaciones
-cp ffmpeg-extractor.desktop ~/.local/share/applications/
+cp elements-extract.desktop ~/.local/share/applications/
 ```
 
 ---
@@ -137,5 +137,5 @@ Ver el archivo [LICENSE](LICENSE) para más detalles.
 
 ## Créditos
 
-Desarrollado por **[Tu Nombre]**  
+Desarrollado por **pdmiguel90-droid**  
 Construido con [Qt5](https://www.qt.io/), [FFmpeg](https://ffmpeg.org/) y C++17.

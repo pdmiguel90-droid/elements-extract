@@ -91,10 +91,10 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
         grid->addWidget(v, row, 1);
     };
 
-    addRow(0, "Desarrollado por", "[Tu Nombre]");
-    addRow(1, "Contacto",         "tu@email.com");
-    addRow(2, "Repositorio",      "github.com/tuusuario/ffmpeg-extractor",
-               QUrl("https://github.com/tuusuario/ffmpeg-extractor"));
+    addRow(0, "Desarrollado por", "pdmiguel90-droid");
+    addRow(1, "Contacto",         "pdmiguel90-droid@users.noreply.github.com");
+    addRow(2, "Repositorio",      "github.com/pdmiguel90-droid/elements-extract",
+               QUrl("https://github.com/pdmiguel90-droid/elements-extract"));
     addRow(3, "Licencia",         "GNU General Public License v3.0");
 
     root->addLayout(grid);
@@ -129,7 +129,7 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     connect(closeBtn, &QPushButton::clicked, this, &QDialog::accept);
     root->addWidget(closeBtn, 0, Qt::AlignCenter);
 
-    QLabel *copy = new QLabel("© 2025 [Tu Nombre]  —  GPL-3.0");
+    QLabel *copy = new QLabel("© 2025 pdmiguel90-droid  —  GPL-3.0");
     copy->setObjectName("copy");
     copy->setAlignment(Qt::AlignCenter);
     root->addWidget(copy);

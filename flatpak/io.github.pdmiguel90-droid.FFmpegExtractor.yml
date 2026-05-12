@@ -1,8 +1,8 @@
-app-id: io.github.tuusuario.FFmpegExtractor
+app-id: io.github.pdmiguel90-droid.FFmpegExtractor
 runtime: org.kde.Platform
 runtime-version: '5.15'
 sdk: org.kde.Sdk
-command: ffmpeg-extractor
+command: elements-extract
 
 # Permisos del sandbox
 finish-args:
@@ -53,22 +53,22 @@ modules:
       - /share/ffmpeg/examples
 
   # ── La aplicación ─────────────────────────────────────────────────────────────
-  - name: ffmpeg-extractor
+  - name: elements-extract
     buildsystem: cmake-ninja
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
     sources:
       - type: git
-        url: https://github.com/tuusuario/ffmpeg-extractor.git
+        url: https://github.com/pdmiguel90-droid/elements-extract.git
         tag: v1.0.0
         # Reemplaza con el commit hash real al publicar:
         # commit: abc123def456...
     post-install:
       # Instalar el binario con el nombre correcto
-      - install -Dm755 FFmpegExtractor /app/bin/ffmpeg-extractor
+      - install -Dm755 FFmpegExtractor /app/bin/elements-extract
       # Instalar el archivo .desktop
-      - install -Dm644 ../ffmpeg-extractor.desktop
-          /app/share/applications/io.github.tuusuario.FFmpegExtractor.desktop
+      - install -Dm644 ../elements-extract.desktop
+          /app/share/applications/io.github.pdmiguel90-droid.FFmpegExtractor.desktop
       # Instalar los metadatos AppStream (requerido por Flathub)
-      - install -Dm644 ../flatpak/io.github.tuusuario.FFmpegExtractor.metainfo.xml
-          /app/share/metainfo/io.github.tuusuario.FFmpegExtractor.metainfo.xml
+      - install -Dm644 ../flatpak/io.github.pdmiguel90-droid.FFmpegExtractor.metainfo.xml
+          /app/share/metainfo/io.github.pdmiguel90-droid.FFmpegExtractor.metainfo.xml

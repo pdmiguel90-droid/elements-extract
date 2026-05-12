@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.tuusuario.FFmpegExtractor</id>
+  <id>io.github.pdmiguel90-droid.FFmpegExtractor</id>
 
   <name>Elements Extract FFmpeg</name>
   <name xml:lang="es">Elements Extract FFmpeg</name>
@@ -31,15 +31,15 @@
     </ul>
   </description>
 
-  <launchable type="desktop-id">io.github.tuusuario.FFmpegExtractor.desktop</launchable>
+  <launchable type="desktop-id">io.github.pdmiguel90-droid.FFmpegExtractor.desktop</launchable>
 
-  <url type="homepage">https://github.com/tuusuario/ffmpeg-extractor</url>
-  <url type="bugtracker">https://github.com/tuusuario/ffmpeg-extractor/issues</url>
+  <url type="homepage">https://github.com/pdmiguel90-droid/elements-extract</url>
+  <url type="bugtracker">https://github.com/pdmiguel90-droid/elements-extract/issues</url>
 
-  <developer_name>[Tu Nombre]</developer_name>
+  <developer_name>pdmiguel90-droid</developer_name>
 
   <provides>
-    <binary>ffmpeg-extractor</binary>
+    <binary>elements-extract</binary>
   </provides>
 
   <releases>
@@ -72,7 +72,7 @@
   <screenshots>
     <screenshot type="default">
       <caption>Ventana principal mostrando el lote de archivos y las pistas disponibles</caption>
-      <image>https://raw.githubusercontent.com/tuusuario/ffmpeg-extractor/main/screenshots/main.png</image>
+      <image>https://raw.githubusercontent.com/pdmiguel90-droid/elements-extract/main/screenshots/main.png</image>
     </screenshot>
   </screenshots>
 </component>
