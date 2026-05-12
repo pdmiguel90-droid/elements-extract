@@ -1,0 +1,50 @@
+# Archivos a ignorar por Git
+
+# Directorio de build de CMake
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+*_autogen/
+
+# Binarios compilados
+FFmpegExtractor
+*.o
+*.a
+*.so
+*.exe
+
+# Archivos de configuración de IDEs
+.vscode/
+.idea/
+*.user
+*.qbs
+*.pro.user*
+*.creator
+*.config
+*.files
+*.includes
+*.kdevelop
+*.kdev4
+
+# Qt Creator
+*.qmlproject.qtds
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+*.bak
+*.orig
+
+# Archivos de QSettings locales (no deben ir al repo)
+*.ini
+*.conf
+
+# Logs
+*.log
