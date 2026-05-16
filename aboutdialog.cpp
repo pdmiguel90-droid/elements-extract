@@ -12,7 +12,7 @@
 AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 {
     setWindowTitle("Acerca de Elements Extract FFmpeg");
-    setFixedSize(500, 420);
+    setFixedSize(550, 550);
     setModal(true);
 
     setStyleSheet(R"(
@@ -42,7 +42,13 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     root->setSpacing(10);
     root->setContentsMargins(30, 22, 30, 18);
 
-    // ── Título ──────────────────────────────────────────────────────────────
+    // ── Título e Icono ──────────────────────────────────────────────────────
+    QLabel *iconLabel = new QLabel();
+    QPixmap pix(":/ffmpeg-extractor.svg");
+    iconLabel->setPixmap(pix.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    iconLabel->setAlignment(Qt::AlignCenter);
+    root->addWidget(iconLabel);
+
     QLabel *title = new QLabel("ELEMENTS EXTRACT FFMPEG");
     title->setObjectName("appTitle");
     title->setAlignment(Qt::AlignCenter);

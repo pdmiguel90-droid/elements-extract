@@ -21,6 +21,10 @@
 #include <QMimeData>
 #include <QComboBox>
 #include <QAction>
+#include <QSystemTrayIcon>
+#include <QMenu>
+#include <QTimer>
+#include <QCoreApplication>
 
 class MainWindow : public QMainWindow
 {
@@ -35,6 +39,7 @@ protected:
     void dropEvent(QDropEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+    void changeEvent(QEvent *event) override;
 
 private slots:
     void addFiles();
@@ -56,6 +61,7 @@ private slots:
     void probeFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void processNextInBatch();
     void openOutputFolder();
+    void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
 
 private:
     void setupUi();
@@ -72,6 +78,7 @@ private:
     qint64  parseTimestamp(const QString &ts);
     void    updateProgressFromLine(const QString &line);
     QString extensionForType(const QString &type);
+    QString extensionForCodec(const QString &codec, const QString &type);
 
     // ── Widgets ──────────────────────────────────────────────────────────────
     QListWidget  *fileListWidget;
@@ -88,7 +95,9 @@ private:
     QPushButton  *openFolderButton;
     QComboBox    *audioFormatCombo;
     QComboBox    *videoFormatCombo;
+    QComboBox    *videoResCombo;
     QComboBox    *subsFormatCombo;
+    QCheckBox    *copyModeCheckBox;
 
     // ── Procesos ─────────────────────────────────────────────────────────────
     QProcess   *process;
@@ -99,11 +108,15 @@ private:
     QString  lastSelectedFile;
     // file → { streamIndex → streamType }
     QMap<QString, QMap<int, QString>> fileSelections;
+    // file → { streamIndex → codecName }
+    QMap<QString, QMap<int, QString>> fileStreamCodecs;
     QSet<QString>  globalSelectionTypes;
     QStringList    batchFiles;
     int            currentBatchIndex;
     QMap<QString, qint64> fileDurations; // duración en ms por archivo
     qint64 currentFileDuration;
+    QSystemTrayIcon *trayIcon;
+    QMenu *trayMenu;
 };
 
 #endif // MAINWINDOW_H

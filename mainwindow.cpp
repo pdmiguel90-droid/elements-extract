@@ -38,19 +38,30 @@ MainWindow::MainWindow(QWidget *parent)
     setAcceptDrops(true);
     loadSettings();
 
-    // Icono de ventana generado programáticamente
-    QPixmap ico(64, 64);
-    ico.fill(Qt::transparent);
-    QPainter p(&ico);
-    p.setRenderHint(QPainter::Antialiasing);
-    p.setBrush(QColor("#1A1A1A"));
-    p.setPen(Qt::NoPen);
-    p.drawRoundedRect(2, 2, 60, 60, 10, 10);
-    p.setPen(QColor("#FF8800"));
-    p.setFont(QFont("Arial", 30, QFont::Bold));
-    p.drawText(QRect(0, 0, 64, 64), Qt::AlignCenter, "F");
-    p.end();
-    setWindowIcon(QIcon(ico));
+    // Icono de la aplicación
+    QIcon appIcon(":/ffmpeg-extractor.svg");
+    setWindowIcon(appIcon);
+
+    trayIcon = new QSystemTrayIcon(appIcon, this);
+    trayMenu = new QMenu(this);
+
+    QAction *restoreAction = trayMenu->addAction("Mostrar / Ocultar ventana");
+    connect(restoreAction, &QAction::triggered, this, [this]() {
+        if (isVisible() && !isMinimized()) hide();
+        else { showNormal(); activateWindow(); }
+    });
+
+    QAction *cancelAction = trayMenu->addAction("Cancelar proceso actual");
+    connect(cancelAction, &QAction::triggered, this, &MainWindow::cancelExtraction);
+
+    trayMenu->addSeparator();
+
+    QAction *quitAction = trayMenu->addAction("Salir");
+    connect(quitAction, &QAction::triggered, qApp, &QCoreApplication::quit);
+
+    trayIcon->setContextMenu(trayMenu);
+    connect(trayIcon, &QSystemTrayIcon::activated, this, &MainWindow::onTrayIconActivated);
+    trayIcon->show();
 
     process = new QProcess(this);
     connect(process, &QProcess::readyReadStandardOutput, this, &MainWindow::readProcessOutput);
@@ -238,7 +249,9 @@ void MainWindow::setupUi()
 
     // ── Formato de salida ────────────────────────────────────────────────────
     QGroupBox *fmtBox = new QGroupBox("FORMATO DE SALIDA");
-    QHBoxLayout *fmtLayout = new QHBoxLayout(fmtBox);
+    QVBoxLayout *fmtMainLayout = new QVBoxLayout(fmtBox);
+    
+    QHBoxLayout *fmtLayout = new QHBoxLayout();
     fmtLayout->setSpacing(16);
 
     auto makeCombo = [&](const QString &label, const QStringList &items) -> QComboBox* {
@@ -253,10 +266,39 @@ void MainWindow::setupUi()
     audioFormatCombo = makeCombo("Audio:", {"mka", "m4a", "aac", "mp3", "flac", "opus", "wav"});
     fmtLayout->addSpacing(8);
     videoFormatCombo = makeCombo("Video:", {"mkv", "mp4", "avi"});
+    
+    videoResCombo = new QComboBox();
+    videoResCombo->addItems({"Original", "4K (2160p)", "2K (1440p)", "FHD (1080p)", "HD (720p)", "SD (480p)"});
+    videoResCombo->setStyleSheet("font-size: 11px; background-color: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 4px; padding: 4px 8px; color: #D0D0D0;");
+    QLabel *resLbl = new QLabel("Res:");
+    resLbl->setStyleSheet("font-size: 11px; color: #888; font-weight: normal;");
+    fmtLayout->addWidget(resLbl);
+    fmtLayout->addWidget(videoResCombo);
+    
     fmtLayout->addSpacing(8);
     subsFormatCombo  = makeCombo("Subs:",  {"srt", "ass", "vtt"});
     fmtLayout->addStretch();
+    
+    copyModeCheckBox = new QCheckBox("Copiar pista original sin re-codificar (Rápido y previene errores)");
+    copyModeCheckBox->setChecked(true);
+    copyModeCheckBox->setStyleSheet("color: #39FF14; font-weight: bold; margin-top: 5px;");
+    
+    fmtMainLayout->addLayout(fmtLayout);
+    fmtMainLayout->addWidget(copyModeCheckBox);
+
     root->addWidget(fmtBox);
+
+    // Conectar el checkbox para deshabilitar los combos si está activo
+    connect(copyModeCheckBox, &QCheckBox::toggled, this, [this](bool checked){
+        audioFormatCombo->setEnabled(!checked);
+        videoFormatCombo->setEnabled(!checked);
+        videoResCombo->setEnabled(!checked);
+        subsFormatCombo->setEnabled(!checked);
+    });
+    audioFormatCombo->setEnabled(false);
+    videoFormatCombo->setEnabled(false);
+    videoResCombo->setEnabled(false);
+    subsFormatCombo->setEnabled(false);
 
     // ── Directorio de destino ────────────────────────────────────────────────
     QHBoxLayout *outDirLayout = new QHBoxLayout();
@@ -394,17 +436,23 @@ void MainWindow::onFileSelectionChanged()
 void MainWindow::saveCurrentSelections()
 {
     if (lastSelectedFile.isEmpty()) return;
-    QMap<int, QString> selected;
-    for (QCheckBox *cb : streamCheckBoxes)
-        if (cb->isChecked())
-            selected[cb->property("streamIndex").toInt()] = cb->property("streamType").toString();
-    fileSelections[lastSelectedFile] = selected;
+    QMap<int, QString> selectedTypes;
+    QMap<int, QString> selectedCodecs;
+    for (QCheckBox *cb : streamCheckBoxes) {
+        if (cb->isChecked()) {
+            int idx = cb->property("streamIndex").toInt();
+            selectedTypes[idx] = cb->property("streamType").toString();
+            selectedCodecs[idx] = cb->property("streamCodec").toString();
+        }
+    }
+    fileSelections[lastSelectedFile] = selectedTypes;
+    fileStreamCodecs[lastSelectedFile] = selectedCodecs;
 
     // Color visual en la lista
     for (int i = 0; i < fileListWidget->count(); ++i) {
         QListWidgetItem *item = fileListWidget->item(i);
         if (item->data(Qt::UserRole).toString() == lastSelectedFile) {
-            item->setForeground(QBrush(selected.isEmpty() && globalSelectionTypes.isEmpty()
+            item->setForeground(QBrush(selectedTypes.isEmpty() && globalSelectionTypes.isEmpty()
                                        ? QColor("#D0D0D0") : QColor("#FF8800")));
             break;
         }
@@ -461,7 +509,7 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
     statusBar()->showMessage("Listo");
     if (exitStatus != QProcess::NormalExit || exitCode != 0) {
         metaInfoLabel->setText("No se pudo analizar el archivo.");
-        logArea->append("[ERROR] No se pudo analizar el archivo."); return;
+        logArea->append("<font color='#FF4444'>[ERROR] No se pudo analizar el archivo.</font>"); return;
     }
     QJsonDocument doc = QJsonDocument::fromJson(probeData);
     QJsonObject   rootObj = doc.object();
@@ -505,6 +553,7 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
         QCheckBox *cb = new QCheckBox(label);
         cb->setProperty("streamIndex", index);
         cb->setProperty("streamType",  type);
+        cb->setProperty("streamCodec", codec);
         if (saved.contains(index) || globalSelectionTypes.contains(type))
             cb->setChecked(true);
         connect(cb, &QCheckBox::stateChanged, this, &MainWindow::onStreamToggled);
@@ -527,6 +576,19 @@ QString MainWindow::extensionForType(const QString &type)
     return "mkv";
 }
 
+QString MainWindow::extensionForCodec(const QString &codec, const QString &type)
+{
+    if (codec == "aac") return "m4a";
+    if (codec == "ac3" || codec == "mp3" || codec == "flac" || codec == "wav" || codec == "opus") return codec;
+    if (codec == "subrip") return "srt";
+    if (codec == "ass" || codec == "ssa") return "ass";
+    if (codec == "webvtt") return "vtt";
+    if (type == "video") return "mkv";
+    if (type == "audio") return "mka";
+    if (type == "subtitle") return "mks";
+    return "mkv";
+}
+
 void MainWindow::startExtraction()
 {
     saveCurrentSelections();
@@ -537,7 +599,7 @@ void MainWindow::startExtraction()
 
     currentBatchIndex = 0;
     logArea->clear();
-    logArea->append("=== INICIANDO EXTRACCIÓN ===");
+    logArea->append("<font color='#FF8800'><b>=== INICIANDO EXTRACCIÓN ===</b></font>");
     extractButton->setEnabled(false);
     cancelButton->setEnabled(true);
     progressBar->setValue(0);
@@ -548,7 +610,7 @@ void MainWindow::cancelExtraction()
 {
     if (process->state() != QProcess::NotRunning) {
         process->kill();
-        logArea->append("\n[CANCELADO] El proceso fue interrumpido por el usuario.");
+        logArea->append("<br><font color='#FF4444'><b>[CANCELADO] El proceso fue interrumpido por el usuario.</b></font>");
         statusBar()->showMessage("Cancelado");
     }
     extractButton->setEnabled(true);
@@ -561,12 +623,15 @@ void MainWindow::processNextInBatch()
 {
     if (currentBatchIndex < 0) return; // cancelado
     if (currentBatchIndex >= batchFiles.size()) {
-        logArea->append("\n=== ✓ PROCESO FINALIZADO ===");
+        logArea->append("<br><font color='#39FF14'><b>=== ✓ PROCESO FINALIZADO ===</b></font>");
         statusBar()->showMessage(QString("✓ Finalizado — %1 archivo(s) procesado(s)")
                                      .arg(batchFiles.size()));
         extractButton->setEnabled(true);
         cancelButton->setEnabled(false);
         progressBar->setValue(100);
+        if (trayIcon->isSystemTrayAvailable()) {
+            trayIcon->showMessage("Elements Extract", "El proceso por lotes ha finalizado correctamente.", QSystemTrayIcon::Information, 4000);
+        }
         return;
     }
 
@@ -579,42 +644,65 @@ void MainWindow::processNextInBatch()
                                  .arg(currentBatchIndex + 1)
                                  .arg(batchFiles.size())
                                  .arg(info.fileName()));
-    logArea->append(QString("\n[%1/%2] %3")
+    logArea->append(QString("<br><font color='#00BFFF'><b>[%1/%2] %3</b></font>")
                         .arg(currentBatchIndex + 1)
                         .arg(batchFiles.size())
-                        .arg(info.fileName()));
+                        .arg(info.fileName().toHtmlEscaped()));
 
     QString outDir  = outputLineEdit->text();
     QString baseName = outDir + "/" + info.baseName();
 
-    QMap<int, QString> selectedMap = fileSelections.value(inputPath);
+    QMap<int, QString> selectedTypes = fileSelections.value(inputPath);
+    QMap<int, QString> selectedCodecs = fileStreamCodecs.value(inputPath);
     QStringList finalArgs;
     finalArgs << "-i" << inputPath;
     bool anyAction = false;
+    bool copyMode = copyModeCheckBox->isChecked();
 
-    if (selectedMap.isEmpty() && !globalSelectionTypes.isEmpty()) {
+    if (selectedTypes.isEmpty() && !globalSelectionTypes.isEmpty()) {
         // Selección global por tipo
         for (const QString &type : globalSelectionTypes) {
             QString mapCode = (type == "audio") ? "a" : (type == "video" ? "v" : "s");
-            QString ext     = extensionForType(type);
-            finalArgs << "-map" << QString("0:%1").arg(mapCode) << "-c" << "copy";
-            finalArgs << "-y"   << getUniqueFilePath(baseName + "_all_" + type + "." + ext);
+            QString ext = copyMode ? (type == "audio" ? "mka" : (type == "video" ? "mkv" : "mks")) : extensionForType(type);
+            finalArgs << "-map" << QString("0:%1").arg(mapCode);
+            if (copyMode) {
+                finalArgs << "-c" << "copy";
+            } else if (type == "video" && videoResCombo->currentText() != "Original") {
+                QString res = videoResCombo->currentText();
+                if (res.contains("2160p")) finalArgs << "-vf" << "scale=-2:2160";
+                else if (res.contains("1440p")) finalArgs << "-vf" << "scale=-2:1440";
+                else if (res.contains("1080p")) finalArgs << "-vf" << "scale=-2:1080";
+                else if (res.contains("720p")) finalArgs << "-vf" << "scale=-2:720";
+                else if (res.contains("480p")) finalArgs << "-vf" << "scale=-2:480";
+            }
+            finalArgs << "-y" << getUniqueFilePath(baseName + "_all_" + type + "." + ext);
             anyAction = true;
         }
     } else {
         // Selección individual por índice
-        for (auto it = selectedMap.constBegin(); it != selectedMap.constEnd(); ++it) {
-            int     index = it.key();
-            QString type  = it.value();
-            QString ext   = extensionForType(type);
-            finalArgs << "-map" << QString("0:%1").arg(index) << "-c" << "copy";
-            finalArgs << "-y"   << getUniqueFilePath(baseName + "_track" + QString::number(index) + "." + ext);
+        for (auto it = selectedTypes.constBegin(); it != selectedTypes.constEnd(); ++it) {
+            int index = it.key();
+            QString type = it.value();
+            QString codec = selectedCodecs.value(index);
+            QString ext = copyMode ? extensionForCodec(codec, type) : extensionForType(type);
+            finalArgs << "-map" << QString("0:%1").arg(index);
+            if (copyMode) {
+                finalArgs << "-c" << "copy";
+            } else if (type == "video" && videoResCombo->currentText() != "Original") {
+                QString res = videoResCombo->currentText();
+                if (res.contains("2160p")) finalArgs << "-vf" << "scale=-2:2160";
+                else if (res.contains("1440p")) finalArgs << "-vf" << "scale=-2:1440";
+                else if (res.contains("1080p")) finalArgs << "-vf" << "scale=-2:1080";
+                else if (res.contains("720p")) finalArgs << "-vf" << "scale=-2:720";
+                else if (res.contains("480p")) finalArgs << "-vf" << "scale=-2:480";
+            }
+            finalArgs << "-y" << getUniqueFilePath(baseName + "_track" + QString::number(index) + "." + ext);
             anyAction = true;
         }
     }
 
     if (!anyAction) {
-        logArea->append("  › Sin pistas seleccionadas para este archivo, omitido.");
+        logArea->append("<font color='#FFCC00'>  › Sin pistas seleccionadas para este archivo, omitido.</font>");
         currentBatchIndex++;
         processNextInBatch();
         return;
@@ -629,17 +717,24 @@ void MainWindow::readProcessOutput()
     if (out.isEmpty()) out = QString::fromLocal8Bit(process->readAllStandardOutput());
     updateProgressFromLine(out);
     // Solo loguear líneas que no sean el progreso (evitar spam)
-    if (!out.contains("time=") && !out.trimmed().isEmpty())
-        logArea->append(out.trimmed());
+    if (!out.contains("time=") && !out.trimmed().isEmpty()) {
+        QString text = out.trimmed().toHtmlEscaped();
+        if (text.contains("Error", Qt::CaseInsensitive) || text.contains("Invalid data found", Qt::CaseInsensitive))
+            logArea->append("<font color='#FF4444'>" + text + "</font>");
+        else if (text.contains("Warning", Qt::CaseInsensitive))
+            logArea->append("<font color='#FFCC00'>" + text + "</font>");
+        else
+            logArea->append("<font color='#888888'>" + text + "</font>");
+    }
 }
 
 void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     if (exitStatus == QProcess::NormalExit && exitCode == 0) {
-        logArea->append("  › OK");
+        logArea->append("<font color='#39FF14'>  › OK</font>");
         progressBar->setValue(100);
     } else if (currentBatchIndex >= 0) {
-        logArea->append("  › Error en este archivo.");
+        logArea->append("<font color='#FF4444'>  › Error en este archivo.</font>");
     }
     if (currentBatchIndex >= 0) {
         currentBatchIndex++;
@@ -817,13 +912,37 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QMainWindow::closeEvent(event);
 }
 
+void MainWindow::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::WindowStateChange) {
+        if (isMinimized()) {
+            QTimer::singleShot(0, this, &QWidget::hide);
+        }
+    }
+    QMainWindow::changeEvent(event);
+}
+
+void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    if (reason == QSystemTrayIcon::DoubleClick || reason == QSystemTrayIcon::Trigger) {
+        if (isVisible() && !isMinimized()) {
+            hide();
+        } else {
+            showNormal();
+            activateWindow();
+        }
+    }
+}
+
 void MainWindow::loadSettings()
 {
     QSettings s("LocalApp", "FFmpegExtractor");
     outputLineEdit->setText(s.value("outputDir", "").toString());
     audioFormatCombo->setCurrentText(s.value("audioFormat", "mka").toString());
     videoFormatCombo->setCurrentText(s.value("videoFormat", "mkv").toString());
+    videoResCombo->setCurrentText(s.value("videoRes", "Original").toString());
     subsFormatCombo ->setCurrentText(s.value("subsFormat",  "srt").toString());
+    copyModeCheckBox->setChecked(s.value("copyMode", true).toBool());
     if (s.contains("geometry")) restoreGeometry(s.value("geometry").toByteArray());
 }
 
@@ -833,6 +952,8 @@ void MainWindow::saveSettings()
     s.setValue("outputDir",   outputLineEdit->text());
     s.setValue("audioFormat", audioFormatCombo->currentText());
     s.setValue("videoFormat", videoFormatCombo->currentText());
+    s.setValue("videoRes",    videoResCombo->currentText());
     s.setValue("subsFormat",  subsFormatCombo->currentText());
+    s.setValue("copyMode",    copyModeCheckBox->isChecked());
     s.setValue("geometry",    saveGeometry());
 }
