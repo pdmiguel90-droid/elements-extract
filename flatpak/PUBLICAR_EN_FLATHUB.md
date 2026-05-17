@@ -7,7 +7,7 @@ Pasos detallados para publicar **Elements Extract FFmpeg** en [Flathub](https://
 ## Requisitos previos
 
 1. **Repositorio público** en GitHub/GitLab con una tag de versión (`v1.0.0`)
-2. **App-ID único** en formato dominio inverso: `io.github.pdmiguel90-droid.FFmpegExtractor`
+2. **App-ID único** en formato dominio inverso: `io.github.pdmiguel90droid.FFmpegExtractor`
 3. **Archivo `.metainfo.xml`** válido (AppStream) — ya incluido en `flatpak/`
 4. **Archivo `.desktop`** — ya creado en la raíz del proyecto
 
@@ -48,13 +48,13 @@ flatpak install flathub org.kde.Platform//5.15
 cd elements-extract/flatpak/
 
 # Compilar el paquete localmente
-flatpak-builder --force-clean build-dir io.github.pdmiguel90-droid.FFmpegExtractor.yml
+flatpak-builder --force-clean build-dir io.github.pdmiguel90droid.FFmpegExtractor.yml
 
 # Instalar y probar localmente
-flatpak-builder --user --install --force-clean build-dir io.github.pdmiguel90-droid.FFmpegExtractor.yml
+flatpak-builder --user --install --force-clean build-dir io.github.pdmiguel90droid.FFmpegExtractor.yml
 
 # Ejecutar
-flatpak run io.github.pdmiguel90-droid.FFmpegExtractor
+flatpak run io.github.pdmiguel90droid.FFmpegExtractor
 ```
 
 ---
@@ -64,10 +64,10 @@ flatpak run io.github.pdmiguel90-droid.FFmpegExtractor
 ```bash
 # Validar el metainfo XML (AppStream)
 flatpak run --command=appstreamcli org.freedesktop.appstream-glib validate \
-    flatpak/io.github.pdmiguel90-droid.FFmpegExtractor.metainfo.xml
+    flatpak/io.github.pdmiguel90droid.FFmpegExtractor.metainfo.xml
 
 # Verificar el .desktop
-desktop-file-validate elements-extract.desktop
+desktop-file-validate ffmpeg-extractor.desktop
 ```
 
 ---
@@ -79,19 +79,19 @@ desktop-file-validate elements-extract.desktop
 2. **Crear la rama** con el nombre de tu app:
    ```bash
    git checkout -b new-app
-   mkdir io.github.pdmiguel90-droid.FFmpegExtractor
-   cp flatpak/io.github.pdmiguel90-droid.FFmpegExtractor.yml io.github.pdmiguel90-droid.FFmpegExtractor/
+   mkdir io.github.pdmiguel90droid.FFmpegExtractor
+   cp flatpak/io.github.pdmiguel90droid.FFmpegExtractor.yml io.github.pdmiguel90droid.FFmpegExtractor/
    ```
 
 3. **Abrir un Pull Request** en el repositorio de Flathub  
-   Título: `Add io.github.pdmiguel90-droid.FFmpegExtractor`
+   Título: `Add io.github.pdmiguel90droid.FFmpegExtractor`
 
 4. **Esperar la revisión** del equipo de Flathub (~1-2 semanas)  
    El equipo verifica: seguridad del sandbox, metadatos, licencia, calidad del código.
 
 5. Una vez aprobado, la app aparece en [https://flathub.org](https://flathub.org) y los usuarios pueden instalarla con:
    ```bash
-   flatpak install flathub io.github.pdmiguel90-droid.FFmpegExtractor
+   flatpak install flathub io.github.pdmiguel90droid.FFmpegExtractor
    ```
 
 ---
@@ -102,7 +102,7 @@ Cuando publiques una nueva versión (`v1.1.0`):
 
 1. Actualizar el `tag` y el `sha256` en el manifiesto `.yml`
 2. Actualizar el `<release>` en el `.metainfo.xml`
-3. Abrir un PR en el repositorio `flathub/io.github.pdmiguel90-droid.FFmpegExtractor`
+3. Abrir un PR en el repositorio `flathub/io.github.pdmiguel90droid.FFmpegExtractor`
 
 ---
 

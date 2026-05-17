@@ -25,7 +25,7 @@ target_link_libraries(FFmpegExtractor PRIVATE Qt5::Widgets)
 # --- Instalación ---
 install(TARGETS FFmpegExtractor DESTINATION bin)
 install(FILES ffmpeg-extractor.desktop DESTINATION share/applications)
-install(FILES ffmpeg-extractor.svg DESTINATION share/icons/hicolor/scalable/apps)
+install(FILES ffmpeg-extractor.svg DESTINATION share/icons/hicolor/scalable/apps RENAME io.github.pdmiguel90droid.FFmpegExtractor.svg)
 
 # --- Configuración de CPack para generar .deb ---
 set(CPACK_PACKAGE_NAME "ffmpeg-extractor")

@@ -48,3 +48,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Flatpak build directories
+.flatpak-builder/
+build-dir/
+flatpak/.flatpak-builder/
+

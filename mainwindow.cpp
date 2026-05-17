@@ -370,15 +370,14 @@ void MainWindow::setupUi()
 // ─────────────────────────────────────────────────────────────────────────────
 // Archivos
 // ─────────────────────────────────────────────────────────────────────────────
-void MainWindow::addFiles()
+void MainWindow::loadFiles(const QStringList &files)
 {
-    QStringList files = QFileDialog::getOpenFileNames(
-        this, "Añadir Videos", "",
-        "Videos (*.mkv *.mp4 *.avi *.mov *.ts *.m2ts *.webm);;Todos los archivos (*.*)");
     for (const QString &f : files) {
+        if (f.isEmpty()) continue;
         bool exists = false;
-        for (int i = 0; i < fileListWidget->count(); ++i)
+        for (int i = 0; i < fileListWidget->count(); ++i) {
             if (fileListWidget->item(i)->data(Qt::UserRole).toString() == f) { exists = true; break; }
+        }
         if (!exists) {
             QListWidgetItem *item = new QListWidgetItem(QFileInfo(f).fileName());
             item->setData(Qt::UserRole, f);
@@ -391,6 +390,15 @@ void MainWindow::addFiles()
     if (fileListWidget->count() > 0 && fileListWidget->currentRow() == -1)
         fileListWidget->setCurrentRow(0);
 }
+
+void MainWindow::addFiles()
+{
+    QStringList files = QFileDialog::getOpenFileNames(
+        this, "Añadir Videos", "",
+        "Videos (*.mkv *.mp4 *.avi *.mov *.ts *.m2ts *.webm);;Todos los archivos (*.*)");
+    loadFiles(files);
+}
+
 
 void MainWindow::removeFiles()
 {
@@ -842,23 +850,13 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 
 void MainWindow::dropEvent(QDropEvent *event)
 {
+    QStringList files;
     for (const QUrl &url : event->mimeData()->urls()) {
         QString f = url.toLocalFile();
-        if (f.isEmpty()) continue;
-        bool exists = false;
-        for (int i = 0; i < fileListWidget->count(); ++i)
-            if (fileListWidget->item(i)->data(Qt::UserRole).toString() == f) { exists = true; break; }
-        if (!exists) {
-            QListWidgetItem *item = new QListWidgetItem(QFileInfo(f).fileName());
-            item->setData(Qt::UserRole, f);
-            item->setToolTip(f);
-            fileListWidget->addItem(item);
-            if (outputLineEdit->text().isEmpty())
-                outputLineEdit->setText(QFileInfo(f).absolutePath());
-        }
+        if (!f.isEmpty())
+            files << f;
     }
-    if (fileListWidget->count() > 0 && fileListWidget->currentRow() == -1)
-        fileListWidget->setCurrentRow(0);
+    loadFiles(files);
     event->acceptProposedAction();
 }
 // ─────────────────────────────────────────────────────────────────────────────

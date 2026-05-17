@@ -33,6 +33,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void loadFiles(const QStringList &files);
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;

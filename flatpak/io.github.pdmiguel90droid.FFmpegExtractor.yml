@@ -1,17 +1,18 @@
-app-id: io.github.pdmiguel90-droid.FFmpegExtractor
+app-id: io.github.pdmiguel90droid.FFmpegExtractor
 runtime: org.kde.Platform
 runtime-version: '5.15'
 sdk: org.kde.Sdk
-command: elements-extract
+command: FFmpegExtractor
 
 # Permisos del sandbox
 finish-args:
   # Acceso a archivos del usuario (necesario para abrir/guardar)
   - --filesystem=home
-  # Acceso al sistema de ventanas
+  # Acceso al sistema de ventanas y aceleración gráfica
   - --socket=wayland
   - --socket=x11
   - --share=ipc
+  - --device=dri
   # Para abrir carpetas en el explorador de archivos del sistema
   - --talk-name=org.freedesktop.portal.Desktop
   - --talk-name=org.freedesktop.portal.FileChooser
@@ -38,6 +39,7 @@ modules:
       - --disable-debug
       - --enable-gpl
       - --enable-version3
+      - --disable-x86asm
       - --disable-encoders
       - --disable-muxers
       - --enable-encoder=copy
@@ -48,7 +50,7 @@ modules:
     sources:
       - type: archive
         url: https://ffmpeg.org/releases/ffmpeg-6.1.tar.xz
-        sha256: 488c76e57dd9b3bee901f71d5c95eaf1db4a5a31c4d609ce7013b4f3040afcf2
+        sha256: 488c76e57dd9b3bee901f71d5c95eaf1db4a5a31fe46a28654e837144207c270
     cleanup:
       - /share/ffmpeg/examples
 
@@ -64,11 +66,14 @@ modules:
         # Reemplaza con el commit hash real al publicar:
         # commit: abc123def456...
     post-install:
-      # Instalar el binario con el nombre correcto
-      - install -Dm755 FFmpegExtractor /app/bin/elements-extract
+      # Instalar el binario
+      - install -Dm755 FFmpegExtractor /app/bin/FFmpegExtractor
+      # Instalar el icono con el nombre del AppID (requerido por Flatpak)
+      - install -Dm644 ../ffmpeg-extractor.svg
+          /app/share/icons/hicolor/scalable/apps/io.github.pdmiguel90droid.FFmpegExtractor.svg
       # Instalar el archivo .desktop
-      - install -Dm644 ../elements-extract.desktop
-          /app/share/applications/io.github.pdmiguel90-droid.FFmpegExtractor.desktop
+      - install -Dm644 ../ffmpeg-extractor.desktop
+          /app/share/applications/io.github.pdmiguel90droid.FFmpegExtractor.desktop
       # Instalar los metadatos AppStream (requerido por Flathub)
-      - install -Dm644 ../flatpak/io.github.pdmiguel90-droid.FFmpegExtractor.metainfo.xml
-          /app/share/metainfo/io.github.pdmiguel90-droid.FFmpegExtractor.metainfo.xml
+      - install -Dm644 ../flatpak/io.github.pdmiguel90droid.FFmpegExtractor.metainfo.xml
+          /app/share/metainfo/io.github.pdmiguel90droid.FFmpegExtractor.metainfo.xml

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.pdmiguel90-droid.FFmpegExtractor</id>
+  <id>io.github.pdmiguel90droid.FFmpegExtractor</id>
 
   <name>Elements Extract FFmpeg</name>
   <name xml:lang="es">Elements Extract FFmpeg</name>
@@ -31,7 +31,7 @@
     </ul>
   </description>
 
-  <launchable type="desktop-id">io.github.pdmiguel90-droid.FFmpegExtractor.desktop</launchable>
+  <launchable type="desktop-id">io.github.pdmiguel90droid.FFmpegExtractor.desktop</launchable>
 
   <url type="homepage">https://github.com/pdmiguel90-droid/elements-extract</url>
   <url type="bugtracker">https://github.com/pdmiguel90-droid/elements-extract/issues</url>
@@ -39,7 +39,7 @@
   <developer_name>pdmiguel90-droid</developer_name>
 
   <provides>
-    <binary>elements-extract</binary>
+    <binary>FFmpegExtractor</binary>
   </provides>
 
   <releases>
