@@ -1,0 +1,32 @@
+elements-extract (1.2.0) unstable; urgency=medium
+
+  * Traducción automática de subtítulos con bergamot-translator
+  * Detección automática del idioma de origen de subtítulos
+  * Descarga de modelos de traducción desde translatelocally.com
+  * Gestión de modelos: instalar, activar, desactivar, eliminar
+  * Panel de configuración con opciones de idioma por defecto
+  * Checkbox "Traducir al extraer" para flujo combinado
+  * Descarga de modelos vía curl para mayor fiabilidad
+  * Corregido parsing de metadatos de modelos online
+  * Interfaz unificada para extracción y traducción
+
+ -- pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>  Mon, 08 Sep 2025 21:00:00 +0000
+
+elements-extract (1.1.0) unstable; urgency=medium
+
+  * Traducción de subtítulos con bergamot-translator
+  * Modelos de traducción incluidos (en-es, es-en, en-fr, fr-en, en-pt, pt-en)
+  * Ventana maximizada por defecto
+  * Selector de idioma origen y destino
+  * Barra de progreso de traducción
+
+ -- pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>  Sat, 06 Sep 2025 12:00:00 +0000
+
+elements-extract (1.0.0) unstable; urgency=low
+
+  * Versión inicial
+  * Extracción de pistas de audio, video y subtítulos
+  * Soporte para FFmpeg
+  * Interfaz gráfica con Qt5
+
+ -- pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>  Wed, 03 Sep 2025 10:00:00 +0000

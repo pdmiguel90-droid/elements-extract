@@ -54,7 +54,7 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     title->setAlignment(Qt::AlignCenter);
     root->addWidget(title);
 
-    QLabel *ver = new QLabel("Versión 1.0.0  ·  2025");
+    QLabel *ver = new QLabel("Versión 1.2.0  ·  2025");
     ver->setObjectName("appVersion");
     ver->setAlignment(Qt::AlignCenter);
     root->addWidget(ver);
@@ -69,7 +69,8 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     // ── Descripción ─────────────────────────────────────────────────────────
     QLabel *desc = new QLabel(
         "Extractor gráfico de pistas de audio, video y subtítulos.\n"
-        "Procesamiento en lote con selección individual por archivo.");
+        "Procesamiento en lote con selección individual por archivo.\n"
+        "Traducción automática de subtítulos con bergamot-translator.");
     desc->setAlignment(Qt::AlignCenter);
     desc->setWordWrap(true);
     root->addWidget(desc);
@@ -117,7 +118,7 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     const QStringList techs = {
         "Qt 5\nInterfaz gráfica",
         "FFmpeg\nExtracción",
-        "ffprobe\nAnálisis",
+        "bergamot\nTraducción",
         "C++17\nLenguaje"
     };
     for (const QString &t : techs) {

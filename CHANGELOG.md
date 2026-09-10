@@ -35,7 +35,6 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 ## [Próximas versiones]
 
 ### Planificado para v1.1.0
-- [ ] Publicación en Flathub como paquete Flatpak
 - [ ] Notificación de escritorio al finalizar el proceso
 - [ ] Perfiles de extracción (presets guardables)
 - [ ] Soporte para renombrado de archivos de salida personalizado

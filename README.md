@@ -110,11 +110,6 @@ cp elements-extract.desktop ~/.local/share/applications/
 | `F1` | Manual de uso |
 | `Ctrl+Q` | Salir |
 
----
-
-## Distribución como Flatpak
-
-Ver [`flatpak/`](flatpak/) para el manifiesto y las instrucciones de compilación y publicación en Flathub.
 
 ---
 

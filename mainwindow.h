@@ -25,6 +25,12 @@
 #include <QMenu>
 #include <QTimer>
 #include <QCoreApplication>
+#include <QGroupBox>
+
+// Forward declarations for translation classes
+class SubtitleTranslator;
+class ModelDownloader;
+class SettingsDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -40,7 +46,6 @@ protected:
     void dropEvent(QDropEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
-    void changeEvent(QEvent *event) override;
 
 private slots:
     void addFiles();
@@ -63,6 +68,27 @@ private slots:
     void processNextInBatch();
     void openOutputFolder();
     void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
+
+    // ── Translation slots ──────────────────────────────────────────────────
+    void onTranslationProgress(int current, int total);
+    void onFileTranslated(const QString &input, const QString &output);
+    void onTranslationError(const QString &message);
+    void onTranslationFinished();
+    void translateExtractedSubtitles(const QString &subtitlePath);
+
+    // ── Model management slots ─────────────────────────────────────────────
+    void showModelManager();
+    void onModelsFetched();
+    void onModelDownloadProgress(const QString &modelId, qint64 received, qint64 total);
+    void onModelDownloaded(const QString &modelId);
+    void onModelDownloadError(const QString &modelId, const QString &message);
+
+    // ── UI language slots ──────────────────────────────────────────────────
+    void changeUILanguage(const QString &langCode);
+
+    // ── Settings slots ────────────────────────────────────────────────────
+    void showSettings();
+    void onSettingsChanged();
 
 private:
     void setupUi();
@@ -100,10 +126,23 @@ private:
     QComboBox    *subsFormatCombo;
     QCheckBox    *copyModeCheckBox;
 
+    // ── Translation widgets ─────────────────────────────────────────────────
+    QGroupBox    *translationGroupBox;
+    QComboBox    *srcLangCombo;
+    QComboBox    *dstLangCombo;
+    QCheckBox    *translateOnExtractCheck;
+    QPushButton  *manageModelsButton;
+    QProgressBar *translationProgressBar;
+    QLabel       *translationStatusLabel;
+
     // ── Procesos ─────────────────────────────────────────────────────────────
     QProcess   *process;
     QProcess   *probeProcess;
     QByteArray  probeData;
+
+    // ── Translation engine ───────────────────────────────────────────────────
+    SubtitleTranslator *subtitleTranslator;
+    ModelDownloader *modelDownloader;
 
     // ── Estado ───────────────────────────────────────────────────────────────
     QString  lastSelectedFile;
@@ -111,13 +150,18 @@ private:
     QMap<QString, QMap<int, QString>> fileSelections;
     // file → { streamIndex → codecName }
     QMap<QString, QMap<int, QString>> fileStreamCodecs;
+    // file → { streamIndex → languageCode }
+    QMap<QString, QMap<int, QString>> fileStreamLanguages;
     QSet<QString>  globalSelectionTypes;
     QStringList    batchFiles;
+    QStringList    extractedSubtitleFiles;
     int            currentBatchIndex;
     QMap<QString, qint64> fileDurations; // duración en ms por archivo
     qint64 currentFileDuration;
     QSystemTrayIcon *trayIcon;
     QMenu *trayMenu;
+
+    void autoDetectSourceLanguage();
 };
 
 #endif // MAINWINDOW_H
