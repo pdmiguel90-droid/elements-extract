@@ -55,3 +55,6 @@ Thumbs.db
 # Translation models (downloaded at runtime)
 models/
 bin/
+
+# Archivos generados por el empaquetado Debian
+*.gz
