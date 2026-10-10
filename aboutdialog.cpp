@@ -10,15 +10,18 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QColor>
+#include <QGuiApplication>
+#include <QClipboard>
+#include <QTimer>
 
 AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 {
     setWindowTitle(tr("Acerca de Elements Extract FFmpeg"));
-    setFixedSize(560, 480);
+    setFixedSize(600, 630);
     setModal(true);
 
     QVBoxLayout *root = new QVBoxLayout(this);
-    root->setSpacing(10);
+    root->setSpacing(8);
     root->setContentsMargins(32, 24, 32, 18);
 
     // ── Logo ────────────────────────────────────────────────────────────────
@@ -62,8 +65,9 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 
     // ── Datos del autor ─────────────────────────────────────────────────────
     QGridLayout *grid = new QGridLayout();
-    grid->setHorizontalSpacing(16);
-    grid->setVerticalSpacing(6);
+    grid->setHorizontalSpacing(20);
+    grid->setVerticalSpacing(12);
+    grid->setColumnMinimumWidth(1, 340);
     grid->setColumnStretch(1, 1);
 
     auto addRow = [&](int row, const QString &key, const QString &value,
@@ -92,10 +96,9 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     };
 
     addRow(0, tr("Desarrollado por"), "pdmiguel90-droid");
-    addRow(1, tr("Contacto"), "pdmiguel90-droid@users.noreply.github.com");
-    addRow(2, tr("Repositorio"), "github.com/pdmiguel90-droid/elements-extract", true,
+    addRow(1, tr("Repositorio"), "github.com/pdmiguel90-droid/elements-extract", true,
            "https://github.com/pdmiguel90-droid/elements-extract");
-    addRow(3, tr("Licencia"), "GNU General Public License v3.0");
+    addRow(2, tr("Licencia"), "GNU General Public License v3.0");
 
     root->addLayout(grid);
     root->addWidget(makeSep());
@@ -121,6 +124,67 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
         techRow->addWidget(lbl);
     }
     root->addLayout(techRow);
+
+    root->addWidget(makeSep());
+
+    QLabel *donarTitle = new QLabel(tr("DONAR"));
+    donarTitle->setObjectName("sectionTitle");
+    donarTitle->setAlignment(Qt::AlignCenter);
+    root->addWidget(donarTitle);
+
+    QGridLayout *don = new QGridLayout();
+    don->setHorizontalSpacing(20);
+    don->setVerticalSpacing(12);
+    don->setColumnStretch(1, 1);
+
+    const QString linkColor =
+        ThemeManager::instance()->effectiveTheme() == ThemeManager::Light
+            ? "#D9700A" : "#FFA040";
+
+    QLabel *ppKey = new QLabel(tr("Donar con PayPal") + ":");
+    ppKey->setObjectName("key");
+    ppKey->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    QLabel *ppVal = new QLabel(
+        QString("<a style=\"color:%1; text-decoration:none;\" href=\"%2\">%3</a>")
+            .arg(linkColor,
+                 "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=pdmiguel90@gmail.com&currency_code=BRL&item_name=Elements%20Extract",
+                 "pdmiguel90@gmail.com"));
+    ppVal->setTextFormat(Qt::RichText);
+    ppVal->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    ppVal->setOpenExternalLinks(true);
+    ppVal->setCursor(Qt::PointingHandCursor);
+    ppVal->setObjectName("value");
+    ppVal->setProperty("link", true);
+    ppVal->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    don->addWidget(ppKey, 0, 0);
+    don->addWidget(ppVal, 0, 1);
+
+    QLabel *pixLabel = new QLabel(tr("Donar con PIX") + ":");
+    pixLabel->setObjectName("key");
+    pixLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    QLabel *pixKey = new QLabel(
+        "2bd297c6-9332-4df1-abf9-a84bba4858fb");
+    pixKey->setObjectName("value");
+    QPushButton *copyPix = new QPushButton(tr("Copiar"));
+    copyPix->setCursor(Qt::PointingHandCursor);
+    connect(copyPix, &QPushButton::clicked, this, [this, copyPix, pixKey]() {
+        QGuiApplication::clipboard()->setText(pixKey->text());
+        copyPix->setText(tr("¡Copiada!"));
+        QTimer::singleShot(1600, copyPix, [copyPix]() {
+            copyPix->setText(tr("Copiar"));
+        });
+    });
+    QWidget *pixCell = new QWidget(this);
+    QHBoxLayout *pixLay = new QHBoxLayout(pixCell);
+    pixLay->setContentsMargins(0, 0, 0, 0);
+    pixLay->setSpacing(10);
+    pixLay->addWidget(pixKey);
+    pixLay->addWidget(copyPix);
+    pixLay->addStretch();
+    don->addWidget(pixLabel, 1, 0);
+    don->addWidget(pixCell, 1, 1);
+
+    root->addLayout(don);
 
     root->addStretch();
 
