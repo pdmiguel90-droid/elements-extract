@@ -17,10 +17,18 @@ SubtitleTranslator::SubtitleTranslator(QObject *parent)
     , m_process(nullptr)
     , m_cancelled(false)
     , m_batchIndex(0)
+    , m_batchActive(false)
     , m_currentLineTotal(0)
     , m_blocking(false)
 {
     m_bergamotBinary = findBergamotBinary();
+
+    // Advance the batch once, after the current signal emission has fully unwound.
+    // QueuedConnection avoids re-entrant recursion during blocking (triangular) hops.
+    connect(this, &SubtitleTranslator::fileTranslated,
+            this, &SubtitleTranslator::onBatchFileDone, Qt::QueuedConnection);
+    connect(this, &SubtitleTranslator::translationError,
+            this, &SubtitleTranslator::onBatchFileFailed, Qt::QueuedConnection);
 }
 
 SubtitleTranslator::~SubtitleTranslator()
@@ -159,7 +167,7 @@ bool SubtitleTranslator::translateFile(const QString &inputPath,
     QList<SubtitleCue> cues = SubtitleParser::parseFile(inputPath);
     if (cues.isEmpty()) {
         qDebug() << "[TRANSLATE] FAIL: no cues parsed from" << inputPath;
-        emit translationError("No se pudieron leer los subtítulos del archivo: " + inputPath);
+        emit translationError(tr("No se pudieron leer los subtítulos del archivo: ") + inputPath);
         return false;
     }
     qDebug() << "[TRANSLATE] Parsed" << cues.size() << "cues";
@@ -168,9 +176,9 @@ bool SubtitleTranslator::translateFile(const QString &inputPath,
     qDebug() << "[TRANSLATE] Bergamot binary:" << m_bergamotBinary << "exists:" << QFile::exists(m_bergamotBinary);
     if (m_bergamotBinary.isEmpty() || !QFile::exists(m_bergamotBinary)) {
         qDebug() << "[TRANSLATE] FAIL: bergamot binary not found";
-        emit translationError("No se encontró el motor de traducción (bergamot).\n"
+        emit translationError(tr("No se encontró el motor de traducción (bergamot).\n"
                               "Asegúrese de que está instalado correctamente.\n"
-                              "Buscado en: " + m_bergamotBinary);
+                              "Buscado en: ") + m_bergamotBinary);
         return false;
     }
 
@@ -178,9 +186,9 @@ bool SubtitleTranslator::translateFile(const QString &inputPath,
     QStringList path = findTranslationPath(sourceLang, targetLang);
     if (path.isEmpty()) {
         qDebug() << "[TRANSLATE] FAIL: no translation path found for" << sourceLang << "→" << targetLang;
-        emit translationError(QString("No se encontró un modelo de traducción para %1→%2.\n"
-                                      "Ni modelo directo ni ruta triangular disponible.\n"
-                                      "Modelos instalados disponibles para: en, es, fr, pt.")
+        emit translationError(tr("No se encontró un modelo de traducción para %1→%2.\n"
+                                       "Ni modelo directo ni ruta triangular disponible.\n"
+                                       "Modelos instalados disponibles para: en, es, fr, pt.")
                                   .arg(languageName(sourceLang))
                                   .arg(languageName(targetLang)));
         return false;
@@ -256,7 +264,7 @@ bool SubtitleTranslator::translateFileDirect(const QString &inputPath,
     QList<SubtitleCue> cues = SubtitleParser::parseFile(inputPath);
     if (cues.isEmpty()) {
         qDebug() << "[TRANSLATE] FAIL: no cues parsed from" << inputPath;
-        emit translationError("No se pudieron leer los subtítulos del archivo: " + inputPath);
+        emit translationError(tr("No se pudieron leer los subtítulos del archivo: ") + inputPath);
         return false;
     }
     qDebug() << "[TRANSLATE] Parsed" << cues.size() << "cues";
@@ -265,9 +273,9 @@ bool SubtitleTranslator::translateFileDirect(const QString &inputPath,
     qDebug() << "[TRANSLATE] Bergamot binary:" << m_bergamotBinary << "exists:" << QFile::exists(m_bergamotBinary);
     if (m_bergamotBinary.isEmpty() || !QFile::exists(m_bergamotBinary)) {
         qDebug() << "[TRANSLATE] FAIL: bergamot binary not found";
-        emit translationError("No se encontró el motor de traducción (bergamot).\n"
+        emit translationError(tr("No se encontró el motor de traducción (bergamot).\n"
                               "Asegúrese de que está instalado correctamente.\n"
-                              "Buscado en: " + m_bergamotBinary);
+                              "Buscado en: ") + m_bergamotBinary);
         return false;
     }
 
@@ -277,85 +285,27 @@ bool SubtitleTranslator::translateFileDirect(const QString &inputPath,
     qDebug() << "[TRANSLATE] Model path:" << modelPath << "installed:" << modelOk;
     if (!modelOk) {
         qDebug() << "[TRANSLATE] FAIL: model not installed";
-        emit translationError(QString("El modelo de traducción %1→%2 no está instalado.\n"
-                                      "Directorio buscado: %3")
+        emit translationError(tr("El modelo de traducción %1→%2 no está instalado.\n"
+                                       "Directorio buscado: %3")
                                   .arg(languageName(sourceLang))
                                   .arg(languageName(targetLang))
                                   .arg(modelPath));
         return false;
     }
 
-    // Store state for translation
     m_currentInputPath = inputPath;
     m_currentOutputPath = outputPath;
+    m_currentSourceLang = sourceLang;
+    m_currentTargetLang = targetLang;
     m_currentCues = cues;
     m_translatableIndices.clear();
     m_currentLineTotal = cues.size();
-    m_batchSourceLang = sourceLang;
-    m_batchTargetLang = targetLang;
 
-    // Translate entire file content at once
-    translateFileContent();
-
-    // In blocking mode, wait for the process to finish.
-    // Disconnect the auto-handler so we can process output ourselves.
-    if (m_blocking && m_process) {
-        disconnect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                   this, &SubtitleTranslator::onProcessFinished);
-        m_process->waitForFinished(600000);  // 10 min timeout
-
-        // Manually process the output
-        if (m_process && m_process->state() == QProcess::NotRunning) {
-            int exitCode = m_process->exitCode();
-            QProcess::ExitStatus exitStatus = m_process->exitStatus();
-            QString output = QString::fromLocal8Bit(m_process->readAllStandardOutput());
-            QStringList translatedLines = output.split('\n', Qt::SkipEmptyParts);
-
-            qDebug() << "[TRANSLATE] blocking hop finished: exitCode=" << exitCode
-                     << "output lines:" << translatedLines.size()
-                     << "cues:" << m_currentCues.size();
-
-            // Assign translations back to cues
-            for (int i = 0; i < m_translatableIndices.size() && i < translatedLines.size(); ++i) {
-                int cueIdx = m_translatableIndices[i];
-                QString translated = translatedLines[i].trimmed();
-                if (!translated.isEmpty()) {
-                    m_currentCues[cueIdx].text = translated;
-                }
-            }
-
-            // Write output file
-            if (exitStatus == QProcess::NormalExit && exitCode == 0) {
-                SubtitleParser::writeSrt(m_currentOutputPath, m_currentCues);
-                qDebug() << "[TRANSLATE] Blocking hop file written:" << m_currentOutputPath;
-            } else {
-                QString stderrOutput = QString::fromLocal8Bit(m_process->readAllStandardError());
-                qWarning() << "Bergamot error (blocking hop):" << stderrOutput;
-                // Write file with original text on error
-                SubtitleParser::writeSrt(m_currentOutputPath, m_currentCues);
-            }
-
-            m_process->deleteLater();
-            m_process = nullptr;
-        }
-    }
-
-    return true;
-}
-
-void SubtitleTranslator::translateFileContent()
-{
-    if (m_cancelled) {
-        emit translationError("Traducción cancelada por el usuario");
-        return;
-    }
-
-    // Build multi-line input: only non-empty lines go to bergamot
-    // Each cue must be exactly one line — join multi-line cue text with space
+    // Build multi-line input: only non-empty lines go to bergamot.
+    // Each cue must be exactly one line — join multi-line cue text with space.
     QStringList inputLines;
-    m_translatableIndices.clear();
-    for (int i = 0; i < m_currentCues.size(); ++i) {
-        QString text = m_currentCues[i].text.trimmed().replace('\n', ' ');
+    for (int i = 0; i < cues.size(); ++i) {
+        QString text = cues[i].text.trimmed().replace('\n', ' ');
         if (!text.isEmpty()) {
             inputLines.append(text);
             m_translatableIndices.append(i);
@@ -364,34 +314,73 @@ void SubtitleTranslator::translateFileContent()
 
     if (m_translatableIndices.isEmpty()) {
         // No translatable text — just copy file
-        if (SubtitleParser::writeSrt(m_currentOutputPath, m_currentCues)) {
-            emit fileTranslated(m_currentInputPath, m_currentOutputPath);
-        } else {
-            emit translationError("Error al escribir el archivo de salida: " + m_currentOutputPath);
+        if (SubtitleParser::writeSrt(outputPath, cues)) {
+            return true;
         }
-        return;
+        emit translationError(tr("Error al escribir el archivo de salida: ") + outputPath);
+        return false;
     }
 
-    // Build bergamot command
-    QString modelDir = modelPathForPair(m_batchSourceLang, m_batchTargetLang);
-    QString configPath = modelDir + "/config.intgemm8bitalpha.yml";
+    // Build bergamot command for THIS pair (never touches the batch languages)
+    QString configPath = modelPath + "/config.intgemm8bitalpha.yml";
     if (!QFile::exists(configPath))
-        configPath = modelDir + "/config.yml";
+        configPath = modelPath + "/config.yml";
 
     QStringList args;
     args << "--model-config-paths" << configPath
          << "--cpu-threads" << "2";
 
-    qDebug() << "[TRANSLATE] translateFileContent:" << m_currentInputPath
-             << "lines:" << m_currentCues.size()
+    qDebug() << "[TRANSLATE] translateFileContent:" << inputPath
+             << "lines:" << cues.size()
              << "translatable:" << m_translatableIndices.size();
 
-    // Create process
-    if (m_process) {
-        m_process->deleteLater();
+    // Blocking mode (triangular hops): use a local QProcess so the member
+    // process and its async slots can never interfere.
+    if (m_blocking) {
+        if (m_cancelled) return false;
+        QProcess proc;
+        proc.setWorkingDirectory(modelPath);
+        proc.start(m_bergamotBinary, args);
+        if (!proc.waitForStarted(5000)) {
+            emit translationError(tr("No se pudo iniciar el motor de traducción"));
+            return false;
+        }
+        proc.write(inputLines.join("\n").toUtf8() + "\n");
+        proc.closeWriteChannel();
+        if (!proc.waitForFinished(600000)) {  // 10 min timeout
+            proc.kill();
+            proc.waitForFinished(1000);
+            emit translationError(tr("Tiempo de espera agotado del motor de traducción"));
+            return false;
+        }
+        if (proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
+            QString err = QString::fromLocal8Bit(proc.readAllStandardError());
+            qWarning() << "Bergamot error (blocking hop):" << err;
+            emit translationError(tr("Error del motor de traducción (código %1).")
+                                      .arg(proc.exitCode()) +
+                                  (err.trimmed().isEmpty() ? QString()
+                                  : QString("\n%1").arg(err.trimmed().left(200))));
+            return false;
+        }
+        QString output = QString::fromLocal8Bit(proc.readAllStandardOutput());
+        QStringList translatedLines = output.split('\n');
+        int n = qMin(m_translatableIndices.size(), translatedLines.size());
+        for (int i = 0; i < n; ++i) {
+            QString translated = translatedLines[i].trimmed();
+            if (!translated.isEmpty())
+                m_currentCues[m_translatableIndices[i]].text = translated;
+        }
+        if (SubtitleParser::writeSrt(outputPath, m_currentCues)) {
+            return true;
+        }
+        emit translationError(tr("Error al escribir el archivo de salida: ") + outputPath);
+        return false;
     }
+
+    // Async mode (direct translation / batch): drive completion via signals.
+    resetProcess();
     m_process = new QProcess(this);
-    m_process->setWorkingDirectory(modelDir);
+    m_process->setWorkingDirectory(modelPath);
 
     connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, &SubtitleTranslator::onProcessFinished);
@@ -403,56 +392,71 @@ void SubtitleTranslator::translateFileContent()
     m_process->start(m_bergamotBinary, args);
 
     if (m_process->waitForStarted(5000)) {
-        // Send all lines at once, separated by newlines
-        QByteArray input = inputLines.join("\n").toUtf8();
-        m_process->write(input);
+        m_process->write(inputLines.join("\n").toUtf8() + "\n");
         m_process->closeWriteChannel();
-    } else {
-        emit translationError("No se pudo iniciar el motor de traducción");
-        m_process->deleteLater();
-        m_process = nullptr;
+        return true;
     }
+
+    emit translationError(tr("No se pudo iniciar el motor de traducción"));
+    resetProcess();
+    return false;
+}
+
+void SubtitleTranslator::resetProcess()
+{
+    if (!m_process) return;
+    disconnect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+               this, &SubtitleTranslator::onProcessFinished);
+    disconnect(m_process, &QProcess::readyReadStandardOutput,
+               this, &SubtitleTranslator::onProcessReadyRead);
+    disconnect(m_process, &QProcess::errorOccurred,
+               this, &SubtitleTranslator::onProcessError);
+    if (m_process->state() != QProcess::NotRunning)
+        m_process->kill();
+    m_process->deleteLater();
+    m_process = nullptr;
 }
 
 void SubtitleTranslator::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
-    if (exitStatus != QProcess::NormalExit || exitCode != 0) {
-        QString stderrOutput = QString::fromLocal8Bit(m_process->readAllStandardError());
+    QProcess *p = qobject_cast<QProcess*>(sender());
+    if (!p || p != m_process) return;  // ignore signals from a stale/replaced process
+
+    bool ok = (exitStatus == QProcess::NormalExit && exitCode == 0);
+    QString output, stderrOutput;
+    if (p->state() == QProcess::NotRunning) {
+        output       = QString::fromLocal8Bit(p->readAllStandardOutput());
+        stderrOutput = QString::fromLocal8Bit(p->readAllStandardError());
+    }
+
+    if (!ok) {
         qWarning() << "Bergamot error:" << stderrOutput;
-        // Keep original text on error — write file as-is
+        resetProcess();
+        emit translationError(tr("Error del motor de traducción (código %1).")
+                                  .arg(exitCode) +
+                              (stderrOutput.trimmed().isEmpty() ? QString()
+                              : QString("\n%1").arg(stderrOutput.trimmed().left(200))));
+        return;
     }
 
-    // Read translated text from stdout (multi-line)
-    QString output = QString::fromLocal8Bit(m_process->readAllStandardOutput());
-    QStringList translatedLines = output.split('\n', Qt::SkipEmptyParts);
-
-    qDebug() << "[TRANSLATE] onProcessFinished: exitCode=" << exitCode
-             << "output lines:" << translatedLines.size()
-             << "cues:" << m_currentCues.size();
-
-    // Assign translations back to cues using stored indices
-    for (int i = 0; i < m_translatableIndices.size() && i < translatedLines.size(); ++i) {
-        int cueIdx = m_translatableIndices[i];
+    QStringList translatedLines = output.split('\n');
+    int n = qMin(m_translatableIndices.size(), translatedLines.size());
+    for (int i = 0; i < n; ++i) {
         QString translated = translatedLines[i].trimmed();
-        if (!translated.isEmpty()) {
-            qDebug() << "[TRANSLATE] line" << cueIdx << ":"
-                     << m_currentCues[cueIdx].text.trimmed().left(40) << "->"
-                     << translated.left(40);
-            m_currentCues[cueIdx].text = translated;
-        }
+        if (!translated.isEmpty())
+            m_currentCues[m_translatableIndices[i]].text = translated;
     }
+    if (translatedLines.size() < m_translatableIndices.size())
+        qWarning() << "Bergamot returned fewer lines than requested:" << translatedLines.size()
+                   << "<" << m_translatableIndices.size();
 
-    // Write output file
+    resetProcess();
     if (SubtitleParser::writeSrt(m_currentOutputPath, m_currentCues)) {
         qDebug() << "[TRANSLATE] File written:" << m_currentOutputPath;
         emit fileTranslated(m_currentInputPath, m_currentOutputPath);
     } else {
-        emit translationError("Error al escribir el archivo de salida: " + m_currentOutputPath);
+        emit translationError(tr("Error al escribir el archivo de salida: ") + m_currentOutputPath);
     }
-
-    // Clean up process
-    m_process->deleteLater();
-    m_process = nullptr;
 }
 
 void SubtitleTranslator::onProcessReadyRead()
@@ -462,20 +466,24 @@ void SubtitleTranslator::onProcessReadyRead()
 
 void SubtitleTranslator::onProcessError(QProcess::ProcessError procError)
 {
+    QProcess *p = qobject_cast<QProcess*>(sender());
+    if (!p || p != m_process) return;  // ignore stale processes
+
     QString errorMsg;
     switch (procError) {
         case QProcess::FailedToStart:
-            errorMsg = "No se pudo iniciar el motor de traducción";
+            errorMsg = tr("No se pudo iniciar el motor de traducción");
             break;
         case QProcess::Crashed:
-            errorMsg = "El motor de traducción terminó inesperadamente";
+            errorMsg = tr("El motor de traducción terminó inesperadamente");
             break;
         case QProcess::Timedout:
-            errorMsg = "El motor de traducción excedió el tiempo límite";
+            errorMsg = tr("El motor de traducción excedió el tiempo límite");
             break;
         default:
-            errorMsg = "Error desconocido del motor de traducción";
+            errorMsg = tr("Error desconocido del motor de traducción");
     }
+    resetProcess();
     emit translationError(errorMsg);
 }
 
@@ -489,6 +497,7 @@ void SubtitleTranslator::translateBatch(const QStringList &inputPaths,
     m_batchSourceLang = sourceLang;
     m_batchTargetLang = targetLang;
     m_cancelled = false;
+    m_batchActive = true;
 
     qDebug() << "[TRANSLATE] translateBatch:" << inputPaths.size() << "files," << sourceLang << "→" << targetLang;
 
@@ -517,6 +526,7 @@ void SubtitleTranslator::processNextInBatch()
 {
     if (m_cancelled || m_batchIndex >= m_batchQueue.size()) {
         qDebug() << "[TRANSLATE] batchFinished, processed" << m_batchIndex << "of" << m_batchQueue.size();
+        m_batchActive = false;
         emit batchFinished();
         return;
     }
@@ -524,25 +534,30 @@ void SubtitleTranslator::processNextInBatch()
     auto [inputPath, outputPath] = m_batchQueue[m_batchIndex];
     qDebug() << "[TRANSLATE] processNextInBatch [" << m_batchIndex << "/" << m_batchQueue.size() << "]" << inputPath << "→" << outputPath;
 
-    connect(this, &SubtitleTranslator::fileTranslated,
-            this, [this](const QString &, const QString &) {
-                qDebug() << "[TRANSLATE] fileTranslated signal, advancing to" << m_batchIndex + 1;
-                m_batchIndex++;
-                processNextInBatch();
-            }, Qt::UniqueConnection);
-
-    connect(this, &SubtitleTranslator::translationError,
-            this, [this](const QString &) {
-                m_batchIndex++;
-                processNextInBatch();
-            }, Qt::UniqueConnection);
-
+    emit progress(m_batchIndex + 1, m_batchQueue.size());
     translateFile(inputPath, outputPath, m_batchSourceLang, m_batchTargetLang);
+}
+
+void SubtitleTranslator::onBatchFileDone()
+{
+    if (!m_batchActive) return;
+    qDebug() << "[TRANSLATE] fileTranslated, advancing to" << m_batchIndex + 1;
+    m_batchIndex++;
+    processNextInBatch();
+}
+
+void SubtitleTranslator::onBatchFileFailed()
+{
+    if (!m_batchActive) return;
+    qDebug() << "[TRANSLATE] translationError, skipping to" << m_batchIndex + 1;
+    m_batchIndex++;
+    processNextInBatch();
 }
 
 void SubtitleTranslator::cancel()
 {
     m_cancelled = true;
+    m_batchActive = false;
     if (m_process && m_process->state() != QProcess::NotRunning) {
         m_process->kill();
     }

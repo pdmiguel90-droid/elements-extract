@@ -65,6 +65,8 @@ public:
 
     void cancel();
 
+    bool isBatchActive() const { return m_batchActive; }
+
 signals:
     void progress(int current, int total);
     void fileTranslated(const QString &input, const QString &output);
@@ -77,6 +79,8 @@ private slots:
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void onProcessReadyRead();
     void onProcessError(QProcess::ProcessError error);
+    void onBatchFileDone();
+    void onBatchFileFailed();
 
 private:
     QString m_modelDir;
@@ -89,10 +93,13 @@ private:
     QString m_batchSourceLang;
     QString m_batchTargetLang;
     int m_batchIndex;
+    bool m_batchActive;
 
     // Current file translation state
     QString m_currentInputPath;
     QString m_currentOutputPath;
+    QString m_currentSourceLang;
+    QString m_currentTargetLang;
     QList<SubtitleCue> m_currentCues;
     QList<int> m_translatableIndices;
     int m_currentLineTotal;
@@ -105,7 +112,7 @@ private:
                              const QString &sourceLang,
                              const QString &targetLang);
     void processNextInBatch();
-    void translateFileContent();
+    void resetProcess();
 };
 
 #endif // SUBTITLETRANSLATOR_H

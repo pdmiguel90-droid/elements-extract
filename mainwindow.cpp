@@ -31,6 +31,10 @@
 #include <QPainter>
 #include <QStyle>
 #include <QStandardPaths>
+#include <QTranslator>
+#include <QLocale>
+#include <QScreen>
+#include <QGuiApplication>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constructor / Destructor
@@ -40,7 +44,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setupUi();
     setupMenuBar();
-    applyStyle();
     setAcceptDrops(true);
     loadSettings();
 
@@ -79,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
             if (i > 0) pathStr += " → ";
             pathStr += SubtitleTranslator::languageName(path[i]);
         }
-        logArea->append(QString("<font color='#FFD700'>↻ Traducción triangular: %1</font>").arg(pathStr));
+        logArea->append(QString("<font color='#FFD700'>" + tr("↻ Traducción triangular: %1") + "</font>").arg(pathStr));
     });
 
     // Connect model downloader signals
@@ -97,18 +100,18 @@ MainWindow::MainWindow(QWidget *parent)
     trayIcon = new QSystemTrayIcon(appIcon, this);
     trayMenu = new QMenu(this);
 
-    QAction *restoreAction = trayMenu->addAction("Mostrar / Ocultar ventana");
+    QAction *restoreAction = trayMenu->addAction(tr("Mostrar / Ocultar ventana"));
     connect(restoreAction, &QAction::triggered, this, [this]() {
         if (isVisible() && !isMinimized()) hide();
         else { showNormal(); activateWindow(); }
     });
 
-    QAction *cancelAction = trayMenu->addAction("Cancelar proceso actual");
+    QAction *cancelAction = trayMenu->addAction(tr("Cancelar proceso actual"));
     connect(cancelAction, &QAction::triggered, this, &MainWindow::cancelExtraction);
 
     trayMenu->addSeparator();
 
-    QAction *quitAction = trayMenu->addAction("Salir");
+    QAction *quitAction = trayMenu->addAction(tr("Salir"));
     connect(quitAction, &QAction::triggered, qApp, &QCoreApplication::quit);
 
     trayIcon->setContextMenu(trayMenu);
@@ -120,6 +123,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(process, &QProcess::readyReadStandardError,  this, &MainWindow::readProcessOutput);
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, &MainWindow::processFinished);
+    connect(process, &QProcess::errorOccurred, this, [this](QProcess::ProcessError e) {
+        if (e == QProcess::FailedToStart) {
+            logArea->append(tr("<font color='#FF4444'>  › No se pudo iniciar ffmpeg. ¿Está instalado?.</font>"));
+            if (currentBatchIndex >= 0) {
+                currentBatchIndex++;
+                processNextInBatch();
+            }
+        }
+    });
 
     probeProcess = new QProcess(this);
     connect(probeProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readProbeOutput);
@@ -130,87 +142,35 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow() {}
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Estilo
-// ─────────────────────────────────────────────────────────────────────────────
-void MainWindow::applyStyle()
-{
-    setStyleSheet(R"(
-        QMainWindow { background-color: #121212; }
-        QWidget { background-color: #121212; color: #D0D0D0;
-                  font-family: 'Segoe UI', sans-serif; font-size: 13px; }
-        QLabel  { font-weight: bold; color: #FF8800; }
-        QGroupBox { border: 1px solid #2A2A2A; border-radius: 5px;
-                    margin-top: 8px; padding-top: 6px; color: #FF8800;
-                    font-weight: bold; font-size: 11px; }
-        QGroupBox::title { subcontrol-origin: margin; left: 10px; }
-        QLineEdit, QListWidget, QTextEdit, QScrollArea {
-            background-color: #1A1A1A; border: 1px solid #2A2A2A;
-            border-radius: 4px; padding: 5px; color: #D0D0D0; }
-        QLineEdit:focus, QListWidget:focus { border: 1px solid #FF8800; }
-        QPushButton {
-            background-color: #1A1A1A; border: 1px solid #39FF14;
-            border-radius: 5px; padding: 7px 14px;
-            color: #39FF14; font-weight: bold; }
-        QPushButton:hover { background-color: #39FF14; color: #000; }
-        QPushButton:disabled { border-color: #333; color: #444; }
-        QPushButton#extractButton {
-            border: 2px solid #FF8800; color: #FF8800;
-            font-size: 15px; padding: 10px; }
-        QPushButton#extractButton:hover { background-color: #FF8800; color: #000; }
-        QPushButton#cancelButton {
-            border: 1px solid #CC3333; color: #CC3333; }
-        QPushButton#cancelButton:hover { background-color: #CC3333; color: #FFF; }
-        QCheckBox { padding: 4px; color: #D0D0D0; font-weight: normal; }
-        QCheckBox::indicator { width: 16px; height: 16px;
-            background-color: #1A1A1A; border: 1px solid #39FF14; }
-        QCheckBox::indicator:checked { background-color: #39FF14; }
-        QComboBox { background-color: #1A1A1A; border: 1px solid #2A2A2A;
-                    border-radius: 4px; padding: 4px 8px; color: #D0D0D0; }
-        QComboBox:hover { border-color: #FF8800; }
-        QComboBox QAbstractItemView { background-color: #1A1A1A;
-            border: 1px solid #FF8800; color: #D0D0D0; }
-        QProgressBar { border: 1px solid #2A2A2A; border-radius: 4px;
-                       background-color: #1A1A1A; text-align: center;
-                       color: #D0D0D0; }
-        QProgressBar::chunk { background-color: #FF8800; border-radius: 3px; }
-        QMenuBar { background-color: #1A1A1A; color: #D0D0D0; }
-        QMenuBar::item:selected { background-color: #FF8800; color: #000; }
-        QMenu { background-color: #1A1A1A; border: 1px solid #2A2A2A; color: #D0D0D0; }
-        QMenu::item:selected { background-color: #FF8800; color: #000; }
-        QStatusBar { background-color: #1A1A1A; color: #888; font-size: 11px; }
-    )");
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Menú
 // ─────────────────────────────────────────────────────────────────────────────
 void MainWindow::setupMenuBar()
 {
-    QMenu *menuArchivo = menuBar()->addMenu("Archivo");
-    QAction *actAnadir = menuArchivo->addAction(
-        style()->standardIcon(QStyle::SP_FileDialogNewFolder), "Añadir archivos…");
+    menuArchivo = menuBar()->addMenu(tr("Archivo"));
+    actAnadir = menuArchivo->addAction(
+        QIcon(":/icons/add.svg"), tr("Añadir archivos…"));
     actAnadir->setShortcut(QKeySequence("Ctrl+O"));
     connect(actAnadir, &QAction::triggered, this, &MainWindow::addFiles);
     menuArchivo->addSeparator();
-    QAction *actSalir = menuArchivo->addAction(
-        style()->standardIcon(QStyle::SP_DialogCloseButton), "Salir");
+    actSalir = menuArchivo->addAction(
+        QIcon(":/icons/close.svg"), tr("Salir"));
     actSalir->setShortcut(QKeySequence("Ctrl+Q"));
     connect(actSalir, &QAction::triggered, this, &QWidget::close);
 
-    QMenu *menuAjustes = menuBar()->addMenu("Ajustes");
-    QAction *actSettings = menuAjustes->addAction(
-        style()->standardIcon(QStyle::SP_FileDialogDetailedView), "Configuración y Modelos…");
+    menuAjustes = menuBar()->addMenu(tr("Ajustes"));
+    actSettings = menuAjustes->addAction(
+        QIcon(":/icons/settings.svg"), tr("Configuración y Modelos…"));
     actSettings->setShortcut(QKeySequence("Ctrl+,"));
     connect(actSettings, &QAction::triggered, this, &MainWindow::showSettings);
 
-    QMenu *menuAyuda = menuBar()->addMenu("Ayuda");
-    QAction *actAyuda = menuAyuda->addAction(
-        style()->standardIcon(QStyle::SP_DialogHelpButton), "Manual de uso");
+    menuAyuda = menuBar()->addMenu(tr("Ayuda"));
+    actAyuda = menuAyuda->addAction(
+        QIcon(":/icons/help.svg"), tr("Manual de uso"));
     actAyuda->setShortcut(Qt::Key_F1);
     connect(actAyuda, &QAction::triggered, this, &MainWindow::showHelp);
     menuAyuda->addSeparator();
-    QAction *actAcerca = menuAyuda->addAction(
-        style()->standardIcon(QStyle::SP_MessageBoxInformation), "Acerca de…");
+    actAcerca = menuAyuda->addAction(
+        QIcon(":/icons/check.svg"), tr("Acerca de…"));
     connect(actAcerca, &QAction::triggered, this, &MainWindow::showAbout);
 }
 
@@ -225,131 +185,135 @@ void MainWindow::setupUi()
     root->setSpacing(6);
     root->setContentsMargins(8, 6, 8, 6);
 
-    // Título
+    // Título (compacto)
     QLabel *titleLabel = new QLabel("ELEMENTS EXTRACT FFMPEG");
     titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet("font-size: 20px; letter-spacing: 3px; color: #FF8800; margin-bottom: 2px;");
+    titleLabel->setProperty("labelColor", "title");
     root->addWidget(titleLabel);
 
-    // ── Panel central: QSplitter para redimensionar entre archivos y pistas ──
+    // ══════════ Splitter principal: archivos+pistas  │  configuración ──────
     QSplitter *mainSplitter = new QSplitter(Qt::Horizontal);
     mainSplitter->setChildrenCollapsible(false);
 
-    // Panel izquierdo: lista de archivos
+    // ── Panel izquierdo: lote + pistas ──
     QWidget *leftWidget = new QWidget();
     QVBoxLayout *leftPanel = new QVBoxLayout(leftWidget);
     leftPanel->setContentsMargins(0, 0, 0, 0);
-    QLabel *lbLote = new QLabel("LOTE DE ARCHIVOS");
-    lbLote->setStyleSheet("font-size: 11px; letter-spacing: 1px;");
-    leftPanel->addWidget(lbLote);
+    leftPanel->setSpacing(4);
+
+    loteLabel = new QLabel(tr("LOTE DE ARCHIVOS"));
+    loteLabel->setProperty("labelColor", "muted");
+    leftPanel->addWidget(loteLabel);
 
     fileListWidget = new QListWidget();
     fileListWidget->setDragDropMode(QAbstractItemView::InternalMove);
     connect(fileListWidget, &QListWidget::itemSelectionChanged,
             this, &MainWindow::onFileSelectionChanged);
-    leftPanel->addWidget(fileListWidget, 1);
+    leftPanel->addWidget(fileListWidget, 3);
 
     QHBoxLayout *fileBtns = new QHBoxLayout();
-    QPushButton *addBtn = new QPushButton(
-        style()->standardIcon(QStyle::SP_FileDialogNewFolder), " Añadir");
-    QPushButton *remBtn = new QPushButton(
-        style()->standardIcon(QStyle::SP_TrashIcon), " Quitar");
-    addBtn->setToolTip("Añadir archivos de video (Ctrl+O)");
-    remBtn->setToolTip("Quitar archivos seleccionados (Del)");
-    connect(addBtn, &QPushButton::clicked, this, &MainWindow::addFiles);
-    connect(remBtn, &QPushButton::clicked, this, &MainWindow::removeFiles);
-    fileBtns->addWidget(addBtn);
-    fileBtns->addWidget(remBtn);
+    fileBtns->setSpacing(6);
+    addButton = new QPushButton(QIcon(":/icons/add.svg"), tr("Añadir"));
+    removeButton = new QPushButton(QIcon(":/icons/remove.svg"), tr("Quitar"));
+    addButton->setToolTip(tr("Añadir archivos de video (Ctrl+O)"));
+    removeButton->setToolTip(tr("Quitar archivos seleccionados (Del)"));
+    connect(addButton, &QPushButton::clicked, this, &MainWindow::addFiles);
+    connect(removeButton, &QPushButton::clicked, this, &MainWindow::removeFiles);
+    fileBtns->addWidget(addButton);
+    fileBtns->addWidget(removeButton);
+    fileBtns->addStretch();
     leftPanel->addLayout(fileBtns);
-    mainSplitter->addWidget(leftWidget);
 
-    // Panel derecho: pistas del archivo
-    QWidget *rightWidget = new QWidget();
-    QVBoxLayout *rightPanel = new QVBoxLayout(rightWidget);
-    rightPanel->setContentsMargins(0, 0, 0, 0);
-    selectedFileLabel = new QLabel("Selecciona un archivo para ver sus pistas");
-    selectedFileLabel->setStyleSheet("color: #39FF14; font-weight: bold;"
-                                     "border-bottom: 1px solid #2A2A2A; padding-bottom: 4px;");
-    rightPanel->addWidget(selectedFileLabel);
+    pistasLabel = new QLabel(tr("PISTAS"));
+    pistasLabel->setProperty("labelColor", "muted");
+    leftPanel->addWidget(pistasLabel);
+
+    selectedFileLabel = new QLabel(tr("Selecciona un archivo para ver sus pistas"));
+    selectedFileLabel->setProperty("labelColor", "accent");
+    leftPanel->addWidget(selectedFileLabel);
 
     metaInfoLabel = new QLabel("");
-    metaInfoLabel->setStyleSheet(
-        "color: #888888; font-size: 11px; font-weight: normal; padding: 2px 0;");
+    metaInfoLabel->setProperty("labelColor", "muted");
     metaInfoLabel->setWordWrap(true);
-    rightPanel->addWidget(metaInfoLabel);
+    leftPanel->addWidget(metaInfoLabel);
 
     QHBoxLayout *quickSel = new QHBoxLayout();
-    QPushButton *allVideoBtn = new QPushButton("▶ VIDEO");
-    QPushButton *allAudioBtn = new QPushButton("♪ AUDIO");
-    QPushButton *allSubsBtn  = new QPushButton("CC SUBS");
-    QPushButton *clearAllBtn = new QPushButton("✕ Limpiar");
-    QString qsStyle = "QPushButton { padding:5px; font-size:11px; border-color:#333; }";
-    for (auto *b : {allVideoBtn, allAudioBtn, allSubsBtn, clearAllBtn})
-        b->setStyleSheet(qsStyle);
-    connect(allVideoBtn, &QPushButton::clicked, this, &MainWindow::selectAllVideo);
-    connect(allAudioBtn, &QPushButton::clicked, this, &MainWindow::selectAllAudio);
-    connect(allSubsBtn,  &QPushButton::clicked, this, &MainWindow::selectAllSubs);
-    connect(clearAllBtn, &QPushButton::clicked, this, &MainWindow::clearAllSelections);
-    quickSel->addWidget(allVideoBtn);
-    quickSel->addWidget(allAudioBtn);
-    quickSel->addWidget(allSubsBtn);
-    quickSel->addStretch();
-    quickSel->addWidget(clearAllBtn);
-    rightPanel->addLayout(quickSel);
+    quickSel->setSpacing(4);
+    videoAllButton = new QPushButton(QIcon(":/icons/video.svg"), tr("VIDEO"));
+    audioAllButton = new QPushButton(QIcon(":/icons/audio.svg"), tr("AUDIO"));
+    subsAllButton  = new QPushButton(QIcon(":/icons/subtitle.svg"), tr("SUBS"));
+    clearAllButton = new QPushButton(QIcon(":/icons/clear.svg"), tr("Limpiar"));
+    for (auto *b : {videoAllButton, audioAllButton, subsAllButton, clearAllButton}) {
+        b->setObjectName("quickSelButton");
+        b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        b->setFixedHeight(24);
+    }
+    connect(videoAllButton, &QPushButton::clicked, this, &MainWindow::selectAllVideo);
+    connect(audioAllButton, &QPushButton::clicked, this, &MainWindow::selectAllAudio);
+    connect(subsAllButton,  &QPushButton::clicked, this, &MainWindow::selectAllSubs);
+    connect(clearAllButton, &QPushButton::clicked, this, &MainWindow::clearAllSelections);
+    quickSel->addWidget(videoAllButton);
+    quickSel->addWidget(audioAllButton);
+    quickSel->addWidget(subsAllButton);
+    quickSel->addWidget(clearAllButton);
+    leftPanel->addLayout(quickSel);
 
     QScrollArea *scrollArea = new QScrollArea();
     scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
     streamsContainer = new QWidget();
     streamsLayout = new QVBoxLayout(streamsContainer);
-    streamsLayout->setAlignment(Qt::AlignTop);
+    streamsLayout->setContentsMargins(0, 0, 0, 0);
+    streamsLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     scrollArea->setWidget(streamsContainer);
-    rightPanel->addWidget(scrollArea, 1);
-    mainSplitter->addWidget(rightWidget);
+    leftPanel->addWidget(scrollArea, 2);
+    mainSplitter->addWidget(leftWidget);
 
-    mainSplitter->setStretchFactor(0, 1);
-    mainSplitter->setStretchFactor(1, 2);
-    root->addWidget(mainSplitter, 3);
+    // ── Panel derecho: configuración ──
+    QWidget *configWidget = new QWidget();
+    QVBoxLayout *configPanel = new QVBoxLayout(configWidget);
+    configPanel->setContentsMargins(0, 0, 0, 0);
+    configPanel->setSpacing(6);
 
-    // ── Formato de salida ────────────────────────────────────────────────────
-    QGroupBox *fmtBox = new QGroupBox("FORMATO DE SALIDA");
-    QVBoxLayout *fmtMainLayout = new QVBoxLayout(fmtBox);
+    // ▶ FORMATO DE SALIDA (grilla 2x2)
+    formatGroupBox = new QGroupBox(tr("FORMATO DE SALIDA"));
+    QVBoxLayout *fmtMainLayout = new QVBoxLayout(formatGroupBox);
 
-    QHBoxLayout *fmtLayout = new QHBoxLayout();
-    fmtLayout->setSpacing(16);
-
-    auto makeCombo = [&](const QString &label, const QStringList &items) -> QComboBox* {
-        QLabel *lbl = new QLabel(label);
-        lbl->setStyleSheet("font-size: 11px; color: #888; font-weight: normal;");
+    auto makeFormatCombo = [&](const QStringList &items) -> QComboBox* {
         QComboBox *cb = new QComboBox();
         cb->addItems(items);
-        fmtLayout->addWidget(lbl);
-        fmtLayout->addWidget(cb);
         return cb;
     };
-    audioFormatCombo = makeCombo("Audio:", {"mka", "m4a", "aac", "mp3", "flac", "opus", "wav"});
-    fmtLayout->addSpacing(8);
-    videoFormatCombo = makeCombo("Video:", {"mkv", "mp4", "avi"});
+    audioFormatCombo = makeFormatCombo({"mka", "m4a", "aac", "mp3", "flac", "opus", "wav"});
+    videoFormatCombo = makeFormatCombo({"mkv", "mp4", "avi"});
+    subsFormatCombo  = makeFormatCombo({"srt", "ass", "vtt"});
+    videoResCombo    = makeFormatCombo({tr("Original"), "4K (2160p)", "2K (1440p)", "FHD (1080p)", "HD (720p)", "SD (480p)"});
 
-    videoResCombo = new QComboBox();
-    videoResCombo->addItems({"Original", "4K (2160p)", "2K (1440p)", "FHD (1080p)", "HD (720p)", "SD (480p)"});
-    videoResCombo->setStyleSheet("font-size: 11px; background-color: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 4px; padding: 4px 8px; color: #D0D0D0;");
-    QLabel *resLbl = new QLabel("Res:");
-    resLbl->setStyleSheet("font-size: 11px; color: #888; font-weight: normal;");
-    fmtLayout->addWidget(resLbl);
-    fmtLayout->addWidget(videoResCombo);
+    auto fmtLabel = [&](const QString &text) -> QLabel* {
+        QLabel *lbl = new QLabel(text);
+        lbl->setProperty("labelColor", "muted");
+        return lbl;
+    };
 
-    fmtLayout->addSpacing(8);
-    subsFormatCombo  = makeCombo("Subs:",  {"srt", "ass", "vtt"});
-    fmtLayout->addStretch();
+    QGridLayout *fmtGrid = new QGridLayout();
+    fmtGrid->setHorizontalSpacing(10);
+    fmtGrid->setVerticalSpacing(4);
+    audioFmtLabel = fmtLabel(tr("Audio:"));
+    videoFmtLabel = fmtLabel(tr("Video:"));
+    resFmtLabel   = fmtLabel(tr("Res:"));
+    subsFmtLabel  = fmtLabel(tr("Subs:"));
+    fmtGrid->addWidget(audioFmtLabel, 0, 0); fmtGrid->addWidget(audioFormatCombo, 0, 1);
+    fmtGrid->addWidget(videoFmtLabel, 0, 2); fmtGrid->addWidget(videoFormatCombo, 0, 3);
+    fmtGrid->addWidget(resFmtLabel,   1, 0); fmtGrid->addWidget(videoResCombo,    1, 1);
+    fmtGrid->addWidget(subsFmtLabel,  1, 2); fmtGrid->addWidget(subsFormatCombo,  1, 3);
+    fmtGrid->setColumnStretch(1, 1);
+    fmtGrid->setColumnStretch(3, 1);
+    fmtMainLayout->addLayout(fmtGrid);
 
-    copyModeCheckBox = new QCheckBox("Copiar pista original sin re-codificar (Rápido y previene errores)");
+    copyModeCheckBox = new QCheckBox(tr("Copiar pista original sin re-codificar (Rápido y previene errores)"));
     copyModeCheckBox->setChecked(true);
-    copyModeCheckBox->setStyleSheet("color: #39FF14; font-weight: bold; margin-top: 5px;");
-
-    fmtMainLayout->addLayout(fmtLayout);
     fmtMainLayout->addWidget(copyModeCheckBox);
-
-    root->addWidget(fmtBox);
+    configPanel->addWidget(formatGroupBox);
 
     connect(copyModeCheckBox, &QCheckBox::toggled, this, [this](bool checked){
         audioFormatCombo->setEnabled(!checked);
@@ -362,139 +326,167 @@ void MainWindow::setupUi()
     videoResCombo->setEnabled(false);
     subsFormatCombo->setEnabled(false);
 
-    // ── TRADUCCIÓN DE SUBTÍTULOS ──────────────────────────────────────────
-    translationGroupBox = new QGroupBox("TRADUCCIÓN DE SUBTÍTULOS");
+    // ▶ TRADUCCIÓN DE SUBTÍTULOS
+    translationGroupBox = new QGroupBox(tr("TRADUCCIÓN DE SUBTÍTULOS"));
     QVBoxLayout *transMainLayout = new QVBoxLayout(translationGroupBox);
 
     QHBoxLayout *transLangLayout = new QHBoxLayout();
-    transLangLayout->setSpacing(12);
-
-    QLabel *srcLangLabel = new QLabel("Origen:");
-    srcLangLabel->setStyleSheet("font-size: 11px; color: #888; font-weight: normal;");
+    transLangLayout->setSpacing(8);
+    srcPromptLabel = fmtLabel(tr("Origen:"));
     srcLangCombo = new QComboBox();
     srcLangCombo->addItem("English", "en");
     srcLangCombo->addItem("Español", "es");
     srcLangCombo->addItem("Français", "fr");
     srcLangCombo->addItem("Português", "pt");
-    transLangLayout->addWidget(srcLangLabel);
-    transLangLayout->addWidget(srcLangCombo);
-
-    transLangLayout->addSpacing(8);
-
-    QLabel *dstLangLabel = new QLabel("Destino:");
-    dstLangLabel->setStyleSheet("font-size: 11px; color: #888; font-weight: normal;");
+    dstPromptLabel = fmtLabel(tr("Destino:"));
     dstLangCombo = new QComboBox();
     dstLangCombo->addItem("Español", "es");
     dstLangCombo->addItem("English", "en");
     dstLangCombo->addItem("Français", "fr");
     dstLangCombo->addItem("Português", "pt");
-    transLangLayout->addWidget(dstLangLabel);
-    transLangLayout->addWidget(dstLangCombo);
-
-    transLangLayout->addSpacing(12);
-
-    translateOnExtractCheck = new QCheckBox("Traducir al extraer");
-    translateOnExtractCheck->setToolTip(
-        "Si está marcado, al extraer subtítulos se traducirán automáticamente\n"
-        "al idioma de destino seleccionado.");
-    translateOnExtractCheck->setStyleSheet(
-        "QCheckBox { color: #00BFFF; font-weight: bold; font-size: 12px; }"
-        "QCheckBox::indicator { width: 18px; height: 18px; border: 2px solid #00BFFF; }"
-        "QCheckBox::indicator:checked { background-color: #00BFFF; }");
-    transLangLayout->addWidget(translateOnExtractCheck);
-
-    transLangLayout->addStretch();
-
-    manageModelsButton = new QPushButton("Modelos");
-    manageModelsButton->setToolTip("Gestionar modelos de traducción");
-    connect(manageModelsButton, &QPushButton::clicked, this, &MainWindow::showSettings);
-    transLangLayout->addWidget(manageModelsButton);
-
+    transLangLayout->addWidget(srcPromptLabel);
+    transLangLayout->addWidget(srcLangCombo, 1);
+    transLangLayout->addWidget(dstPromptLabel);
+    transLangLayout->addWidget(dstLangCombo, 1);
     transMainLayout->addLayout(transLangLayout);
 
-    // Progress bar for translation
+    translateOnExtractCheck = new QCheckBox(tr("Traducir al extraer"));
+    translateOnExtractCheck->setToolTip(
+        tr("Si está marcado, al extraer subtítulos se traducirán automáticamente\n"
+        "al idioma de destino seleccionado."));
+    connect(translateOnExtractCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        QSettings s("LocalApp", "FFmpegExtractor");
+        s.setValue("autoTranslate", checked);
+    });
+    transMainLayout->addWidget(translateOnExtractCheck);
+
+    QHBoxLayout *transBtns = new QHBoxLayout();
+    transBtns->setSpacing(6);
+    manageModelsButton = new QPushButton(QIcon(":/icons/model.svg"), tr("Modelos"));
+    manageModelsButton->setToolTip(tr("Gestionar modelos de traducción"));
+    connect(manageModelsButton, &QPushButton::clicked, this, &MainWindow::showSettings);
+    translateFilesButton = new QPushButton(QIcon(":/icons/translate.svg"), tr("Traducir subtítulos"));
+    translateFilesButton->setToolTip(
+        tr("Seleccionar subtítulos ya existentes en disco y traducirlos en lote"));
+    connect(translateFilesButton, &QPushButton::clicked, this, &MainWindow::translateExistingFiles);
+    transBtns->addWidget(manageModelsButton);
+    transBtns->addWidget(translateFilesButton, 1);
+    transMainLayout->addLayout(transBtns);
+
     QHBoxLayout *transProgressLayout = new QHBoxLayout();
     translationProgressBar = new QProgressBar();
     translationProgressBar->setRange(0, 100);
     translationProgressBar->setValue(0);
-    translationProgressBar->setFixedHeight(16);
+    translationProgressBar->setFixedHeight(14);
     translationProgressBar->setFormat("%p%");
     translationProgressBar->setVisible(false);
-
-    translationStatusLabel = new QLabel("Selecciona subtítulos y marca \"Traducir al extraer\"");
-    translationStatusLabel->setStyleSheet("font-size: 11px; color: #888; font-weight: normal;");
-
+    translationStatusLabel = new QLabel(tr("Selecciona subtítulos y marca \"Traducir al extraer\""));
+    translationStatusLabel->setProperty("labelColor", "muted");
     transProgressLayout->addWidget(translationProgressBar, 1);
     transProgressLayout->addWidget(translationStatusLabel);
     transMainLayout->addLayout(transProgressLayout);
-    transMainLayout->addLayout(transProgressLayout);
 
-    root->addWidget(translationGroupBox);
+    configPanel->addWidget(translationGroupBox);
 
-    // ── Directorio de destino ────────────────────────────────────────────────
-    QHBoxLayout *outDirLayout = new QHBoxLayout();
-    QLabel *destLbl = new QLabel("DESTINO:");
-    destLbl->setStyleSheet("font-size: 11px; letter-spacing: 1px;");
+    // ▶ DESTINO
+    destGroupBox = new QGroupBox(tr("DESTINO"));
+    QVBoxLayout *destLay = new QVBoxLayout(destGroupBox);
     outputLineEdit = new QLineEdit();
-    outputLineEdit->setPlaceholderText("Carpeta donde se guardarán los archivos extraídos…");
-    QPushButton *browseBtn = new QPushButton(
-        style()->standardIcon(QStyle::SP_DirOpenIcon), " …");
-    browseBtn->setFixedWidth(68);
-    browseBtn->setToolTip("Seleccionar carpeta de destino");
-    openFolderButton = new QPushButton(
-        style()->standardIcon(QStyle::SP_DirOpenIcon), " Abrir");
-    openFolderButton->setToolTip("Abrir carpeta de destino en el explorador");
+    outputLineEdit->setPlaceholderText(tr("Carpeta donde se guardarán los archivos extraídos…"));
+    destLay->addWidget(outputLineEdit);
+    QHBoxLayout *destBtns = new QHBoxLayout();
+    destBtns->setSpacing(6);
+    browseButton = new QPushButton(QIcon(":/icons/folder.svg"), tr("Examinar…"));
+    browseButton->setToolTip(tr("Seleccionar carpeta de destino"));
+    openFolderButton = new QPushButton(QIcon(":/icons/folder-open.svg"), tr("Abrir"));
+    openFolderButton->setToolTip(tr("Abrir carpeta de destino en el explorador"));
     openFolderButton->setEnabled(false);
-    connect(browseBtn,       &QPushButton::clicked, this, &MainWindow::selectOutputDir);
-    connect(openFolderButton,&QPushButton::clicked, this, &MainWindow::openOutputFolder);
-    connect(outputLineEdit,  &QLineEdit::textChanged, this,
+    connect(browseButton,        &QPushButton::clicked, this, &MainWindow::selectOutputDir);
+    connect(openFolderButton, &QPushButton::clicked, this, &MainWindow::openOutputFolder);
+    connect(outputLineEdit,   &QLineEdit::textChanged, this,
             [this](const QString &t){ openFolderButton->setEnabled(!t.isEmpty()); });
-    outDirLayout->addWidget(destLbl);
-    outDirLayout->addWidget(outputLineEdit);
-    outDirLayout->addWidget(browseBtn);
-    outDirLayout->addWidget(openFolderButton);
-    root->addLayout(outDirLayout);
+    destBtns->addWidget(browseButton);
+    destBtns->addWidget(openFolderButton, 1);
+    destLay->addLayout(destBtns);
+    configPanel->addWidget(destGroupBox);
 
-    // ── Progreso ─────────────────────────────────────────────────────────────
-    progressBar = new QProgressBar();
-    progressBar->setRange(0, 100);
-    progressBar->setValue(0);
-    progressBar->setFixedHeight(18);
-    progressBar->setFormat("%p%  —  %v / %m");
-    root->addWidget(progressBar);
+    configPanel->addStretch(1);
 
-    // ── Log ──────────────────────────────────────────────────────────────────
-    logArea = new QTextEdit();
-    logArea->setReadOnly(true);
-    logArea->setPlaceholderText("Sistema listo. Añade archivos y selecciona las pistas a extraer.");
-    root->addWidget(logArea, 1);
-
-    // ── Botones de acción ────────────────────────────────────────────────────
+    // ── Acciones ──
     QHBoxLayout *actionBtns = new QHBoxLayout();
-    cancelButton = new QPushButton(
-        style()->standardIcon(QStyle::SP_DialogCancelButton), " Cancelar");
+    actionBtns->setSpacing(6);
+    cancelButton = new QPushButton(QIcon(":/icons/cancel.svg"), tr("Cancelar"));
     cancelButton->setObjectName("cancelButton");
     cancelButton->setEnabled(false);
-    cancelButton->setToolTip("Cancelar el proceso en curso (Escape)");
+    cancelButton->setToolTip(tr("Cancelar el proceso en curso (Escape)"));
     connect(cancelButton, &QPushButton::clicked, this, &MainWindow::cancelExtraction);
 
-    extractButton = new QPushButton(
-        style()->standardIcon(QStyle::SP_MediaPlay), "  INICIAR EXTRACCIÓN");
+    extractButton = new QPushButton(QIcon(":/icons/extract.svg"), tr("INICIAR EXTRACCIÓN"));
     extractButton->setObjectName("extractButton");
     extractButton->setEnabled(false);
     extractButton->setShortcut(QKeySequence("Ctrl+Return"));
-    extractButton->setToolTip("Iniciar la extracción de todas las pistas seleccionadas (Ctrl+Enter)");
+    extractButton->setToolTip(tr("Iniciar la extracción de todas las pistas seleccionadas (Ctrl+Enter)"));
     connect(extractButton, &QPushButton::clicked, this, &MainWindow::startExtraction);
 
     actionBtns->addWidget(cancelButton);
     actionBtns->addWidget(extractButton, 1);
-    root->addLayout(actionBtns);
+    configPanel->addLayout(actionBtns);
 
-    // ── Barra de estado ──────────────────────────────────────────────────────
-    statusBar()->showMessage("Listo");
+    // Columna de configuración dentro de un QScrollArea: su contenido no debería
+    // fijar el tamaño mínimo de la ventana (eso impedía maximizar en pantallas bajas).
+    QScrollArea *configScroller = new QScrollArea();
+    configScroller->setWidgetResizable(true);
+    configScroller->setFrameShape(QFrame::NoFrame);
+    configScroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    configScroller->setWidget(configWidget);
+    configScroller->setMinimumWidth(340);
+    configScroller->setMaximumWidth(460);
 
-    setWindowTitle("Elements Extract FFmpeg");
-    resize(980, 680);
+    mainSplitter->addWidget(configScroller);
+    mainSplitter->setStretchFactor(0, 3);
+    mainSplitter->setStretchFactor(1, 0);
+    root->addWidget(mainSplitter, 3);
+
+    // ── Barra de progreso fina + toggle del log ──
+    QHBoxLayout *progressRow = new QHBoxLayout();
+    progressRow->setSpacing(6);
+    progressBar = new QProgressBar();
+    progressBar->setRange(0, 100);
+    progressBar->setValue(0);
+    progressBar->setFixedHeight(14);
+    progressBar->setFormat("%p%  —  %v / %m");
+    progressRow->addWidget(progressBar, 1);
+    QPushButton *logToggle = new QPushButton(tr("LOG ▸"));
+    logToggle->setObjectName("quickSelButton");
+    logToggle->setToolTip(tr("Mostrar / ocultar registro de actividad"));
+    logToggleButton = logToggle;
+    connect(logToggle, &QPushButton::clicked, this, [this, logToggle]() {
+        const bool show = !logArea->isVisible();
+        logArea->setVisible(show);
+        logToggle->setText(show ? tr("LOG ▾") : tr("LOG ▸"));
+    });
+    progressRow->addWidget(logToggle);
+    root->addLayout(progressRow);
+
+    // ── Log (colapsable) ──
+    logArea = new QTextEdit();
+    logArea->setReadOnly(true);
+    logArea->setMinimumHeight(50);
+    logArea->setVisible(false);
+    logArea->setPlaceholderText(tr("Sistema listo. Añade archivos y selecciona las pistas a extraer."));
+    root->addWidget(logArea, 1);
+
+    statusBar()->showMessage(tr("Listo"));
+
+    setWindowTitle(tr("Elements Extract FFmpeg"));
+    resize(1100, 700);
+}
+
+void MainWindow::showLogArea()
+{
+    if (!logArea) return;
+    logArea->setVisible(true);
+    if (logToggleButton) logToggleButton->setText(tr("LOG ▾"));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -524,8 +516,8 @@ void MainWindow::loadFiles(const QStringList &files)
 void MainWindow::addFiles()
 {
     QStringList files = QFileDialog::getOpenFileNames(
-        this, "Añadir Videos", "",
-        "Videos (*.mkv *.mp4 *.avi *.mov *.ts *.m2ts *.webm);;Todos los archivos (*.*)");
+        this, tr("Añadir Videos"), "",
+        tr("Videos (*.mkv *.mp4 *.avi *.mov *.ts *.m2ts *.webm);;Todos los archivos (*.*)"));
     loadFiles(files);
 }
 
@@ -534,15 +526,18 @@ void MainWindow::removeFiles()
 {
     for (QListWidgetItem *item : fileListWidget->selectedItems()) {
         fileSelections.remove(item->data(Qt::UserRole).toString());
+        fileStreamTypes.remove(item->data(Qt::UserRole).toString());
+        fileStreamCodecs.remove(item->data(Qt::UserRole).toString());
+        fileStreamLanguages.remove(item->data(Qt::UserRole).toString());
         fileDurations.remove(item->data(Qt::UserRole).toString());
         delete item;
     }
     if (fileListWidget->count() == 0) {
         clearStreamsList();
-        selectedFileLabel->setText("No hay archivos cargados");
+        selectedFileLabel->setText(tr("No hay archivos cargados"));
         extractButton->setEnabled(false);
         globalSelectionTypes.clear();
-        statusBar()->showMessage("Listo");
+        statusBar()->showMessage(tr("Listo"));
     }
 }
 
@@ -553,16 +548,24 @@ void MainWindow::onFileSelectionChanged()
 {
     saveCurrentSelections();
     if (fileListWidget->selectedItems().isEmpty()) {
-        clearStreamsList(); lastSelectedFile = ""; return;
+        clearStreamsList(); lastSelectedFile = ""; m_probedFile = ""; return;
     }
     QString currentFile = fileListWidget->selectedItems().first()->data(Qt::UserRole).toString();
     lastSelectedFile = currentFile;
     selectedFileLabel->setText(QFileInfo(currentFile).fileName().toUpper());
     clearStreamsList();
     probeData.clear();
-    statusBar()->showMessage("Analizando: " + QFileInfo(currentFile).fileName());
 
-    metaInfoLabel->setText("Analizando…");
+    // Cancela un análisis en curso: sus resultados se descartarían al llegar (C1)
+    if (probeProcess->state() != QProcess::NotRunning) {
+        probeProcess->kill();
+        probeProcess->waitForFinished(1000);
+    }
+    m_probedFile = currentFile;
+
+    statusBar()->showMessage(tr("Analizando: ") + QFileInfo(currentFile).fileName());
+
+    metaInfoLabel->setText(tr("Analizando…"));
     QStringList args;
     args << "-v" << "error"
          << "-show_entries"
@@ -619,6 +622,8 @@ void MainWindow::saveCurrentSelections()
 
 void MainWindow::autoDetectSourceLanguage()
 {
+    bool translateEnabled = translateOnExtractCheck && translateOnExtractCheck->isChecked();
+
     // Collect languages from all selected subtitle streams across all files
     QMap<QString, int> langCount;
     for (auto it = fileSelections.constBegin(); it != fileSelections.constEnd(); ++it) {
@@ -674,13 +679,13 @@ void MainWindow::autoDetectSourceLanguage()
         int idx = srcLangCombo->findData(mappedLang);
         if (idx >= 0 && srcLangCombo->currentIndex() != idx) {
             srcLangCombo->setCurrentIndex(idx);
-            logArea->append(QString("<font color='#00BFFF'>Idioma origen detectado: %1</font>")
+            logArea->append(QString("<font color='#00BFFF'>" + tr("Idioma origen detectado: %1") + "</font>")
                 .arg(SubtitleTranslator::languageName(mappedLang)));
         }
 
-        // Check if translation model exists for this pair
+        // Check if translation model exists for this pair — only if translate-on-extract is enabled
         QString dstLang = dstLangCombo->currentData().toString();
-        if (!dstLang.isEmpty() && mappedLang != dstLang) {
+        if (translateEnabled && !dstLang.isEmpty() && mappedLang != dstLang) {
             if (!subtitleTranslator->isModelInstalled(mappedLang, dstLang)) {
                 // Check for triangular path
                 QStringList triPath = subtitleTranslator->findTranslationPath(mappedLang, dstLang);
@@ -693,18 +698,18 @@ void MainWindow::autoDetectSourceLanguage()
                     }
 
                     QMessageBox msgBox(this);
-                    msgBox.setWindowTitle("Traducción triangular disponible");
+                    msgBox.setWindowTitle(tr("Traducción triangular disponible"));
                     msgBox.setIcon(QMessageBox::Information);
                     msgBox.setText(
-                        QString("No hay modelo directo de <b>%1 → %2</b>.<br><br>"
-                                "Pero se usará <b>traducción triangular</b>:<br>%3<br><br>"
-                                "Esto puede tardar un poco más, pero funcionará correctamente.")
+                        tr("No hay modelo directo de <b>%1 → %2</b>.<br><br>"
+                           "Pero se usará <b>traducción triangular</b>:<br>%3<br><br>"
+                           "Esto puede tardar un poco más, pero funcionará correctamente.")
                             .arg(SubtitleTranslator::languageName(mappedLang))
                             .arg(SubtitleTranslator::languageName(dstLang))
                             .arg(pathStr));
-                    msgBox.setInformativeText("¿Qué deseas hacer?");
-                    QPushButton *okBtn = msgBox.addButton("Aceptar", QMessageBox::AcceptRole);
-                    QPushButton *selectBtn = msgBox.addButton("Cambiar idioma destino", QMessageBox::ActionRole);
+                    msgBox.setInformativeText(tr("¿Qué deseas hacer?"));
+                    QPushButton *okBtn = msgBox.addButton(tr("Aceptar"), QMessageBox::AcceptRole);
+                    QPushButton *selectBtn = msgBox.addButton(tr("Cambiar idioma destino"), QMessageBox::ActionRole);
                     msgBox.setDefaultButton(okBtn);
                     msgBox.exec();
 
@@ -719,19 +724,19 @@ void MainWindow::autoDetectSourceLanguage()
                                         SubtitleTranslator::languageName(dstLang);
 
                     QMessageBox msgBox(this);
-                    msgBox.setWindowTitle("Modelo de traducción no encontrado");
+                    msgBox.setWindowTitle(tr("Modelo de traducción no encontrado"));
                     msgBox.setIcon(QMessageBox::Information);
                     msgBox.setText(
-                        QString("No se encontró modelo de traducción para:<br><b>%1</b><br><br>"
-                                "Tampoco hay ruta triangular disponible.<br><br>"
-                                "Idioma detectado: %2 → %3")
+                        tr("No se encontró modelo de traducción para:<br><b>%1</b><br><br>"
+                           "Tampoco hay ruta triangular disponible.<br><br>"
+                           "Idioma detectado: %2 → %3")
                             .arg(modelName)
                             .arg(SubtitleTranslator::languageName(mappedLang))
                             .arg(SubtitleTranslator::languageName(dstLang)));
-                    msgBox.setInformativeText("¿Qué deseas hacer?");
-                    QPushButton *downloadBtn = msgBox.addButton("Descargar modelo", QMessageBox::AcceptRole);
-                    QPushButton *selectBtn = msgBox.addButton("Cambiar idioma destino", QMessageBox::ActionRole);
-                    QPushButton *skipBtn = msgBox.addButton("Continuar sin traducir", QMessageBox::RejectRole);
+                    msgBox.setInformativeText(tr("¿Qué deseas hacer?"));
+                    QPushButton *downloadBtn = msgBox.addButton(tr("Descargar modelo"), QMessageBox::AcceptRole);
+                    QPushButton *selectBtn = msgBox.addButton(tr("Cambiar idioma destino"), QMessageBox::ActionRole);
+                    QPushButton *skipBtn = msgBox.addButton(tr("Continuar sin traducir"), QMessageBox::RejectRole);
                     msgBox.setDefaultButton(downloadBtn);
                     msgBox.exec();
 
@@ -791,10 +796,15 @@ void MainWindow::readProbeOutput() { probeData.append(probeProcess->readAllStand
 
 void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
-    statusBar()->showMessage("Listo");
+    statusBar()->showMessage(tr("Listo"));
+    // Resultado obsoleto: el usuario ya seleccionó otro archivo o vació la lista (C1/C2)
+    if (lastSelectedFile.isEmpty() || m_probedFile != lastSelectedFile) {
+        m_probedFile.clear();
+        return;
+    }
     if (exitStatus != QProcess::NormalExit || exitCode != 0) {
-        metaInfoLabel->setText("No se pudo analizar el archivo.");
-        logArea->append("<font color='#FF4444'>[ERROR] No se pudo analizar el archivo.</font>"); return;
+        metaInfoLabel->setText(tr("No se pudo analizar el archivo."));
+        logArea->append(tr("<font color='#FF4444'>[ERROR] No se pudo analizar el archivo.</font>")); return;
     }
     QJsonDocument doc = QJsonDocument::fromJson(probeData);
     QJsonObject   rootObj = doc.object();
@@ -812,6 +822,7 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
 
     QMap<int, QString> saved = fileSelections.value(lastSelectedFile);
     QMap<int, QString> langMap;
+    QMap<int, QString> typeMap;
     for (int i = 0; i < streams.size(); ++i) {
         QJsonObject s = streams.at(i).toObject();
         int     index = s.value("index").toInt();
@@ -821,6 +832,7 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
         int     w     = s.value("width").toInt();
         int     h     = s.value("height").toInt();
 
+        typeMap[index] = type;
         if (!lang.isEmpty()) langMap[index] = lang;
 
         if (type == "video" && videoInfo.isEmpty() && w > 0)
@@ -850,6 +862,7 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
     }
 
     fileStreamLanguages[lastSelectedFile] = langMap;
+    fileStreamTypes[lastSelectedFile] = typeMap;
 
     // Actualizar panel de metadatos
     updateMetadataPanel(dur, size, videoInfo, nAudio, nSubs);
@@ -891,8 +904,9 @@ void MainWindow::startExtraction()
     if (batchFiles.isEmpty()) return;
 
     currentBatchIndex = 0;
+    showLogArea();
     logArea->clear();
-    logArea->append("<font color='#FF8800'><b>=== INICIANDO EXTRACCIÓN ===</b></font>");
+    logArea->append(tr("<font color='#FF8800'><b>=== INICIANDO EXTRACCIÓN ===</b></font>"));
     extractButton->setEnabled(false);
     cancelButton->setEnabled(true);
     progressBar->setValue(0);
@@ -901,10 +915,19 @@ void MainWindow::startExtraction()
 
 void MainWindow::cancelExtraction()
 {
+    if (subtitleTranslator && subtitleTranslator->isBatchActive()) {
+        subtitleTranslator->cancel();
+        logArea->append(tr("<br><font color='#FF4444'><b>[CANCELADO] La traducción fue interrumpida por el usuario.</b></font>"));
+        statusBar()->showMessage(tr("Cancelado"));
+        translationProgressBar->setVisible(false);
+        extractButton->setEnabled(true);
+        cancelButton->setEnabled(false);
+        return;
+    }
     if (process->state() != QProcess::NotRunning) {
         process->kill();
-        logArea->append("<br><font color='#FF4444'><b>[CANCELADO] El proceso fue interrumpido por el usuario.</b></font>");
-        statusBar()->showMessage("Cancelado");
+        logArea->append(tr("<br><font color='#FF4444'><b>[CANCELADO] El proceso fue interrumpido por el usuario.</b></font>"));
+        statusBar()->showMessage(tr("Cancelado"));
     }
     extractButton->setEnabled(true);
     cancelButton->setEnabled(false);
@@ -916,8 +939,8 @@ void MainWindow::processNextInBatch()
 {
     if (currentBatchIndex < 0) return; // cancelado
     if (currentBatchIndex >= batchFiles.size()) {
-        logArea->append("<br><font color='#39FF14'><b>=== ✓ PROCESO FINALIZADO ===</b></font>");
-        statusBar()->showMessage(QString("✓ Finalizado — %1 archivo(s) procesado(s)")
+        logArea->append(tr("<br><font color='#39FF14'><b>=== ✓ PROCESO FINALIZADO ===</b></font>"));
+        statusBar()->showMessage(tr("✓ Finalizado — %1 archivo(s) procesado(s)")
                                      .arg(batchFiles.size()));
         extractButton->setEnabled(true);
         cancelButton->setEnabled(false);
@@ -938,12 +961,15 @@ void MainWindow::processNextInBatch()
                     .arg(extractedSubtitleFiles.size()));
 
                 if (!extractedSubtitleFiles.isEmpty()) {
-                    logArea->append(QString("<br><font color='#00BFFF'><b>Traduciendo %1 archivo(s) de subtítulos...</b></font>")
+                    // Bloquear re-entrada mientras se traduce (A6)
+                    extractButton->setEnabled(false);
+                    cancelButton->setEnabled(true);
+                    logArea->append(QString("<br><font color='#00BFFF'><b>" + tr("Traduciendo %1 archivo(s) de subtítulos...") + "</b></font>")
                         .arg(extractedSubtitleFiles.size()));
                     translationProgressBar->setVisible(true);
                     translationProgressBar->setValue(0);
 
-                    subtitleTranslator->translateBatch(extractedSubtitleFiles, outputLineEdit->text(), srcLang, dstLang);
+                    subtitleTranslator->translateBatch(extractedSubtitleFiles, ensureOutputSubdir(tr("Traducidos")), srcLang, dstLang);
                     return;
                 }
             } else {
@@ -952,7 +978,7 @@ void MainWindow::processNextInBatch()
         }
 
         if (trayIcon->isSystemTrayAvailable()) {
-            trayIcon->showMessage("Elements Extract", "El proceso por lotes ha finalizado correctamente.", QSystemTrayIcon::Information, 4000);
+            trayIcon->showMessage("Elements Extract", tr("El proceso por lotes ha finalizado correctamente."), QSystemTrayIcon::Information, 4000);
         }
         return;
     }
@@ -962,30 +988,82 @@ void MainWindow::processNextInBatch()
     currentFileDuration = fileDurations.value(inputPath, 0);
     progressBar->setValue(0);
 
-    statusBar()->showMessage(QString("Procesando %1/%2: %3")
+    statusBar()->showMessage(tr("Procesando %1/%2: %3")
                                  .arg(currentBatchIndex + 1)
                                  .arg(batchFiles.size())
                                  .arg(info.fileName()));
-    logArea->append(QString("<br><font color='#00BFFF'><b>[%1/%2] %3</b></font>")
+    logArea->append(tr("<br><font color='#00BFFF'><b>[%1/%2] %3</b></font>")
                         .arg(currentBatchIndex + 1)
                         .arg(batchFiles.size())
                         .arg(info.fileName().toHtmlEscaped()));
 
-    QString outDir  = outputLineEdit->text();
-    QString baseName = outDir + "/" + info.baseName();
+    bool copyMode = copyModeCheckBox->isChecked();
+    QString outDir = ensureOutputSubdir(copyMode ? tr("Extraídos") : tr("Convertidos"));
+    if (outDir.isEmpty()) {
+        logArea->append(tr("<font color='#FF4444'>  › No se ha especificado carpeta de destino, omitido.</font>"));
+        currentBatchIndex++;
+        processNextInBatch();
+        return;
+    }
+    QString baseName = outDir + "/" + info.completeBaseName();
+
+    // Determinista: evita colisiones tanto con archivos en disco como con rutas
+    // ya reclamadas en esta misma invocación de ffmpeg.
+    QSet<QString> usedPaths;
+    auto claimUnique = [this, &usedPaths](const QString &name) -> QString {
+        QString p = getUniqueFilePath(name);
+        int c = 2;
+        while (usedPaths.contains(p)) {
+            QFileInfo fi(name);
+            p = getUniqueFilePath(fi.absolutePath() + "/" + fi.completeBaseName()
+                                  + "_v" + QString::number(c) + "." + fi.suffix());
+            ++c;
+        }
+        usedPaths.insert(p);
+        return p;
+    };
+
+    auto subtitleExtForCodec = [](const QString &codec) -> QString {
+        if (codec == "subrip" || codec == "webvtt") return "srt";
+        if (codec == "ass" || codec == "ssa" || codec == "mov_text") return "ass";
+        return "mks";  // imagen u otros contenedores
+    };
+    auto subtitleCodecIsText = [](const QString &codec) -> bool {
+        return codec == "subrip" || codec == "ass" || codec == "ssa"
+            || codec == "webvtt" || codec == "mov_text";
+    };
 
     QMap<int, QString> selectedTypes = fileSelections.value(inputPath);
     QMap<int, QString> selectedCodecs = fileStreamCodecs.value(inputPath);
+    QMap<int, QString> strTypes = fileStreamTypes.value(inputPath);
+    QMap<int, QString> strLangs = fileStreamLanguages.value(inputPath);
     QStringList finalArgs;
     finalArgs << "-i" << inputPath;
     bool anyAction = false;
-    bool copyMode = copyModeCheckBox->isChecked();
 
     if (selectedTypes.isEmpty() && !globalSelectionTypes.isEmpty()) {
         // Selección global por tipo
         for (const QString &type : globalSelectionTypes) {
             QString mapCode = (type == "audio") ? "a" : (type == "video" ? "v" : "s");
-            QString ext = copyMode ? (type == "audio" ? "mka" : (type == "video" ? "mkv" : "mks")) : extensionForType(type);
+
+            // Para subtítulos globales: si hay más de una pista, se necesita un
+            // contenedor multi-stream (.mks); si solo hay una, usar su formato.
+            QString ext;
+            if (type == "subtitle") {
+                QStringList subCodecs;
+                for (auto it = strTypes.constBegin(); it != strTypes.constEnd(); ++it)
+                    if (it.value() == "subtitle")
+                        subCodecs << selectedCodecs.value(it.key());
+                if (subCodecs.size() == 1 && copyMode)
+                    ext = subtitleExtForCodec(subCodecs.first());
+                else if (subCodecs.size() == 1)
+                    ext = extensionForType("subtitle");
+                else
+                    ext = "mks";
+            } else {
+                ext = copyMode ? (type == "audio" ? "mka" : "mkv") : extensionForType(type);
+            }
+
             finalArgs << "-map" << QString("0:%1").arg(mapCode);
             if (copyMode) {
                 finalArgs << "-c" << "copy";
@@ -997,9 +1075,27 @@ void MainWindow::processNextInBatch()
                 else if (res.contains("720p")) finalArgs << "-vf" << "scale=-2:720";
                 else if (res.contains("480p")) finalArgs << "-vf" << "scale=-2:480";
             }
-            QString outPath = getUniqueFilePath(baseName + "_all_" + type + "." + ext);
+
+            QString outName;
+            if (type == "subtitle") {
+                QStringList subLangs;
+                for (auto it = strTypes.constBegin(); it != strTypes.constEnd(); ++it) {
+                    if (it.value() == "subtitle") {
+                        QString l = strLangs.value(it.key());
+                        if (!l.isEmpty() && !subLangs.contains(l)) subLangs << l;
+                    }
+                }
+                if (subLangs.size() == 1)
+                    outName = baseName + "." + subLangs.first() + "." + ext;
+                else
+                    outName = baseName + "_all_subtitle." + ext;
+            } else {
+                outName = baseName + "." + ext;
+            }
+            QString outPath = claimUnique(outName);
             finalArgs << "-y" << outPath;
-            if (type == "subtitle") extractedSubtitleFiles.append(outPath);
+            if (type == "subtitle")
+                extractedSubtitleFiles.append(outPath);
             anyAction = true;
         }
     } else {
@@ -1009,6 +1105,8 @@ void MainWindow::processNextInBatch()
             QString type = it.value();
             QString codec = selectedCodecs.value(index);
             QString ext = copyMode ? extensionForCodec(codec, type) : extensionForType(type);
+            bool translatableSub = (type == "subtitle") && subtitleCodecIsText(codec);
+
             finalArgs << "-map" << QString("0:%1").arg(index);
             if (copyMode) {
                 finalArgs << "-c" << "copy";
@@ -1020,20 +1118,31 @@ void MainWindow::processNextInBatch()
                 else if (res.contains("720p")) finalArgs << "-vf" << "scale=-2:720";
                 else if (res.contains("480p")) finalArgs << "-vf" << "scale=-2:480";
             }
-            QString outPath = getUniqueFilePath(baseName + "_track" + QString::number(index) + "." + ext);
+            QString outName;
+            if (type == "subtitle") {
+                QString lang = strLangs.value(index);
+                outName = lang.isEmpty()
+                          ? baseName + "_track" + QString::number(index) + "." + ext
+                          : baseName + "." + lang + "." + ext;
+            } else {
+                outName = baseName + "." + ext;
+            }
+            QString outPath = claimUnique(outName);
             finalArgs << "-y" << outPath;
-            if (type == "subtitle") extractedSubtitleFiles.append(outPath);
+            if (translatableSub)
+                extractedSubtitleFiles.append(outPath);
             anyAction = true;
         }
     }
 
     if (!anyAction) {
-        logArea->append("<font color='#FFCC00'>  › Sin pistas seleccionadas para este archivo, omitido.</font>");
+        logArea->append(tr("<font color='#FFCC00'>  › Sin pistas seleccionadas para este archivo, omitido.</font>"));
         currentBatchIndex++;
         processNextInBatch();
         return;
     }
 
+    if (process->state() != QProcess::NotRunning) return;  // ffmpeg aún en marcha: no relanzar
     process->start("ffmpeg", finalArgs);
 }
 
@@ -1057,10 +1166,10 @@ void MainWindow::readProcessOutput()
 void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     if (exitStatus == QProcess::NormalExit && exitCode == 0) {
-        logArea->append("<font color='#39FF14'>  › OK</font>");
+        logArea->append(tr("<font color='#39FF14'>  › OK</font>"));
         progressBar->setValue(100);
     } else if (currentBatchIndex >= 0) {
-        logArea->append("<font color='#FF4444'>  › Error en este archivo.</font>");
+        logArea->append(tr("<font color='#FF4444'>  › Error en este archivo.</font>"));
     }
     if (currentBatchIndex >= 0) {
         currentBatchIndex++;
@@ -1111,14 +1220,17 @@ void MainWindow::showHelp()
 // ─────────────────────────────────────────────────────────────────────────────
 void MainWindow::selectOutputDir()
 {
-    QString dir = QFileDialog::getExistingDirectory(this, "Destino", outputLineEdit->text());
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Destino"), outputLineEdit->text());
     if (!dir.isEmpty()) outputLineEdit->setText(dir);
 }
 
 void MainWindow::openOutputFolder()
 {
     QString dir = outputLineEdit->text();
-    if (!dir.isEmpty()) QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
+    if (dir.isEmpty()) return;
+    QString appDir = dir + "/Elements Extract";
+    if (QDir(appDir).exists()) dir = appDir;
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
 }
 
 void MainWindow::clearStreamsList()
@@ -1136,6 +1248,15 @@ QString MainWindow::getUniqueFilePath(const QString &fullPath)
                          + "_v" + QString::number(c) + "." + info.suffix())) c++;
     return info.absolutePath() + "/" + info.baseName()
            + "_v" + QString::number(c) + "." + info.suffix();
+}
+
+QString MainWindow::ensureOutputSubdir(const QString &subName)
+{
+    QString dest = outputLineEdit->text().trimmed();
+    if (dest.isEmpty()) return QString();
+    QString path = dest + "/Elements Extract/" + subName;
+    QDir().mkpath(path);
+    return path;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1183,8 +1304,8 @@ void MainWindow::updateMetadataPanel(double durSecs, qint64 sizeBytes,
     if (durSecs  > 0)        parts << "⏱ " + durStr;
     if (sizeBytes > 0)       parts << "💾 " + sizeStr;
     if (!videoInfo.isEmpty()) parts << "🎬 " + videoInfo;
-    if (nAudio > 0)          parts << QString("🎵 %1 audio").arg(nAudio);
-    if (nSubs  > 0)          parts << QString("CC %1 subs").arg(nSubs);
+    if (nAudio > 0)          parts << tr("🎵 %1 audio").arg(nAudio);
+    if (nSubs  > 0)          parts << tr("CC %1 subs").arg(nSubs);
 
     metaInfoLabel->setText(parts.join("   "));
 }
@@ -1194,7 +1315,7 @@ void MainWindow::updateMetadataPanel(double durSecs, qint64 sizeBytes,
 // ─────────────────────────────────────────────────────────────────────────────
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Delete)
+    if (event->key() == Qt::Key_Delete && fileListWidget->hasFocus())
         removeFiles();
     else if (event->key() == Qt::Key_Escape && cancelButton->isEnabled())
         cancelExtraction();
@@ -1204,8 +1325,121 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    // Detener procesos en curso para un cierre limpio (A8)
+    if (process && process->state() != QProcess::NotRunning) process->kill();
+    if (probeProcess && probeProcess->state() != QProcess::NotRunning) probeProcess->kill();
+    if (subtitleTranslator && subtitleTranslator->isBatchActive()) subtitleTranslator->cancel();
     saveSettings();
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        retranslateUi();
+    }
+    QMainWindow::changeEvent(event);
+}
+
+void MainWindow::retranslateUi()
+{
+    setWindowTitle(tr("Elements Extract FFmpeg"));
+    statusBar()->showMessage(tr("Listo"));
+
+    // ── Menú ──
+    if (menuArchivo) menuArchivo->setTitle(tr("Archivo"));
+    if (menuAjustes) menuAjustes->setTitle(tr("Ajustes"));
+    if (menuAyuda)   menuAyuda->setTitle(tr("Ayuda"));
+    if (actAnadir)   actAnadir->setText(tr("Añadir archivos…"));
+    if (actSalir)    actSalir->setText(tr("Salir"));
+    if (actSettings) actSettings->setText(tr("Configuración y Modelos…"));
+    if (actAyuda)    actAyuda->setText(tr("Manual de uso"));
+    if (actAcerca)   actAcerca->setText(tr("Acerca de…"));
+
+    // ── Panel izquierdo ──
+    if (loteLabel)   loteLabel->setText(tr("LOTE DE ARCHIVOS"));
+    if (pistasLabel) pistasLabel->setText(tr("PISTAS"));
+    if (addButton) {
+        addButton->setText(tr("Añadir"));
+        addButton->setToolTip(tr("Añadir archivos de video (Ctrl+O)"));
+    }
+    if (removeButton) {
+        removeButton->setText(tr("Quitar"));
+        removeButton->setToolTip(tr("Quitar archivos seleccionados (Del)"));
+    }
+    if (selectedFileLabel && fileListWidget && fileListWidget->count() == 0)
+        selectedFileLabel->setText(tr("Selecciona un archivo para ver sus pistas"));
+    if (videoAllButton) videoAllButton->setText(tr("VIDEO"));
+    if (audioAllButton) audioAllButton->setText(tr("AUDIO"));
+    if (subsAllButton)  subsAllButton->setText(tr("SUBS"));
+    if (clearAllButton) clearAllButton->setText(tr("Limpiar"));
+
+    // ── Formato de salida ──
+    if (formatGroupBox) formatGroupBox->setTitle(tr("FORMATO DE SALIDA"));
+    if (audioFmtLabel)  audioFmtLabel->setText(tr("Audio:"));
+    if (videoFmtLabel)  videoFmtLabel->setText(tr("Video:"));
+    if (resFmtLabel)    resFmtLabel->setText(tr("Res:"));
+    if (subsFmtLabel)   subsFmtLabel->setText(tr("Subs:"));
+    if (copyModeCheckBox)
+        copyModeCheckBox->setText(tr("Copiar pista original sin re-codificar (Rápido y previene errores)"));
+    if (videoResCombo) {
+        int cur = videoResCombo->currentIndex();
+        videoResCombo->clear();
+        videoResCombo->addItems({tr("Original"), "4K (2160p)", "2K (1440p)",
+                                 "FHD (1080p)", "HD (720p)", "SD (480p)"});
+        if (cur >= 0) videoResCombo->setCurrentIndex(qBound(0, cur, videoResCombo->count() - 1));
+    }
+
+    // ── Traducción ──
+    if (translationGroupBox) translationGroupBox->setTitle(tr("TRADUCCIÓN DE SUBTÍTULOS"));
+    if (srcPromptLabel) srcPromptLabel->setText(tr("Origen:"));
+    if (dstPromptLabel) dstPromptLabel->setText(tr("Destino:"));
+    if (translateOnExtractCheck) {
+        translateOnExtractCheck->setText(tr("Traducir al extraer"));
+        translateOnExtractCheck->setToolTip(
+            tr("Si está marcado, al extraer subtítulos se traducirán automáticamente\n"
+            "al idioma de destino seleccionado."));
+    }
+    if (manageModelsButton) {
+        manageModelsButton->setText(tr("Modelos"));
+        manageModelsButton->setToolTip(tr("Gestionar modelos de traducción"));
+    }
+    if (translateFilesButton) {
+        translateFilesButton->setText(tr("Traducir subtítulos"));
+        translateFilesButton->setToolTip(
+            tr("Seleccionar subtítulos ya existentes en disco y traducirlos en lote"));
+    }
+    if (translationProgressBar && !translationProgressBar->isVisible() && translationStatusLabel)
+        translationStatusLabel->setText(tr("Selecciona subtítulos y marca \"Traducir al extraer\""));
+
+    // ── Destino ──
+    if (destGroupBox) destGroupBox->setTitle(tr("DESTINO"));
+    if (outputLineEdit)
+        outputLineEdit->setPlaceholderText(tr("Carpeta donde se guardarán los archivos extraídos…"));
+    if (browseButton) {
+        browseButton->setText(tr("Examinar…"));
+        browseButton->setToolTip(tr("Seleccionar carpeta de destino"));
+    }
+    if (openFolderButton) {
+        openFolderButton->setText(tr("Abrir"));
+        openFolderButton->setToolTip(tr("Abrir carpeta de destino en el explorador"));
+    }
+
+    // ── Acciones ──
+    if (cancelButton) {
+        cancelButton->setText(tr("Cancelar"));
+        cancelButton->setToolTip(tr("Cancelar el proceso en curso (Escape)"));
+    }
+    if (extractButton) {
+        extractButton->setText(tr("INICIAR EXTRACCIÓN"));
+        extractButton->setToolTip(tr("Iniciar la extracción de todas las pistas seleccionadas (Ctrl+Enter)"));
+    }
+    if (logToggleButton) {
+        logToggleButton->setText(logArea && logArea->isVisible() ? tr("LOG ▾") : tr("LOG ▸"));
+        logToggleButton->setToolTip(tr("Mostrar / ocultar registro de actividad"));
+    }
+    if (logArea)
+        logArea->setPlaceholderText(tr("Sistema listo. Añade archivos y selecciona las pistas a extraer."));
 }
 
 void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -1239,6 +1473,9 @@ void MainWindow::loadSettings()
     if (srcIdx >= 0) srcLangCombo->setCurrentIndex(srcIdx);
     if (dstIdx >= 0) dstLangCombo->setCurrentIndex(dstIdx);
 
+    // Load auto-translate setting
+    translateOnExtractCheck->setChecked(s.value("autoTranslate", false).toBool());
+
     // Migrate from old geometry format
     if (s.contains("geometry")) {
         s.remove("geometry");
@@ -1250,10 +1487,20 @@ void MainWindow::loadSettings()
         int h = s.value("windowHeight", 680).toInt();
         int x = s.value("windowX", -1).toInt();
         int y = s.value("windowY", -1).toInt();
+
+        // Acotar a la pantalla: si la geometría "normal" es casi de pantalla completa
+        // (p. ej. guardada estando maximizada), al restaurarla no se distingue del
+        // estado maximizado y el botón de maximizar queda inoperante.
+        const QRect wa = QGuiApplication::primaryScreen()->availableGeometry();
+        if (w > wa.width() - 60) w = wa.width() - 60;
+        if (h > wa.height() - 60) h = wa.height() - 60;
+        if (w < 640) w = 640;
+        if (h < 480) h = 480;
+
         resize(w, h);
         if (x >= 0 && y >= 0) move(x, y);
         if (s.value("windowMaximized", false).toBool()) {
-            showMaximized();
+            setWindowState(windowState() | Qt::WindowMaximized);
         }
     }
 }
@@ -1269,10 +1516,15 @@ void MainWindow::saveSettings()
     s.setValue("copyMode",    copyModeCheckBox->isChecked());
     s.setValue("srcLang",     srcLangCombo->currentData().toString());
     s.setValue("dstLang",     dstLangCombo->currentData().toString());
+    s.setValue("autoTranslate", translateOnExtractCheck->isChecked());
 
     // Save window geometry (use normalGeometry when maximized)
     s.setValue("windowMaximized", isMaximized());
     QRect geo = isMaximized() ? normalGeometry() : geometry();
+    // Evitar persistir un "normal" a pantalla completa (rompe el botón de maximizar)
+    const QRect wa = QGuiApplication::primaryScreen()->availableGeometry();
+    if (geo.width() > wa.width() - 60) geo.setWidth(wa.width() - 60);
+    if (geo.height() > wa.height() - 60) geo.setHeight(wa.height() - 60);
     s.setValue("windowX", geo.x());
     s.setValue("windowY", geo.y());
     s.setValue("windowWidth", geo.width());
@@ -1286,7 +1538,7 @@ void MainWindow::translateExtractedSubtitles(const QString &subtitlePath)
 {
     QFileInfo fi(subtitlePath);
     if (!fi.exists()) {
-        logArea->append(QString("<font color='#FF4444'>No se encontró el archivo: %1</font>")
+        logArea->append(QString("<font color='#FF4444'>" + tr("No se encontró el archivo: %1") + "</font>")
             .arg(fi.fileName()));
         return;
     }
@@ -1295,7 +1547,7 @@ void MainWindow::translateExtractedSubtitles(const QString &subtitlePath)
     QString dstLang = dstLangCombo->currentData().toString();
 
     if (srcLang == dstLang) {
-        logArea->append("<font color='#FFCC00'>Idioma origen y destino son iguales.</font>");
+        logArea->append(tr("<font color='#FFCC00'>Idioma origen y destino son iguales.</font>"));
         return;
     }
 
@@ -1303,13 +1555,53 @@ void MainWindow::translateExtractedSubtitles(const QString &subtitlePath)
 
     translationProgressBar->setVisible(true);
     translationProgressBar->setValue(0);
-    translationStatusLabel->setText("Traduciendo...");
+    translationStatusLabel->setText(tr("Traduciendo..."));
 
-    logArea->append(QString("<br><font color='#00BFFF'><b>Traduciendo: %1 → %2</b></font>")
+    logArea->append(QString("<br><font color='#00BFFF'><b>" + tr("Traduciendo: %1 → %2") + "</b></font>")
         .arg(SubtitleTranslator::languageName(srcLang))
         .arg(SubtitleTranslator::languageName(dstLang)));
 
     subtitleTranslator->translateFile(subtitlePath, outputPath, srcLang, dstLang);
+}
+
+void MainWindow::translateExistingFiles()
+{
+    if (!subtitleTranslator) return;
+
+    QString srcLang = srcLangCombo->currentData().toString();
+    QString dstLang = dstLangCombo->currentData().toString();
+    if (srcLang.isEmpty() || dstLang.isEmpty() || srcLang == dstLang) {
+        QMessageBox::warning(this, tr("Traducción"),
+            tr("Selecciona idiomas de origen y destino distintos antes de traducir."));
+        return;
+    }
+
+    QStringList files = QFileDialog::getOpenFileNames(
+        this, tr("Seleccionar subtítulos para traducir"), "",
+        tr("Subtítulos (*.srt *.ass *.ssa *.vtt);;Todos los archivos (*.*)"));
+    if (files.isEmpty()) return;
+
+    QString outDir = ensureOutputSubdir(tr("Traducidos"));
+    if (outDir.isEmpty()) {
+        QMessageBox::warning(this, tr("Traducción"),
+            tr("Selecciona primero una carpeta de destino."));
+        return;
+    }
+
+    showLogArea();
+    logArea->append(tr("<br><font color='#FF8800'><b>=== TRADUCCIÓN POR LOTES ===</b></font>"));
+    logArea->append(QString("<font color='#00BFFF'>" + tr("Traduciendo %1 archivo(s): %2 → %3") + "</font>")
+        .arg(files.size())
+        .arg(SubtitleTranslator::languageName(srcLang))
+        .arg(SubtitleTranslator::languageName(dstLang)));
+
+    translationProgressBar->setVisible(true);
+    translationProgressBar->setValue(0);
+    translationStatusLabel->setText(tr("Traduciendo en lote..."));
+    extractButton->setEnabled(false);
+    cancelButton->setEnabled(true);
+
+    subtitleTranslator->translateBatch(files, outDir, srcLang, dstLang);
 }
 
 void MainWindow::onTranslationProgress(int current, int total)
@@ -1317,37 +1609,44 @@ void MainWindow::onTranslationProgress(int current, int total)
     if (total > 0) {
         int pct = (current * 100) / total;
         translationProgressBar->setValue(pct);
-        translationStatusLabel->setText(QString("Traduciendo: %1 / %2 líneas").arg(current).arg(total));
+        translationStatusLabel->setText(
+            tr("Traduciendo archivo %1 / %2…").arg(current).arg(total));
     }
 }
 
 void MainWindow::onFileTranslated(const QString &input, const QString &output)
 {
     Q_UNUSED(input);
-    translationProgressBar->setValue(100);
-    translationStatusLabel->setText("Traducción completada: " + QFileInfo(output).fileName());
+    if (!subtitleTranslator->isBatchActive())
+        translationProgressBar->setValue(100);
+    translationStatusLabel->setText(tr("Traducción completada: ") + QFileInfo(output).fileName());
 
-    logArea->append(QString("<font color='#39FF14'>  ✓ Traducción guardada: %1</font>")
+    logArea->append(QString("<font color='#39FF14'>  ✓ " + tr("Traducción guardada: %1") + "</font>")
         .arg(QFileInfo(output).fileName()));
 }
 
 void MainWindow::onTranslationError(const QString &message)
 {
     translationProgressBar->setVisible(false);
-    translationStatusLabel->setText("Error en la traducción");
+    translationStatusLabel->setText(tr("Error en la traducción"));
 
-    logArea->append(QString("<font color='#FF4444'>  ✗ Error de traducción: %1</font>").arg(message));
+    logArea->append(QString("<font color='#FF4444'>  ✗ " + tr("Error de traducción: %1") + "</font>").arg(message));
 
-    QMessageBox::critical(this, "Error de traducción", message);
+    // During a batch a modal dialog would interrupt the whole run — just log and continue.
+    if (!subtitleTranslator->isBatchActive())
+        QMessageBox::critical(this, tr("Error de traducción"), message);
 }
 
 void MainWindow::onTranslationFinished()
 {
+    translationProgressBar->setValue(100);
     translationProgressBar->setVisible(false);
+    translationStatusLabel->setText(tr("Traducción completada"));
     extractButton->setEnabled(true);
+    cancelButton->setEnabled(false);
 
     if (trayIcon->isSystemTrayAvailable()) {
-        trayIcon->showMessage("Elements Extract", "La traducción ha finalizado correctamente.",
+        trayIcon->showMessage("Elements Extract", tr("La traducción ha finalizado correctamente."),
                               QSystemTrayIcon::Information, 4000);
     }
 }
@@ -1355,19 +1654,19 @@ void MainWindow::onTranslationFinished()
 void MainWindow::showModelManager()
 {
     QMessageBox info(this);
-    info.setWindowTitle("Gestionar Modelos de Traducción");
+    info.setWindowTitle(tr("Gestionar Modelos de Traducción"));
     info.setIcon(QMessageBox::Information);
     info.setText(
-        "<b>Modelos de traducción</b><br><br>"
-        "Los modelos se descargan automáticamente cuando se necesita un par de idiomas no disponible.<br><br>"
-        "<b>Modelos incluidos:</b><br>"
-        "• English → Español (en→es)<br>"
-        "• Español → English (es→en)<br>"
-        "• English → Français (en→fr)<br>"
-        "• Français → English (fr→en)<br>"
-        "• English → Português (en→pt)<br>"
-        "• Português → English (pt→en)<br><br>"
-        "<b>Directorio de modelos:</b><br>" +
+        tr("<b>Modelos de traducción</b><br><br>"
+           "Los modelos se descargan automáticamente cuando se necesita un par de idiomas no disponible.<br><br>"
+           "<b>Modelos incluidos:</b><br>"
+           "• English → Español (en→es)<br>"
+           "• Español → English (es→en)<br>"
+           "• English → Français (en→fr)<br>"
+           "• Français → English (fr→en)<br>"
+           "• English → Português (en→pt)<br>"
+           "• Português → English (pt→en)<br><br>"
+           "<b>Directorio de modelos:</b><br>") +
         subtitleTranslator->modelDirectory()
     );
     info.exec();
@@ -1382,29 +1681,67 @@ void MainWindow::onModelDownloadProgress(const QString &modelId, qint64 received
 {
     if (total > 0) {
         int pct = (received * 100) / total;
-        translationStatusLabel->setText(QString("Descargando modelo %1: %2%")
+        translationStatusLabel->setText(tr("Descargando modelo %1: %2%")
             .arg(modelId).arg(pct));
     }
 }
 
 void MainWindow::onModelDownloaded(const QString &modelId)
 {
-    translationStatusLabel->setText("Modelo descargado: " + modelId);
-    logArea->append(QString("<font color='#39FF14'>  ✓ Modelo descargado: %1</font>").arg(modelId));
+    translationStatusLabel->setText(tr("Modelo descargado: ") + modelId);
+    logArea->append(QString("<font color='#39FF14'>  ✓ " + tr("Modelo descargado: %1") + "</font>").arg(modelId));
 }
 
 void MainWindow::onModelDownloadError(const QString &modelId, const QString &message)
 {
-    translationStatusLabel->setText("Error descargando modelo: " + modelId);
-    logArea->append(QString("<font color='#FF4444'>  ✗ Error descargando %1: %2</font>")
+    translationStatusLabel->setText(tr("Error descargando modelo: ") + modelId);
+    logArea->append(QString("<font color='#FF4444'>  ✗ " + tr("Error descargando %1: %2") + "</font>")
         .arg(modelId, message));
 }
 
 void MainWindow::changeUILanguage(const QString &langCode)
 {
-    // TODO: Implement UI language switching with QTranslator
-    logArea->append(QString("<font color='#888888'>Idioma de interfaz cambiado a: %1</font>")
-        .arg(langCode));
+    // Save preference
+    QSettings s("LocalApp", "FFmpegExtractor");
+    s.setValue("language", langCode);
+
+    // Reload translations
+    static QTranslator *translator = nullptr;
+    if (translator) {
+        qApp->removeTranslator(translator);
+        delete translator;
+        translator = nullptr;
+    }
+
+    translator = new QTranslator(this);
+    QString actualLang = langCode;
+    if (actualLang == "system") {
+        actualLang = QLocale::system().name();
+    }
+
+    bool loaded = translator->load("elements_extract_" + actualLang, ":/translations");
+    if (!loaded) {
+        loaded = translator->load("elements_extract_" + actualLang,
+                                  QCoreApplication::applicationDirPath() + "/../share/elements-extract/translations");
+    }
+    if (!loaded) {
+        QString shortLang = actualLang.left(2);
+        loaded = translator->load("elements_extract_" + shortLang, ":/translations");
+        if (!loaded) {
+            loaded = translator->load("elements_extract_" + shortLang,
+                                      QCoreApplication::applicationDirPath() + "/../share/elements-extract/translations");
+        }
+    }
+
+    if (loaded) {
+        qApp->installTranslator(translator);
+        // Re-translate the UI by rebuilding it
+        logArea->append(QString("<font color='#00BFFF'>%1</font>")
+            .arg(tr("Idioma de interfaz cambiado a: %1").arg(langCode)));
+    } else {
+        logArea->append(QString("<font color='#FF8800'>%1</font>")
+            .arg(tr("No se pudo cargar la traducción para: %1").arg(langCode)));
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1414,6 +1751,7 @@ void MainWindow::showSettings()
 {
     SettingsDialog dlg(subtitleTranslator, modelDownloader, this);
     connect(&dlg, &SettingsDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
+    connect(&dlg, &SettingsDialog::uiLanguageChanged, this, &MainWindow::changeUILanguage);
     dlg.exec();
 }
 
@@ -1421,5 +1759,5 @@ void MainWindow::onSettingsChanged()
 {
     // Reload settings after dialog closes
     loadSettings();
-    logArea->append("<font color='#888888'>Configuración actualizada</font>");
+    logArea->append(tr("<font color='#888888'>Configuración actualizada</font>"));
 }

@@ -46,6 +46,7 @@ protected:
     void dropEvent(QDropEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+    void changeEvent(QEvent *event) override;
 
 private slots:
     void addFiles();
@@ -75,6 +76,7 @@ private slots:
     void onTranslationError(const QString &message);
     void onTranslationFinished();
     void translateExtractedSubtitles(const QString &subtitlePath);
+    void translateExistingFiles();
 
     // ── Model management slots ─────────────────────────────────────────────
     void showModelManager();
@@ -93,7 +95,8 @@ private slots:
 private:
     void setupUi();
     void setupMenuBar();
-    void applyStyle();
+    void retranslateUi();
+    void showLogArea();
     void clearStreamsList();
     void saveCurrentSelections();
     void updateCheckboxesFromGlobal();
@@ -102,6 +105,7 @@ private:
     void loadSettings();
     void saveSettings();
     QString getUniqueFilePath(const QString &fullPath);
+    QString ensureOutputSubdir(const QString &subName);
     qint64  parseTimestamp(const QString &ts);
     void    updateProgressFromLine(const QString &line);
     QString extensionForType(const QString &type);
@@ -126,12 +130,41 @@ private:
     QComboBox    *subsFormatCombo;
     QCheckBox    *copyModeCheckBox;
 
+    // ── Widgets traducibles (retranslateUi) ──────────────────────────────────
+    QMenu        *menuArchivo;
+    QMenu        *menuAjustes;
+    QMenu        *menuAyuda;
+    QAction      *actAnadir;
+    QAction      *actSalir;
+    QAction      *actSettings;
+    QAction      *actAyuda;
+    QAction      *actAcerca;
+    QLabel       *loteLabel;
+    QLabel       *pistasLabel;
+    QPushButton  *addButton;
+    QPushButton  *removeButton;
+    QPushButton  *videoAllButton;
+    QPushButton  *audioAllButton;
+    QPushButton  *subsAllButton;
+    QPushButton  *clearAllButton;
+    QPushButton  *logToggleButton;
+    QGroupBox    *formatGroupBox;
+    QLabel       *audioFmtLabel;
+    QLabel       *videoFmtLabel;
+    QLabel       *resFmtLabel;
+    QLabel       *subsFmtLabel;
+    QLabel       *srcPromptLabel;
+    QLabel       *dstPromptLabel;
+    QGroupBox    *destGroupBox;
+    QPushButton  *browseButton;
+
     // ── Translation widgets ─────────────────────────────────────────────────
     QGroupBox    *translationGroupBox;
     QComboBox    *srcLangCombo;
     QComboBox    *dstLangCombo;
     QCheckBox    *translateOnExtractCheck;
     QPushButton  *manageModelsButton;
+    QPushButton  *translateFilesButton;
     QProgressBar *translationProgressBar;
     QLabel       *translationStatusLabel;
 
@@ -146,10 +179,13 @@ private:
 
     // ── Estado ───────────────────────────────────────────────────────────────
     QString  lastSelectedFile;
+    QString  m_probedFile;      // archivo que está siendo analizado por ffprobe
     // file → { streamIndex → streamType }
     QMap<QString, QMap<int, QString>> fileSelections;
     // file → { streamIndex → codecName }
     QMap<QString, QMap<int, QString>> fileStreamCodecs;
+    // file → { streamIndex → streamType }
+    QMap<QString, QMap<int, QString>> fileStreamTypes;
     // file → { streamIndex → languageCode }
     QMap<QString, QMap<int, QString>> fileStreamLanguages;
     QSet<QString>  globalSelectionTypes;

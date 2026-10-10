@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QProcess>
 #include <QTimer>
+#include <QSettings>
 
 // ── Remote model info ───────────────────────────────────────────────────────
 struct RemoteModel {
@@ -47,6 +48,7 @@ public:
 
     bool isModelInstalled(const QString &modelId);
     bool isModelInstalled(const QString &sourceLang, const QString &targetLang);
+    bool isModelUpdateAvailable(const RemoteModel &model) const;
 
     // ── Download management ─────────────────────────────────────────────────
     void downloadModel(const QString &modelId);

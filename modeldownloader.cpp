@@ -105,6 +105,19 @@ bool ModelDownloader::isModelInstalled(const QString &sourceLang, const QString 
            isModelInstalled(modelIdForPair(sourceLang, targetLang, "base"));
 }
 
+bool ModelDownloader::isModelUpdateAvailable(const RemoteModel &model) const
+{
+    const QString modelId = model.id;
+    if (modelId.isEmpty()) return false;
+
+    QSettings s("LocalApp", "FFmpegExtractor");
+    s.beginGroup("installedModelVersions");
+    int installedVersion = s.value(modelId, 0).toInt();
+    s.endGroup();
+
+    return installedVersion > 0 && installedVersion < model.version;
+}
+
 void ModelDownloader::downloadModel(const QString &modelId)
 {
     RemoteModel model;
@@ -201,6 +214,28 @@ void ModelDownloader::onDownloadProcessFinished(int exitCode, QProcess::ExitStat
 
     qInfo() << "Downloaded" << modelId << ":" << fi.size() << "bytes";
 
+    // G1: verificar checksum SHA-256 si el registro lo ofrece
+    {
+        QString checksum;
+        int version = 0;
+        for (const RemoteModel &mm : m_cachedModels) {
+            if (mm.id == modelId) { checksum = mm.checksum; version = mm.version; break; }
+        }
+        if (!verifyChecksum(archivePath, checksum)) {
+            emit downloadError(modelId, "Checksum verification failed");
+            QFile::remove(archivePath);
+            m_currentDownloadModelId.clear();
+            m_currentDownloadArchivePath.clear();
+            return;
+        }
+        if (version > 0) {
+            QSettings s("LocalApp", "FFmpegExtractor");
+            s.beginGroup("installedModelVersions");
+            s.setValue(modelId, version);
+            s.endGroup();
+        }
+    }
+
     extractModelArchive(archivePath, modelId);
     QFile::remove(archivePath);
 
@@ -270,9 +305,9 @@ void ModelDownloader::onRegistryReply(QNetworkReply *reply)
     }
     m_cachedModels.clear();
 
-    QStringList supportedSrc = SubtitleTranslator::supportedSourceLanguages();
-    QStringList supportedTrg = SubtitleTranslator::supportedTargetLanguages();
-
+    // Listar TODOS los modelos del registro: el usuario elige cuál descargar
+    // (incluso pares fuera de en/es/fr/pt, útiles por ejemplo en traducciones
+    // triangulares). No filtrar por idioma.
     for (const QJsonValue &value : modelsArray) {
         QJsonObject obj = value.toObject();
 
@@ -290,10 +325,7 @@ void ModelDownloader::onRegistryReply(QNetworkReply *reply)
         model.version = obj["version"].toInt();
         model.isInstalled = isModelInstalled(model.id);
 
-        if (supportedSrc.contains(model.sourceLang) &&
-            supportedTrg.contains(model.targetLang)) {
-            m_cachedModels.append(model);
-        }
+        m_cachedModels.append(model);
     }
 
     emit modelsFetched(m_cachedModels);

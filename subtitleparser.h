@@ -117,7 +117,8 @@ public:
         int startCol = 1, endCol = 3, textCol = 9;
         int idx = 1;
 
-        static QRegularExpression reTime(R"((\d+):(\d{2}):(\d{2})\.(\d{2}))");
+        static QRegularExpression reTime(
+            QRegularExpression::anchoredPattern(QStringLiteral(R"((\d+):(\d{2}):(\d{2})\.(\d{2}))")));
 
         while (!in.atEnd()) {
             QString line = in.readLine().trimmed();
@@ -143,7 +144,10 @@ public:
             if (!line.startsWith("Dialogue:", Qt::CaseInsensitive)) continue;
 
             QStringList parts = line.mid(9).split(',');
-            if (parts.size() <= textCol) continue;
+            // Validar TODOS los índices antes de acceder (D1)
+            if (textCol >= parts.size()) continue;
+            if (startCol < 0 || endCol < 0 || startCol >= parts.size() || endCol >= parts.size())
+                continue;
 
             QRegularExpressionMatch mStart = reTime.match(parts[startCol].trimmed());
             QRegularExpressionMatch mEnd   = reTime.match(parts[endCol].trimmed());
@@ -189,28 +193,34 @@ public:
         QTextCodec *codec = QTextCodec::codecForName("UTF-8");
         if (codec) in.setCodec(codec);
 
-        while (!in.atEnd()) {
-            QString line = in.readLine().trimmed();
-            if (line.isEmpty()) break;
-            if (line.startsWith("WEBVTT")) continue;
-        }
-
         static QRegularExpression reTime(
             R"((\d{1,2}):(\d{2}):(\d{2})\.(\d{3})\s*-->\s*(\d{1,2}):(\d{2}):(\d{2})\.(\d{3}))");
 
+        // Leer todas las líneas: permite saltar el encabezado sin consumir cues (D2)
+        QStringList lines = in.readAll().split('\n');
+        if (!lines.isEmpty() && lines[0].startsWith(QChar(0xFEFF)))
+            lines[0].remove(0, 1);  // BOM
+
+        int i = 0;
+        // Saltar el bloque WEBVTT (opcional) hasta la línea en blanco o el primer timing
+        if (i < lines.size() && lines[i].trimmed().startsWith("WEBVTT")) {
+            ++i;
+            while (i < lines.size()) {
+                QString t = lines[i].trimmed();
+                if (t.isEmpty()) { ++i; break; }
+                if (reTime.match(t).hasMatch()) break;  // los cues empiezan justo aquí
+                ++i;  // metadatos del encabezado
+            }
+        }
+
         int idx = 1;
-        while (!in.atEnd()) {
-            QString line = in.readLine().trimmed();
+        while (i < lines.size()) {
+            QString line = lines[i].trimmed();
+            ++i;
             if (line.isEmpty()) continue;
 
             QRegularExpressionMatch m = reTime.match(line);
-            if (!m.hasMatch()) {
-                if (!in.atEnd()) {
-                    line = in.readLine().trimmed();
-                    m = reTime.match(line);
-                }
-                if (!m.hasMatch()) continue;
-            }
+            if (!m.hasMatch()) continue;  // líneas identificador de cue
 
             qint64 startMs = timeToMs(m.captured(1).toInt(), m.captured(2).toInt(),
                                       m.captured(3).toInt(), m.captured(4).toInt());
@@ -218,8 +228,9 @@ public:
                                       m.captured(7).toInt(), m.captured(8).toInt());
 
             QString text;
-            while (!in.atEnd()) {
-                QString l = in.readLine();
+            while (i < lines.size()) {
+                QString l = lines[i];
+                ++i;
                 if (l.trimmed().isEmpty()) break;
                 if (!text.isEmpty()) text += "\n";
                 text += l.trimmed();

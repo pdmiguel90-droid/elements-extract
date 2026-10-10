@@ -11,13 +11,16 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QVBoxLayout>
+#include <QGroupBox>
 #include <QMap>
 #include <QSet>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QEvent>
 
 class SubtitleTranslator;
 class ModelDownloader;
+class ThemeManager;
 struct RemoteModel;
 
 struct LocalModel {
@@ -40,11 +43,11 @@ public:
 
 signals:
     void settingsChanged();
+    void uiLanguageChanged(const QString &langCode);
 
 private slots:
     void onBrowseModelsDir();
     void onFetchOnlineModels();
-    void onOnlineModelsReply(QNetworkReply *reply);
     void onDownloadModel(const QString &modelId);
     void onDeleteModel(const QString &modelId);
     void onActivateModel(const QString &modelId);
@@ -52,19 +55,41 @@ private slots:
     void onModelDownloaded(const QString &modelId);
     void onModelDownloadError(const QString &modelId, const QString &message);
 
+protected:
+    void changeEvent(QEvent *event) override;
+
 private:
     void refreshLocalModels();
     void refreshOnlineModels();
+    void retranslateUi();
     QString formatSize(qint64 bytes);
 
     SubtitleTranslator *m_translator;
     ModelDownloader *m_downloader;
-    QNetworkAccessManager *m_netManager;
+
+    QTabWidget *m_tabs;
+    QGroupBox  *m_dirBox;
+    QPushButton *m_browseBtn;
+    QGroupBox  *m_langBox;
+    QLabel     *m_srcLbl;
+    QLabel     *m_dstLbl;
+    QGroupBox  *m_optBox;
+    QGroupBox  *m_appearanceBox;
+    QLabel     *m_themeLbl;
+    QLabel     *m_langLbl;
+    QLabel     *m_leftTitle;
+    QLabel     *m_rightTitle;
+    QPushButton *m_fetchBtn;
+    QPushButton *m_deleteBtn;
+    QLabel     *m_infoLbl;
+    QPushButton *m_closeBtn;
 
     QLineEdit *m_modelsDirEdit;
     QComboBox *m_defaultSrcLangCombo;
     QComboBox *m_defaultDstLangCombo;
     QCheckBox *m_autoTranslateCheck;
+    QComboBox *m_themeCombo;
+    QComboBox *m_uiLangCombo;
 
     QListWidget *m_localListWidget;
     QListWidget *m_onlineListWidget;

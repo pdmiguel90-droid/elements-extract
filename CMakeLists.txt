@@ -30,6 +30,8 @@ add_executable(elements-extract
     subtitletranslator.cpp
     modeldownloader.h
     modeldownloader.cpp
+    theme.h
+    theme.cpp
     resources.qrc
 )
 
@@ -57,6 +59,10 @@ endif()
 # Install models without executable bit on .sh files
 install(DIRECTORY models/ DESTINATION share/elements-extract/models
         PATTERN "*.sh" EXCLUDE)
+
+# Install translation files
+install(DIRECTORY translations/ DESTINATION share/elements-extract/translations
+        FILES_MATCHING PATTERN "*.qm")
 
 # Install debian packaging files
 if(EXISTS ${CMAKE_SOURCE_DIR}/debian/copyright)

@@ -1,4 +1,5 @@
 #include "aboutdialog.h"
+#include "theme.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -8,107 +9,99 @@
 #include <QFrame>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QColor>
 
 AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 {
-    setWindowTitle("Acerca de Elements Extract FFmpeg");
-    setFixedSize(550, 550);
+    setWindowTitle(tr("Acerca de Elements Extract FFmpeg"));
+    setFixedSize(560, 480);
     setModal(true);
-
-    setStyleSheet(R"(
-        QDialog  { background-color: #121212; }
-        QWidget  { background-color: #121212; color: #CCCCCC;
-                   font-family: 'Segoe UI', sans-serif; font-size: 13px; }
-        QLabel#appTitle  { font-size: 18px; font-weight: bold;
-                           color: #FF8800; letter-spacing: 3px; }
-        QLabel#appVersion { font-size: 11px; color: #666666; }
-        QLabel#sectionTitle { color: #FF8800; font-weight: bold;
-                              font-size: 11px; letter-spacing: 1px; }
-        QLabel#key   { color: #888888; }
-        QLabel#value { color: #39FF14; }
-        QLabel#tech  { color: #CCCCCC; font-size: 11px;
-                       background-color: #1E1E1E;
-                       border: 1px solid #2A2A2A; border-radius: 4px;
-                       padding: 6px 10px; }
-        QFrame#sep   { background-color: #2A2A2A; }
-        QPushButton  { background-color: #1E1E1E; border: 1px solid #39FF14;
-                       border-radius: 5px; padding: 7px 24px;
-                       color: #39FF14; font-weight: bold; }
-        QPushButton:hover { background-color: #39FF14; color: #000; }
-        QLabel#copy { color: #444444; font-size: 11px; }
-    )");
 
     QVBoxLayout *root = new QVBoxLayout(this);
     root->setSpacing(10);
-    root->setContentsMargins(30, 22, 30, 18);
+    root->setContentsMargins(32, 24, 32, 18);
 
-    // ── Título e Icono ──────────────────────────────────────────────────────
+    // ── Logo ────────────────────────────────────────────────────────────────
     QLabel *iconLabel = new QLabel();
+    iconLabel->setObjectName("appLogo");
     QPixmap pix(":/ffmpeg-extractor.svg");
-    iconLabel->setPixmap(pix.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    iconLabel->setPixmap(pix.scaled(76, 76, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     iconLabel->setAlignment(Qt::AlignCenter);
     root->addWidget(iconLabel);
 
+    // ── Título ──────────────────────────────────────────────────────────────
     QLabel *title = new QLabel("ELEMENTS EXTRACT FFMPEG");
     title->setObjectName("appTitle");
     title->setAlignment(Qt::AlignCenter);
     root->addWidget(title);
 
-    QLabel *ver = new QLabel("Versión 1.2.0  ·  2025");
+    QLabel *ver = new QLabel(tr("Versión 1.2.0  ·  2026"));
     ver->setObjectName("appVersion");
     ver->setAlignment(Qt::AlignCenter);
     root->addWidget(ver);
 
     auto makeSep = [&]() {
-        QFrame *f = new QFrame(); f->setObjectName("sep");
-        f->setFrameShape(QFrame::HLine); f->setFixedHeight(1);
+        QFrame *f = new QFrame();
+        f->setObjectName("sep");
+        f->setFrameShape(QFrame::HLine);
+        f->setFixedHeight(1);
         return f;
     };
     root->addWidget(makeSep());
 
     // ── Descripción ─────────────────────────────────────────────────────────
     QLabel *desc = new QLabel(
-        "Extractor gráfico de pistas de audio, video y subtítulos.\n"
-        "Procesamiento en lote con selección individual por archivo.\n"
-        "Traducción automática de subtítulos con bergamot-translator.");
+        tr("Extractor gráfico de pistas de audio, vídeo y subtítulos.\n"
+        "Procesamiento por lotes con selección individual por archivo\n"
+        "y traducción automática de subtítulos sin conexión."));
     desc->setAlignment(Qt::AlignCenter);
     desc->setWordWrap(true);
     root->addWidget(desc);
 
     root->addWidget(makeSep());
 
-    // ── Datos del autor ──────────────────────────────────────────────────────
+    // ── Datos del autor ─────────────────────────────────────────────────────
     QGridLayout *grid = new QGridLayout();
     grid->setHorizontalSpacing(16);
-    grid->setVerticalSpacing(5);
+    grid->setVerticalSpacing(6);
     grid->setColumnStretch(1, 1);
 
     auto addRow = [&](int row, const QString &key, const QString &value,
-                      const QUrl &link = QUrl()) {
+                      bool link = false, const QString &url = QString()) {
         QLabel *k = new QLabel(key + ":"); k->setObjectName("key");
         k->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        QLabel *v = new QLabel(value);   v->setObjectName("value");
-        if (link.isValid()) {
+        QLabel *v;
+        if (link) {
+            const QString linkColor =
+                ThemeManager::instance()->effectiveTheme() == ThemeManager::Light
+                    ? "#D9700A" : "#FFA040";
+            v = new QLabel(QString("<a style=\"color:%1; text-decoration:none;\" href=\"%2\">%3</a>")
+                               .arg(linkColor, url, value.toHtmlEscaped()));
+            v->setTextFormat(Qt::RichText);
+            v->setTextInteractionFlags(Qt::TextBrowserInteraction);
+            v->setOpenExternalLinks(true);
             v->setCursor(Qt::PointingHandCursor);
-            v->setToolTip("Abrir en navegador");
-            // click via mouse-press handled through installEventFilter if needed;
-            // for simplicity show the URL as text
+            v->setProperty("link", true);
+        } else {
+            v = new QLabel(value);
         }
+        v->setObjectName("value");
+        v->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         grid->addWidget(k, row, 0);
         grid->addWidget(v, row, 1);
     };
 
-    addRow(0, "Desarrollado por", "pdmiguel90-droid");
-    addRow(1, "Contacto",         "pdmiguel90-droid@users.noreply.github.com");
-    addRow(2, "Repositorio",      "github.com/pdmiguel90-droid/elements-extract",
-               QUrl("https://github.com/pdmiguel90-droid/elements-extract"));
-    addRow(3, "Licencia",         "GNU General Public License v3.0");
+    addRow(0, tr("Desarrollado por"), "pdmiguel90-droid");
+    addRow(1, tr("Contacto"), "pdmiguel90-droid@users.noreply.github.com");
+    addRow(2, tr("Repositorio"), "github.com/pdmiguel90-droid/elements-extract", true,
+           "https://github.com/pdmiguel90-droid/elements-extract");
+    addRow(3, tr("Licencia"), "GNU General Public License v3.0");
 
     root->addLayout(grid);
     root->addWidget(makeSep());
 
-    // ── Tecnologías ──────────────────────────────────────────────────────────
-    QLabel *techTitle = new QLabel("TECNOLOGÍAS UTILIZADAS");
+    // ── Tecnologías ─────────────────────────────────────────────────────────
+    QLabel *techTitle = new QLabel(tr("TECNOLOGÍAS"));
     techTitle->setObjectName("sectionTitle");
     techTitle->setAlignment(Qt::AlignCenter);
     root->addWidget(techTitle);
@@ -116,10 +109,10 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     QHBoxLayout *techRow = new QHBoxLayout();
     techRow->setSpacing(8);
     const QStringList techs = {
-        "Qt 5\nInterfaz gráfica",
-        "FFmpeg\nExtracción",
-        "bergamot\nTraducción",
-        "C++17\nLenguaje"
+        tr("Qt 5\nInterfaz"),
+        tr("FFmpeg\nExtracción"),
+        tr("bergamot\nTraducción"),
+        tr("C++17\nLenguaje")
     };
     for (const QString &t : techs) {
         QLabel *lbl = new QLabel(t);
@@ -132,11 +125,11 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     root->addStretch();
 
     // ── Botón cerrar ─────────────────────────────────────────────────────────
-    QPushButton *closeBtn = new QPushButton("Cerrar");
+    QPushButton *closeBtn = new QPushButton(QIcon(":/icons/check.svg"), tr("Cerrar"));
     connect(closeBtn, &QPushButton::clicked, this, &QDialog::accept);
     root->addWidget(closeBtn, 0, Qt::AlignCenter);
 
-    QLabel *copy = new QLabel("© 2025 pdmiguel90-droid  —  GPL-3.0");
+    QLabel *copy = new QLabel(tr("© 2026 pdmiguel90-droid  —  GPL-3.0"));
     copy->setObjectName("copy");
     copy->setAlignment(Qt::AlignCenter);
     root->addWidget(copy);
