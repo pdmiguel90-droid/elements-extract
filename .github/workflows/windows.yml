@@ -48,31 +48,28 @@ jobs:
         run: |
           curl -fsSL "$env:BERGAMOT_WIN_URL" -o bin/bergamot.exe
 
+      - name: Locate Qt6
+        shell: bash
+        run: |
+          QT_UNIX="$(cygpath -u "$GITHUB_WORKSPACE")/qt"
+          cfg="$(find "$QT_UNIX" -path '*lib/cmake/Qt6/Qt6Config.cmake' 2>/dev/null | head -n1)"
+          if [ -z "$cfg" ]; then
+            echo "ERROR: Qt6Config.cmake no encontrado bajo $QT_UNIX"
+            find "$QT_UNIX" -maxdepth 3 -type d 2>/dev/null | head -40
+            exit 1
+          fi
+          root="$(dirname "$(dirname "$(dirname "$(dirname "$cfg")")")")"
+          echo "QT6_DIR_WIN=$(cygpath -w "$(dirname "$cfg")")" >> "$GITHUB_ENV"
+          echo "QT_ROOT_WIN=$(cygpath -w "$root")" >> "$GITHUB_ENV"
+          echo "Qt detectado:"
+          echo "  Qt6_DIR = $(cygpath -w "$(dirname "$cfg")")"
+          echo "  QT_ROOT = $(cygpath -w "$root")"
+
       - name: Configure
         shell: bash
         run: |
-          QT_ROOT="$GITHUB_WORKSPACE/qt/$QT_VERSION/$QT_ARCH"
-          echo "QT_ROOT=$QT_ROOT"
-          QT_UNIX="$(cygpath -u "$GITHUB_WORKSPACE")/qt/$QT_VERSION/$QT_ARCH"
-          echo "QT_UNIX=$QT_UNIX"
-          find "$QT_UNIX" -maxdepth 2 -type d 2>/dev/null | head -40 || echo "no hay dir qt/$QT_VERSION/$QT_ARCH"
-          Qt6DIR=""
-          cfg_expected="$QT_UNIX/lib/cmake/Qt6/Qt6Config.cmake"
-          if [ -f "$cfg_expected" ]; then
-            Qt6DIR="$QT_UNIX/lib/cmake/Qt6"
-          else
-            found="$(find "$QT_UNIX" -iname 'Qt6Config.cmake' 2>/dev/null | head -n1)"
-            if [ -n "$found" ]; then Qt6DIR="$(dirname "$found")"; fi
-          fi
-          if [ -z "$Qt6DIR" ]; then
-            echo "ERROR: no se encontro Qt6Config.cmake"
-            find "$(cygpath -u "$GITHUB_WORKSPACE")/qt" -maxdepth 5 -iname '*Qt6*' 2>/dev/null | head -40
-            exit 1
-          fi
-          QT6_WIN="$(cygpath -w "$Qt6DIR")"
-          echo "Qt6_DIR=$QT6_WIN"
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 \
-            -DQt6_DIR="$QT6_WIN" \
+            -DQt6_DIR="$QT6_DIR_WIN" \
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
@@ -82,8 +79,7 @@ jobs:
         run: cmake --install build --config Release --prefix stage
 
       - name: windeployqt
-        run: |
-          qt/$env:QT_VERSION/$env:QT_ARCH/bin/windeployqt.exe stage/elements-extract.exe
+        run: "$env:QT_ROOT_WIN/bin/windeployqt.exe stage/elements-extract.exe"
 
       - name: Package zip
         run: |
