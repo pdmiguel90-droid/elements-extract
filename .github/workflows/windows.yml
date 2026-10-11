@@ -12,10 +12,13 @@ permissions:
 env:
   QT_VERSION: 6.8.3
   QT_ARCH: win64_msvc2022_64
-  BERGAMOT_WIN_URL: ${{ vars.BERGAMOT_WIN_URL }}
 
 jobs:
+  bergamot:
+    uses: ./.github/workflows/bergamot-windows.yml
+
   build:
+    needs: bergamot
     runs-on: windows-2022
     steps:
       - name: Checkout
@@ -43,10 +46,16 @@ jobs:
           New-Item -ItemType Directory -Force -Path bin | Out-Null
           Copy-Item $ff.FullName bin/ffmpeg.exe
 
-      - name: Download bergamot (optional)
-        if: ${{ env.BERGAMOT_WIN_URL != '' }}
+      - name: Download bergamot engine (built in this run)
+        uses: actions/download-artifact@v5
+        with:
+          name: bergamot-win64
+
+      - name: Unpack bergamot.exe
         run: |
-          curl -fsSL "$env:BERGAMOT_WIN_URL" -o bin/bergamot.exe
+          Expand-Archive -Force bergamot-win64.zip berg
+          New-Item -ItemType Directory -Force -Path bin | Out-Null
+          Copy-Item berg/bergamot.exe bin/bergamot.exe
 
       - name: Locate Qt6
         shell: bash

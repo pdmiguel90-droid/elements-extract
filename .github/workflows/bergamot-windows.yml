@@ -6,6 +6,7 @@ name: bergamot-windows
 # lo empaquete en el zip de la app.
 on:
   workflow_dispatch:
+  workflow_call:
   push:
     tags: ['bergamot-*']
 
@@ -17,7 +18,7 @@ env:
   MKL_URL: "https://data.statmt.org/romang/marian-regression-tests/ci/mkl-2020.1-windows-static.zip"
 
 jobs:
-  build:
+  build-bergamot:
     runs-on: windows-2022
     steps:
       - name: Checkout bergamot-translator
