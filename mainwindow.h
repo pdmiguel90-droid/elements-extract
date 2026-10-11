@@ -219,6 +219,10 @@ private:
     QList<MuxJobInfo>     m_muxQueue;        // subs traducidos pendientes de remux
     int            m_muxIndex;
     bool           m_muxActive;
+    int            m_muxOk = 0;           // remux correctos
+    int            m_muxFailed = 0;       // omitidos o con error
+    QStringList    m_muxReasons;          // "archivo → motivo" (omitidos y errores)
+    QStringList    m_muxTail;             // últimas líneas de ffmpeg durante el remux
     QStringList    m_detectedSubLangs;       // idiomas de subs detectados en el lote
     QString        m_subLangFilter;          // "" = todos; si no, código a filtrar
     int            currentBatchIndex;

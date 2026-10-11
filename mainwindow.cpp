@@ -1250,6 +1250,10 @@ void MainWindow::readProcessOutput()
     QString out = QString::fromLocal8Bit(process->readAllStandardError());
     if (out.isEmpty()) out = QString::fromLocal8Bit(process->readAllStandardOutput());
     updateProgressFromLine(out);
+    if (m_muxActive && !out.trimmed().isEmpty()) {
+        m_muxTail.append(out.trimmed());
+        while (m_muxTail.size() > 30) m_muxTail.removeFirst();
+    }
     // Solo loguear líneas que no sean el progreso (evitar spam)
     if (!out.contains("time=") && !out.trimmed().isEmpty()) {
         QString text = out.trimmed().toHtmlEscaped();
@@ -1267,8 +1271,26 @@ void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     if (m_muxActive) {
         if (exitStatus == QProcess::NormalExit && exitCode == 0) {
             logArea->append(tr("<font color='#39FF14'>  › OK</font>"));
+            m_muxOk++;
         } else {
+            const MuxJobInfo &job = m_muxQueue[m_muxIndex];
+            QStringList hits;
+            for (int i = m_muxTail.size() - 1; i >= 0 && hits.size() < 3; --i) {
+                const QString l = m_muxTail[i].trimmed();
+                if (l.isEmpty()) continue;
+                if (l.contains("Error", Qt::CaseInsensitive) || l.contains("muxer", Qt::CaseInsensitive)
+                    || l.contains("stream", Qt::CaseInsensitive) || l.contains("does not", Qt::CaseInsensitive)
+                    || l.contains("not found", Qt::CaseInsensitive))
+                    hits.prepend(l);
+            }
+            if (hits.isEmpty() && !m_muxTail.isEmpty())
+                hits << m_muxTail.last().trimmed();
+            const QString reason = hits.isEmpty() ? tr("error de ffmpeg") : hits.join(" ");
+            m_muxFailed++;
+            m_muxReasons.append(QFileInfo(job.videoInput).fileName() + " → " + reason);
             logArea->append(tr("<font color='#FF4444'>  › Error al incrustar, omitido.</font>"));
+            for (const QString &h : hits)
+                logArea->append("<font color='#FF8844'>     " + h.toHtmlEscaped() + "</font>");
         }
         progressBar->setValue(100);
         m_muxIndex++;
@@ -1445,8 +1467,12 @@ void MainWindow::onSubLangFilterChanged(int)
 void MainWindow::startMuxQueue()
 {
     if (m_muxQueue.isEmpty()) return;
-    m_muxActive = true;
-    m_muxIndex = 0;
+    m_muxActive  = true;
+    m_muxIndex   = 0;
+    m_muxOk      = 0;
+    m_muxFailed  = 0;
+    m_muxReasons.clear();
+    m_muxTail.clear();
     extractButton->setEnabled(false);
     cancelButton->setEnabled(true);
     showLogArea();
@@ -1454,41 +1480,97 @@ void MainWindow::startMuxQueue()
     processNextMux();
 }
 
+// Códecs que pueden copiarse (stream copy) a contenedor MP4
+static bool isMp4SafeAudio(const QString &c)
+{
+    if (c.startsWith("pcm_")) return false;
+    static const QSet<QString> bad = {"vorbis", "flac", "dts", "dtshd", "truehd",
+                                      "tta", "wmav1", "wmav2", "wmalossless"};
+    return !bad.contains(c);
+}
+
+static bool isMp4SafeVideo(const QString &c)
+{
+    static const QSet<QString> good = {"h264", "hevc", "mpeg4", "mpeg2video",
+                                       "mpeg1video", "vp8", "vp9", "av1", "mjpeg", "prores"};
+    return good.contains(c);
+}
+
 void MainWindow::processNextMux()
 {
     if (m_muxIndex >= m_muxQueue.size()) {
         m_muxActive = false;
         logArea->append(tr("<br><font color='#39FF14'><b>=== ✓ PROCESO FINALIZADO ===</b></font>"));
-        statusBar()->showMessage(tr("✓ Finalizado — %1 archivo(s) incrustado(s)")
-                                     .arg(m_muxQueue.size()));
+        if (m_muxFailed > 0) {
+            logArea->append(tr("<font color='#FFCC00'><b>Incrustados: %1 · Omitidos/error: %2</b></font>")
+                                .arg(m_muxOk).arg(m_muxFailed));
+            for (const QString &r : m_muxReasons)
+                logArea->append(tr("<font color='#FF8844'>  › %1</font>").arg(r.toHtmlEscaped()));
+        }
+        statusBar()->showMessage(tr("✓ Finalizado — %1 incrustados, %2 omitidos")
+                                     .arg(m_muxOk).arg(m_muxFailed));
         extractButton->setEnabled(true);
         cancelButton->setEnabled(false);
         progressBar->setValue(100);
-        if (trayIcon->isSystemTrayAvailable())
-            trayIcon->showMessage("Elements Extract", tr("Subtítulos incrustados correctamente."),
-                                  QSystemTrayIcon::Information, 4000);
+        if (trayIcon->isSystemTrayAvailable()) {
+            QString msg = m_muxFailed > 0
+                ? tr("Subtítulos incrustados: %1 correctos, %2 con problemas.").arg(m_muxOk).arg(m_muxFailed)
+                : tr("Subtítulos incrustados correctamente.");
+            trayIcon->showMessage("Elements Extract", msg, QSystemTrayIcon::Information, 4000);
+        }
         return;
     }
 
     const MuxJobInfo &job = m_muxQueue[m_muxIndex];
     QFileInfo vi(job.videoInput);
+    QString reason;
     if (!QFile::exists(job.translatedSub)) {
-        logArea->append(tr("<font color='#FF4444'>  › No se encontró la traducción, omitido: %1</font>")
-                            .arg(QFileInfo(job.translatedSub).fileName()));
+        reason = tr("no se encontró la traducción");
+    } else if (outputLineEdit->text().trimmed().isEmpty()) {
+        reason = tr("no hay carpeta de destino configurada");
+    } else {
+        const QMap<int, QString> &types = fileStreamTypes.value(job.videoInput);
+        bool hasVideo = types.isEmpty();
+        for (auto it = types.constBegin(); it != types.constEnd(); ++it)
+            if (it.value() == "video") { hasVideo = true; break; }
+        if (!hasVideo)
+            reason = tr("sin pista de vídeo: no se puede incrustar");
+    }
+
+    if (!reason.isEmpty()) {
+        m_muxFailed++;
+        m_muxReasons.append(vi.fileName() + " → " + reason);
+        logArea->append(tr("<font color='#FF8844'>  › Omitido: %1 (%2)</font>")
+                            .arg(vi.fileName().toHtmlEscaped(), reason.toHtmlEscaped()));
         m_muxIndex++;
         processNextMux();
         return;
     }
 
     QString outDir = ensureOutputSubdir(tr("Remuxados"));
-    if (outDir.isEmpty()) {
-        logArea->append(tr("<font color='#FF4444'>  › No se ha especificado carpeta de destino, omitido.</font>"));
-        m_muxIndex++;
-        processNextMux();
-        return;
-    }
+    m_muxTail.clear();  // buffer de líneas para diagnosticar fallos
 
     bool toMp4 = vi.suffix().toLower() == "mp4";
+    if (toMp4 && !fileStreamTypes.value(job.videoInput).isEmpty()) {
+        // Compatibilidad stream-copy a MP4: si algún códec no es copiable, bajar a MKV
+        const QMap<int, QString> &typeMap = fileStreamTypes.value(job.videoInput);
+        const QMap<int, QString> &codecs  = fileStreamCodecs.value(job.videoInput);
+        QString switched;
+        for (auto it = typeMap.constBegin(); it != typeMap.constEnd(); ++it) {
+            const QString codec = codecs.value(it.key());
+            if (it.value() == "audio" && !isMp4SafeAudio(codec))
+                switched = tr("audio %1").arg(codec);
+            else if (it.value() == "video" && !isMp4SafeVideo(codec))
+                switched = tr("vídeo %1").arg(codec);
+            if (!switched.isEmpty()) break;
+        }
+        if (!switched.isEmpty()) {
+            toMp4 = false;
+            logArea->append(tr("<font color='#FFCC00'>  › %1 no es copiable a MP4 (%2) → se usará MKV</font>")
+                                .arg(switched, vi.fileName().toHtmlEscaped()));
+        }
+    }
+
     QString container = toMp4 ? "mp4" : "mkv";
     QString subCodec  = toMp4 ? "mov_text" : "srt";
     QString outPath = getUniqueFilePath(outDir + "/" + vi.completeBaseName()
