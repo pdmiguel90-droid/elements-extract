@@ -570,20 +570,26 @@ QString SubtitleTranslator::findBergamotBinary()
 {
     QStringList searchPaths;
 
+#ifdef Q_OS_WIN
+    const QString exe = QStringLiteral(".exe");
+#else
+    const QString exe = QString();
+#endif
+
     // Development paths
-    searchPaths << QCoreApplication::applicationDirPath() + "/bergamot";
-    searchPaths << QCoreApplication::applicationDirPath() + "/../bin/bergamot";
-    searchPaths << QCoreApplication::applicationDirPath() + "/../third_party/bergamot/build/app/bergamot";
+    searchPaths << QCoreApplication::applicationDirPath() + "/bergamot" + exe;
+    searchPaths << QCoreApplication::applicationDirPath() + "/../bin/bergamot" + exe;
+    searchPaths << QCoreApplication::applicationDirPath() + "/../third_party/bergamot/build/app/bergamot" + exe;
 
     // Installed paths
-    searchPaths << QCoreApplication::applicationDirPath() + "/../share/elements-extract/bin/bergamot";
-    searchPaths << "/usr/share/elements-extract/bin/bergamot";
+    searchPaths << QCoreApplication::applicationDirPath() + "/../share/elements-extract/bin/bergamot" + exe;
+    searchPaths << "/usr/share/elements-extract/bin/bergamot" + exe;
 
     // User config directory
-    searchPaths << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/bin/bergamot";
+    searchPaths << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/bin/bergamot" + exe;
 
     // System PATH
-    searchPaths << "bergamot";
+    searchPaths << "bergamot" + exe;
 
     for (const QString &path : searchPaths) {
         if (QFile::exists(path)) return path;
@@ -591,7 +597,7 @@ QString SubtitleTranslator::findBergamotBinary()
 
     // Try to find in PATH
     QProcess which;
-    which.start("which", {"bergamot"});
+    which.start("which", {"bergamot" + exe});
     if (which.waitForFinished(3000) && which.exitCode() == 0) {
         return QString::fromLocal8Bit(which.readAllStandardOutput()).trimmed();
     }
