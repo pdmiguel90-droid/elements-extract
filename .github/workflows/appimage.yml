@@ -44,6 +44,12 @@ jobs:
             echo "BERGAMOT_BASE_URL no definida: el AppImage ira sin motor de traduccion"
           fi
 
+      - name: Sanity checks (Qt6)
+        run: |
+          qmake6 -v
+          ls /usr/lib/x86_64-linux-gnu/cmake/ | grep -i qt || true
+          test -f /usr/lib/x86_64-linux-gnu/cmake/Qt6/Qt6Config.cmake && echo Q6_CONFIG_OK
+
       - name: Build AppImage
         run: ./tools/build-appimage.sh
 

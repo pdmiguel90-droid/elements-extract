@@ -29,6 +29,10 @@ import ssl
 import sys
 import urllib.request
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 DEFAULT_REGISTRY = "https://translatelocally.com/models.json"
 
 HDRS = {"User-Agent": "elements-extract-mirror/1.0"}
@@ -100,7 +104,7 @@ def main():
         if args.dry_run:
             base = f"file://{os.path.abspath(args.out)}"
         else:
-            print("⚠  --base-url vacío: usaré file:// a la ruta local del mirror.")
+            print("AVISO: --base-url vacío: usaré file:// a la ruta local del mirror.")
             base = f"file://{os.path.abspath(args.out)}"
     else:
         base = args.base_url.rstrip("/")

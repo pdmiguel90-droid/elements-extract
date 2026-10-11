@@ -8,12 +8,24 @@ APPDIR="$CACHE/AppDir"
 VER="$(grep -oP 'project\(ElementsExtract VERSION \K[0-9.]+' CMakeLists.txt)"
 echo "[*] version $VER"
 
-if command -v qmake6 >/dev/null 2>&1; then QMAKE=qmake6; else QMAKE=qmake; fi
-QTPLUGINS="$("$QMAKE" -query QT_INSTALL_PLUGINS)"
+if ! command -v qmake6 >/dev/null 2>&1; then
+    echo "ERROR: Qt6 no disponible (falta qmake6). Aborto para no empaquetar Qt5 con plugins Qt6."
+    exit 1
+fi
+QMAKE=qmake6
 
-cmake -S . -B build-appimage -DCMAKE_BUILD_TYPE=Release >/dev/null
-cmake --build build-appimage -j"$(nproc)" >/dev/null
+QT6_CMAKE="/usr/lib/x86_64-linux-gnu/cmake/Qt6"
+EXTRA=""
+if [ -d "$QT6_CMAKE" ]; then
+    EXTRA="-DQt6_DIR=$QT6_CMAKE"
+fi
+echo "[*] cmake Qt6 hint: ${EXTRA:-<detección del sistema>}"
+
+cmake -S . -B build-appimage -DCMAKE_BUILD_TYPE=Release $EXTRA
+cmake --build build-appimage -j"$(nproc)"
 cmake --install build-appimage --prefix "$APPDIR/usr"
+
+QTPLUGINS="$("$QMAKE" -query QT_INSTALL_PLUGINS)"
 
 mkdir -p "$APPDIR/usr/lib/elements-extract"
 for sub in platforms imageformats iconengines platforminputcontexts xcbglintegrations; do
