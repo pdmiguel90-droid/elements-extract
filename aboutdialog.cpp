@@ -112,7 +112,7 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     QHBoxLayout *techRow = new QHBoxLayout();
     techRow->setSpacing(8);
     const QStringList techs = {
-        tr("Qt 5\nInterfaz"),
+        tr("Qt %1\nInterfaz").arg(qVersion()),
         tr("FFmpeg\nExtracción"),
         tr("bergamot\nTraducción"),
         tr("C++17\nLenguaje")
