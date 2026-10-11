@@ -51,11 +51,28 @@ jobs:
       - name: Configure
         shell: bash
         run: |
-          QT_DIR="$GITHUB_WORKSPACE/qt/$QT_VERSION/$QT_ARCH"
-          echo "QT_DIR=$QT_DIR"
-          ls "$QT_DIR/lib/cmake/Qt6/Qt6Config.cmake" && echo Q6_CONFIG_OK
+          QT_ROOT="$GITHUB_WORKSPACE/qt/$QT_VERSION/$QT_ARCH"
+          echo "QT_ROOT=$QT_ROOT"
+          QT_UNIX="$(cygpath -u "$GITHUB_WORKSPACE")/qt/$QT_VERSION/$QT_ARCH"
+          echo "QT_UNIX=$QT_UNIX"
+          find "$QT_UNIX" -maxdepth 2 -type d 2>/dev/null | head -40 || echo "no hay dir qt/$QT_VERSION/$QT_ARCH"
+          Qt6DIR=""
+          cfg_expected="$QT_UNIX/lib/cmake/Qt6/Qt6Config.cmake"
+          if [ -f "$cfg_expected" ]; then
+            Qt6DIR="$QT_UNIX/lib/cmake/Qt6"
+          else
+            found="$(find "$QT_UNIX" -iname 'Qt6Config.cmake' 2>/dev/null | head -n1)"
+            if [ -n "$found" ]; then Qt6DIR="$(dirname "$found")"; fi
+          fi
+          if [ -z "$Qt6DIR" ]; then
+            echo "ERROR: no se encontro Qt6Config.cmake"
+            find "$(cygpath -u "$GITHUB_WORKSPACE")/qt" -maxdepth 5 -iname '*Qt6*' 2>/dev/null | head -40
+            exit 1
+          fi
+          QT6_WIN="$(cygpath -w "$Qt6DIR")"
+          echo "Qt6_DIR=$QT6_WIN"
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 \
-            -DCMAKE_PREFIX_PATH="$QT_DIR" \
+            -DQt6_DIR="$QT6_WIN" \
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
