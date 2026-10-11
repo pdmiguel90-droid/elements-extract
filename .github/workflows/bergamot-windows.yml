@@ -38,28 +38,31 @@ jobs:
 
       - name: Disable vcpkg debug builds
         shell: pwsh
-        working-directory: ${{ env.VCPKG_INSTALLATION_ROOT }}\triplets
         run: |
-          Add-Content -Path x64-windows-static.cmake -Value "set(VCPKG_BUILD_TYPE release)"
-          Add-Content -Path x64-windows.cmake -Value "set(VCPKG_BUILD_TYPE release)"
+          $vcpkg = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { 'C:\vcpkg' }
+          $triplets = Join-Path $vcpkg 'triplets'
+          Write-Host "vcpkg root: $vcpkg"
+          Add-Content -Path (Join-Path $triplets 'x64-windows-static.cmake') -Value "set(VCPKG_BUILD_TYPE release)"
+          Add-Content -Path (Join-Path $triplets 'x64-windows.cmake') -Value "set(VCPKG_BUILD_TYPE release)"
 
       - name: Install dependencies with vcpkg
         shell: pwsh
-        working-directory: ${{ env.VCPKG_INSTALLATION_ROOT }}
         run: |
+          $vcpkg = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { 'C:\vcpkg' }
           $env:VCPKG_BUILD_TYPE = 'release'
           $env:VCPKG_DEFAULT_TRIPLET = 'x64-windows-static'
-          .\vcpkg install protobuf:x64-windows-static pcre2:x64-windows-static
+          & (Join-Path $vcpkg 'vcpkg.exe') install protobuf:x64-windows-static pcre2:x64-windows-static
 
       - name: Configure
         shell: pwsh
         working-directory: ${{ github.workspace }}\bergamot
         run: |
+          $vcpkg = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { 'C:\vcpkg' }
           cmake -S . -B build `
             -DCMAKE_BUILD_TYPE=Release `
             -DUSE_STATIC_LIBS=ON `
             -DVCPKG_TARGET_TRIPLET='x64-windows-static' `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+            -DCMAKE_TOOLCHAIN_FILE="$(Join-Path $vcpkg 'scripts\buildsystems\vcpkg.cmake')"
 
       - name: Build CLI
         shell: pwsh
