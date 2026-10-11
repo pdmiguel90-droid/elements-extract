@@ -46,6 +46,8 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 - 🖱️ **Drag & Drop** — arraste arquivos direto para a janela
 - ⌨️ **Atalhos de teclado** — `Ctrl+O`, `Del`, `Ctrl+Enter`, `Esc`, `F1`
 - 🌐 **Tradução de legendas offline** — traduza legendas extraídas para o idioma que quiser (en, es, fr, pt)
+- ➡️ **Incrustar a tradução (remux)** — a legenda traduzida é incorporada num novo .mkv/.mp4 com o vídeo e o áudio originais, sem re-codificar (estilo MKVToolNix)
+- 🎯 **Filtro de legendas por idioma** — seleciona e traduz apenas as legendas de um idioma específico em todos os arquivos do lote
 - 🔄 **Tradução triangular** — quando não há modelo direto (ex.: pt→es), usa intermediários (pt→en→es)
 - 🤖 **Detecção automática de idioma** — detecta o idioma das legendas a partir dos metadados do arquivo
 - ⬇️ **Modelos baixáveis** — baixe modelos de tradução do translatelocally.com (apenas uma vez)
@@ -183,6 +185,10 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 2. Marque a caixa **"Traduzir ao extrair"**
 3. Extraia normalmente — as legendas traduzidas são salvas como `arquivo.es.srt`
 4. Se não houver modelo direto (ex.: pt→es), a **tradução triangular** é usada automaticamente
+
+> 💡 **Trabalhar com um único idioma**: a lista **"Apenas legendas"** seleciona de uma vez as legendas de um idioma específico em todos os arquivos do lote (arquivos sem esse idioma são ignorados). Com o filtro ativo, a tradução usa esse idioma como origem automaticamente.
+
+> 🎬 **Incrustar a tradução**: com a caixa **"Incrustar a tradução (remux)"** marcada, é gerado um novo `.mkv`/`.mp4` (`arquivo.<idioma>.mkv`) com o vídeo e o áudio originais e a faixa de legendas traduzidas incorporada (sem re-codificar). É salvo em `Elements Extract/Remuxados`.
 
 ### Gerenciamento de modelos
 

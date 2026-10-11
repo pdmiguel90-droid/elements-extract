@@ -46,6 +46,8 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 - 🖱️ **Drag & Drop** — arrastra archivos directamente a la ventana
 - ⌨️ **Atajos de teclado** — `Ctrl+O`, `Del`, `Ctrl+Enter`, `Escape`, `F1`
 - 🌐 **Traducción de subtítulos offline** — traduce subtítulos extraídos al idioma que quieras (en, es, fr, pt)
+- ➡️ **Incrustar la traducción (remux)** — el subtítulo traducido se incrusta en un nuevo .mkv/.mp4 con el vídeo y el audio originales, sin re-codificar (estilo MKVToolNix)
+- 🎯 **Filtro de subtítulos por idioma** — selecciona y traduce solo los subtítulos de un idioma concreto en todos los archivos del lote
 - 🔄 **Traducción triangular** — si no hay modelo directo (ej. pt→es), usa intermediarios (pt→en→es)
 - 🤖 **Detección automática de idioma** — detecta el idioma de los subtítulos desde la metadata del archivo
 - ⬇️ **Modelos descargables** — descarga modelos de traducción desde translatelocally.com (solo una vez)
@@ -183,6 +185,10 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 2. Marca la casilla **«Traducir al extraer»**
 3. Extrae normalmente — los subtítulos traducidos se guardan como `archivo.es.srt`
 4. Si no hay modelo directo (ej. pt→es), se usa **traducción triangular** automáticamente
+
+> 💡 **Trabajar solo con un idioma**: el desplegable **«Solo subs»** selecciona a la vez los subtítulos de un idioma concreto en todos los archivos del lote (si un archivo no tiene ese idioma, se omite). Con el filtro activo, la traducción usa ese idioma como origen automáticamente.
+
+> 🎬 **Incrustar la traducción**: con la casilla **«Incrustar la traducción (remux)»**, al terminar se genera un `.mkv`/`.mp4` nuevo (`archivo.<idioma>.mkv`) con el vídeo y el audio originales y la pista de subtítulos traducida dentro (sin re-codificar). Se guardan en `Elements Extract/Remuxados`.
 
 ### Gestión de modelos
 

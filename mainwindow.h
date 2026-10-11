@@ -32,6 +32,20 @@ class SubtitleTranslator;
 class ModelDownloader;
 class SettingsDialog;
 
+// Sub extraído que puede traducirse/incrustarse de vuelta en su vídeo
+struct SubExtractInfo {
+    QString videoInput;
+    QString subPath;
+    QString subLang;      // código normalizado (ej: "es")
+};
+
+// Trabajo de remux: sub ya traducido → incrustar en el vídeo original
+struct MuxJobInfo {
+    QString videoInput;
+    QString translatedSub;
+    QString langCode;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -78,6 +92,12 @@ private slots:
     void translateExtractedSubtitles(const QString &subtitlePath);
     void translateExistingFiles();
 
+    // ── Filtro por idioma + remux ──────────────────────────────────────────
+    void refreshSubLangFilter();
+    void onSubLangFilterChanged(int index);
+    void startMuxQueue();
+    void processNextMux();
+
     // ── Model management slots ─────────────────────────────────────────────
     void showModelManager();
     void onModelsFetched();
@@ -106,6 +126,8 @@ private:
     void saveSettings();
     QString getUniqueFilePath(const QString &fullPath);
     QString ensureOutputSubdir(const QString &subName);
+    void    applySubtitleFilterToFile(const QString &path);
+    QString ffmpegExecutable() const;
     qint64  parseTimestamp(const QString &ts);
     void    updateProgressFromLine(const QString &line);
     QString extensionForType(const QString &type);
@@ -163,10 +185,13 @@ private:
     QComboBox    *srcLangCombo;
     QComboBox    *dstLangCombo;
     QCheckBox    *translateOnExtractCheck;
+    QCheckBox    *muxOnExtractCheck;
     QPushButton  *manageModelsButton;
     QPushButton  *translateFilesButton;
     QProgressBar *translationProgressBar;
     QLabel       *translationStatusLabel;
+    QLabel       *subFilterLabel;
+    QComboBox    *subFilterCombo;
 
     // ── Procesos ─────────────────────────────────────────────────────────────
     QProcess   *process;
@@ -190,7 +215,12 @@ private:
     QMap<QString, QMap<int, QString>> fileStreamLanguages;
     QSet<QString>  globalSelectionTypes;
     QStringList    batchFiles;
-    QStringList    extractedSubtitleFiles;
+    QList<SubExtractInfo> m_extractedSubs;   // subs extraídos + su vídeo de origen
+    QList<MuxJobInfo>     m_muxQueue;        // subs traducidos pendientes de remux
+    int            m_muxIndex;
+    bool           m_muxActive;
+    QStringList    m_detectedSubLangs;       // idiomas de subs detectados en el lote
+    QString        m_subLangFilter;          // "" = todos; si no, código a filtrar
     int            currentBatchIndex;
     QMap<QString, qint64> fileDurations; // duración en ms por archivo
     qint64 currentFileDuration;

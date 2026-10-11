@@ -35,12 +35,38 @@
 #include <QLocale>
 #include <QScreen>
 #include <QGuiApplication>
+#include <algorithm>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constructor / Destructor
 // ─────────────────────────────────────────────────────────────────────────────
+static QString normalizeLangCode(const QString &raw)
+{
+    const QString c = raw.trimmed().toLower();
+    static const QMap<QString, QString> map = {
+        {"en", "en"}, {"eng", "en"}, {"english", "en"},
+        {"es", "es"}, {"spa", "es"}, {"spanish", "es"}, {"cast", "es"},
+        {"fr", "fr"}, {"fra", "fr"}, {"fre", "fr"}, {"french", "fr"},
+        {"pt", "pt"}, {"por", "pt"}, {"portuguese", "pt"},
+        {"de", "de"}, {"ger", "de"}, {"deu", "de"}, {"german", "de"},
+        {"it", "it"}, {"ita", "it"}, {"italian", "it"},
+        {"ja", "ja"}, {"jpn", "ja"}, {"japanese", "ja"},
+        {"zh", "zh"}, {"chi", "zh"}, {"zho", "zh"}, {"chinese", "zh"},
+        {"ko", "ko"}, {"kor", "ko"}, {"korean", "ko"},
+        {"ru", "ru"}, {"rus", "ru"}, {"russian", "ru"},
+        {"ar", "ar"}, {"ara", "ar"}, {"arabic", "ar"},
+        {"hi", "hi"}, {"hin", "hi"}, {"hindi", "hi"},
+        {"nl", "nl"}, {"dut", "nl"}, {"nld", "nl"}, {"dutch", "nl"},
+        {"sv", "sv"}, {"swe", "sv"}, {"swedish", "sv"},
+        {"pl", "pl"}, {"pol", "pl"}, {"polish", "pl"},
+        {"tr", "tr"}, {"tur", "tr"}, {"turkish", "tr"}
+    };
+    return map.value(c, c);
+}
+
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), currentBatchIndex(-1), currentFileDuration(0)
+    : QMainWindow(parent), currentBatchIndex(-1), currentFileDuration(0),
+      m_muxIndex(0), m_muxActive(false)
 {
     setupUi();
     setupMenuBar();
@@ -126,7 +152,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(process, &QProcess::errorOccurred, this, [this](QProcess::ProcessError e) {
         if (e == QProcess::FailedToStart) {
             logArea->append(tr("<font color='#FF4444'>  › No se pudo iniciar ffmpeg. ¿Está instalado?.</font>"));
-            if (currentBatchIndex >= 0) {
+            if (m_muxActive) {
+                m_muxIndex++;
+                processNextMux();
+            } else if (currentBatchIndex >= 0) {
                 currentBatchIndex++;
                 processNextInBatch();
             }
@@ -258,6 +287,21 @@ void MainWindow::setupUi()
     quickSel->addWidget(clearAllButton);
     leftPanel->addLayout(quickSel);
 
+    QHBoxLayout *subFilterRow = new QHBoxLayout();
+    subFilterRow->setSpacing(4);
+    subFilterLabel = new QLabel(tr("Solo subs:"));
+    subFilterLabel->setProperty("labelColor", "muted");
+    subFilterCombo = new QComboBox();
+    subFilterCombo->addItem(tr("Todos los idiomas"), "");
+    subFilterCombo->setToolTip(
+        tr("Selecciona los subtítulos de un idioma concreto en TODOS los archivos del lote.\n"
+           "Mientras esté activo, la extracción y la traducción trabajarán solo con ese idioma."));
+    connect(subFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onSubLangFilterChanged);
+    subFilterRow->addWidget(subFilterLabel);
+    subFilterRow->addWidget(subFilterCombo, 1);
+    leftPanel->addLayout(subFilterRow);
+
     QScrollArea *scrollArea = new QScrollArea();
     scrollArea->setWidgetResizable(true);
     scrollArea->setFrameShape(QFrame::NoFrame);
@@ -359,6 +403,12 @@ void MainWindow::setupUi()
         s.setValue("autoTranslate", checked);
     });
     transMainLayout->addWidget(translateOnExtractCheck);
+
+    muxOnExtractCheck = new QCheckBox(tr("Incrustar la traducción (remux)"));
+    muxOnExtractCheck->setToolTip(
+        tr("Tras traducir, genera un archivo .mkv/.mp4 con el vídeo y el audio originales\n"
+        "y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin pérdida)."));
+    transMainLayout->addWidget(muxOnExtractCheck);
 
     QHBoxLayout *transBtns = new QHBoxLayout();
     transBtns->setSpacing(6);
@@ -532,6 +582,7 @@ void MainWindow::removeFiles()
         fileDurations.remove(item->data(Qt::UserRole).toString());
         delete item;
     }
+    refreshSubLangFilter();
     if (fileListWidget->count() == 0) {
         clearStreamsList();
         selectedFileLabel->setText(tr("No hay archivos cargados"));
@@ -652,26 +703,7 @@ void MainWindow::autoDetectSourceLanguage()
 
     if (detectedLang.isEmpty()) return;
 
-    // Map common codes to our supported codes
-    QMap<QString, QString> codeMap;
-    codeMap["eng"] = "en"; codeMap["english"] = "en";
-    codeMap["spa"] = "es"; codeMap["spanish"] = "es"; codeMap["cast"] = "es";
-    codeMap["fre"] = "fr"; codeMap["fra"] = "fr"; codeMap["french"] = "fr";
-    codeMap["por"] = "pt"; codeMap["portuguese"] = "pt";
-    codeMap["ger"] = "de"; codeMap["deu"] = "de"; codeMap["german"] = "de";
-    codeMap["ita"] = "it"; codeMap["italian"] = "it";
-    codeMap["jpn"] = "ja"; codeMap["japanese"] = "ja";
-    codeMap["chi"] = "zh"; codeMap["zho"] = "zh"; codeMap["chinese"] = "zh";
-    codeMap["kor"] = "ko"; codeMap["korean"] = "ko";
-    codeMap["rus"] = "ru"; codeMap["russian"] = "ru";
-    codeMap["ara"] = "ar"; codeMap["arabic"] = "ar";
-    codeMap["hin"] = "hi"; codeMap["hindi"] = "hi";
-    codeMap["dut"] = "nl"; codeMap["nld"] = "nl"; codeMap["dutch"] = "nl";
-    codeMap["swe"] = "sv"; codeMap["swedish"] = "sv";
-    codeMap["pol"] = "pl"; codeMap["polish"] = "pl";
-    codeMap["tur"] = "tr"; codeMap["turkish"] = "tr";
-
-    QString mappedLang = codeMap.value(detectedLang, detectedLang);
+    QString mappedLang = normalizeLangCode(detectedLang);
 
     // Check if it's one of our supported source languages
     QStringList supportedSrc = SubtitleTranslator::supportedSourceLanguages();
@@ -768,6 +800,11 @@ void MainWindow::selectAllAudio()
 }
 void MainWindow::selectAllSubs()
 {
+    if (!m_subLangFilter.isEmpty()) {
+        logArea->append(tr("<font color='#FFCC00'>El filtro \"Solo subs\" está activo. "
+                           "Ponlo en \"Todos los idiomas\" para la selección global de subs.</font>"));
+        return;
+    }
     if (globalSelectionTypes.contains("subtitle")) globalSelectionTypes.remove("subtitle");
     else globalSelectionTypes.insert("subtitle");
     updateCheckboxesFromGlobal();
@@ -823,6 +860,7 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
     QMap<int, QString> saved = fileSelections.value(lastSelectedFile);
     QMap<int, QString> langMap;
     QMap<int, QString> typeMap;
+    QMap<int, QString> codecMap;
     for (int i = 0; i < streams.size(); ++i) {
         QJsonObject s = streams.at(i).toObject();
         int     index = s.value("index").toInt();
@@ -833,6 +871,7 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
         int     h     = s.value("height").toInt();
 
         typeMap[index] = type;
+        codecMap[index] = codec;
         if (!lang.isEmpty()) langMap[index] = lang;
 
         if (type == "video" && videoInfo.isEmpty() && w > 0)
@@ -863,6 +902,17 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
 
     fileStreamLanguages[lastSelectedFile] = langMap;
     fileStreamTypes[lastSelectedFile] = typeMap;
+    if (!fileStreamCodecs.contains(lastSelectedFile))
+        fileStreamCodecs[lastSelectedFile] = codecMap;
+
+    // Si hay un filtro por idioma activo, aplicarlo y reflejarlo en los checkboxes
+    if (!m_subLangFilter.isEmpty()) {
+        applySubtitleFilterToFile(lastSelectedFile);
+        const QMap<int, QString> &sel = fileSelections.value(lastSelectedFile);
+        for (QCheckBox *cb : streamCheckBoxes)
+            cb->setChecked(sel.contains(cb->property("streamIndex").toInt()));
+    }
+    refreshSubLangFilter();
 
     // Actualizar panel de metadatos
     updateMetadataPanel(dur, size, videoInfo, nAudio, nSubs);
@@ -897,8 +947,17 @@ QString MainWindow::extensionForCodec(const QString &codec, const QString &type)
 void MainWindow::startExtraction()
 {
     saveCurrentSelections();
+    if (!m_subLangFilter.isEmpty()) {
+        globalSelectionTypes.remove("subtitle");
+        const int n = fileListWidget->count();
+        for (int i = 0; i < n; ++i)
+            applySubtitleFilterToFile(fileListWidget->item(i)->data(Qt::UserRole).toString());
+    }
     batchFiles.clear();
-    extractedSubtitleFiles.clear();
+    m_extractedSubs.clear();
+    m_muxQueue.clear();
+    m_muxIndex = 0;
+    m_muxActive = false;
     for (int i = 0; i < fileListWidget->count(); ++i)
         batchFiles << fileListWidget->item(i)->data(Qt::UserRole).toString();
     if (batchFiles.isEmpty()) return;
@@ -924,6 +983,18 @@ void MainWindow::cancelExtraction()
         cancelButton->setEnabled(false);
         return;
     }
+    if (m_muxActive) {
+        if (process->state() != QProcess::NotRunning) {
+            process->kill();
+            logArea->append(tr("<br><font color='#FF4444'><b>[CANCELADO] El remux fue interrumpido por el usuario.</b></font>"));
+        }
+        m_muxActive = false;
+        m_muxQueue.clear();
+        extractButton->setEnabled(true);
+        cancelButton->setEnabled(false);
+        progressBar->setValue(0);
+        return;
+    }
     if (process->state() != QProcess::NotRunning) {
         process->kill();
         logArea->append(tr("<br><font color='#FF4444'><b>[CANCELADO] El proceso fue interrumpido por el usuario.</b></font>"));
@@ -947,34 +1018,46 @@ void MainWindow::processNextInBatch()
         progressBar->setValue(100);
 
         // Auto-translate extracted subtitles if checkbox is checked
-        if (translateOnExtractCheck->isChecked() && !extractedSubtitleFiles.isEmpty()) {
-            QString srcLang = srcLangCombo->currentData().toString();
+        if (translateOnExtractCheck->isChecked() && !m_extractedSubs.isEmpty()) {
             QString dstLang = dstLangCombo->currentData().toString();
+            QString srcLang;
+            if (!m_subLangFilter.isEmpty()) {
+                srcLang = m_subLangFilter;
+                logArea->append(QString("<font color='#888888'>  [DEBUG] idioma origen fijado por el filtro: %1</font>")
+                    .arg(SubtitleTranslator::languageName(srcLang)));
+            } else {
+                srcLang = srcLangCombo->currentData().toString();
+            }
             logArea->append(QString("<font color='#888888'>  [DEBUG] translateCheck=ON, srcLang='%1', dstLang='%2'</font>")
                 .arg(srcLang, dstLang));
             if (srcLang != dstLang) {
-                QStringList existingFiles;
-                for (const QString &f : extractedSubtitleFiles)
-                    if (QFile::exists(f)) existingFiles.append(f);
-                extractedSubtitleFiles = existingFiles;
+                QStringList subPaths;
+                for (const SubExtractInfo &se : m_extractedSubs)
+                    if (QFile::exists(se.subPath)) subPaths.append(se.subPath);
                 logArea->append(QString("<font color='#888888'>  [DEBUG] files to translate: %1</font>")
-                    .arg(extractedSubtitleFiles.size()));
+                    .arg(subPaths.size()));
 
-                if (!extractedSubtitleFiles.isEmpty()) {
+                if (!subPaths.isEmpty()) {
                     // Bloquear re-entrada mientras se traduce (A6)
                     extractButton->setEnabled(false);
                     cancelButton->setEnabled(true);
                     logArea->append(QString("<br><font color='#00BFFF'><b>" + tr("Traduciendo %1 archivo(s) de subtítulos...") + "</b></font>")
-                        .arg(extractedSubtitleFiles.size()));
+                        .arg(subPaths.size()));
                     translationProgressBar->setVisible(true);
                     translationProgressBar->setValue(0);
 
-                    subtitleTranslator->translateBatch(extractedSubtitleFiles, ensureOutputSubdir(tr("Traducidos")), srcLang, dstLang);
+                    subtitleTranslator->translateBatch(subPaths, ensureOutputSubdir(tr("Traducidos")), srcLang, dstLang);
                     return;
                 }
             } else {
                 logArea->append("<font color='#FFCC00'>  [DEBUG] srcLang == dstLang, traducción omitida</font>");
             }
+        }
+
+        // Sin traducción (o ya hecha): pasar al remux si se pidió
+        if (muxOnExtractCheck->isChecked() && !m_muxQueue.isEmpty()) {
+            startMuxQueue();
+            return;
         }
 
         if (trayIcon->isSystemTrayAvailable()) {
@@ -1094,8 +1177,21 @@ void MainWindow::processNextInBatch()
             }
             QString outPath = claimUnique(outName);
             finalArgs << "-y" << outPath;
-            if (type == "subtitle")
-                extractedSubtitleFiles.append(outPath);
+            if (type == "subtitle") {
+                // Solo se puede traducir/incrustar un sub de texto único
+                int textSubCount = 0;
+                QString recLang;
+                for (auto it = strTypes.constBegin(); it != strTypes.constEnd(); ++it) {
+                    if (it.value() == "subtitle" && subtitleCodecIsText(selectedCodecs.value(it.key()))) {
+                        ++textSubCount;
+                        recLang = strLangs.value(it.key());
+                    }
+                }
+                if (textSubCount == 1 && !normalizeLangCode(recLang).isEmpty())
+                    m_extractedSubs.append({inputPath, outPath, normalizeLangCode(recLang)});
+                else
+                    logArea->append(tr("<font color='#FFCC00'>  › Subtítulo omitido para traducción (varias pistas de texto o formato de imagen): %1</font>").arg(outPath));
+            }
             anyAction = true;
         }
     } else {
@@ -1129,8 +1225,11 @@ void MainWindow::processNextInBatch()
             }
             QString outPath = claimUnique(outName);
             finalArgs << "-y" << outPath;
-            if (translatableSub)
-                extractedSubtitleFiles.append(outPath);
+            if (translatableSub) {
+                QString normLang = normalizeLangCode(strLangs.value(index));
+                m_extractedSubs.append({inputPath, outPath,
+                                       (normLang.isEmpty() || normLang == "und") ? QString() : normLang});
+            }
             anyAction = true;
         }
     }
@@ -1143,13 +1242,7 @@ void MainWindow::processNextInBatch()
     }
 
     if (process->state() != QProcess::NotRunning) return;  // ffmpeg aún en marcha: no relanzar
-    QString ffmpegBin = QCoreApplication::applicationDirPath()
-                        + QDir::separator() + QStringLiteral("ffmpeg")
-#ifdef Q_OS_WIN
-                        + QStringLiteral(".exe")
-#endif
-                        ;
-    process->start(QFileInfo::exists(ffmpegBin) ? ffmpegBin : QStringLiteral("ffmpeg"), finalArgs);
+    process->start(ffmpegExecutable(), finalArgs);
 }
 
 void MainWindow::readProcessOutput()
@@ -1171,6 +1264,17 @@ void MainWindow::readProcessOutput()
 
 void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
+    if (m_muxActive) {
+        if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+            logArea->append(tr("<font color='#39FF14'>  › OK</font>"));
+        } else {
+            logArea->append(tr("<font color='#FF4444'>  › Error al incrustar, omitido.</font>"));
+        }
+        progressBar->setValue(100);
+        m_muxIndex++;
+        processNextMux();
+        return;
+    }
     if (exitStatus == QProcess::NormalExit && exitCode == 0) {
         logArea->append(tr("<font color='#39FF14'>  › OK</font>"));
         progressBar->setValue(100);
@@ -1243,6 +1347,191 @@ void MainWindow::clearStreamsList()
 {
     qDeleteAll(streamCheckBoxes);
     streamCheckBoxes.clear();
+}
+
+QString MainWindow::ffmpegExecutable() const
+{
+    QString bin = QCoreApplication::applicationDirPath()
+                  + QDir::separator() + QStringLiteral("ffmpeg");
+#ifdef Q_OS_WIN
+    bin += QStringLiteral(".exe");
+#endif
+    return QFileInfo::exists(bin) ? bin : QStringLiteral("ffmpeg");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Filtro de subtítulos por idioma
+// ─────────────────────────────────────────────────────────────────────────────
+void MainWindow::refreshSubLangFilter()
+{
+    if (!subFilterCombo) return;
+    m_detectedSubLangs.clear();
+    QString prev = subFilterCombo->currentData().toString();
+    const int n = fileListWidget ? fileListWidget->count() : 0;
+    for (int i = 0; i < n; ++i) {
+        const QString path = fileListWidget->item(i)->data(Qt::UserRole).toString();
+        const QMap<int, QString> &types = fileStreamTypes.value(path);
+        const QMap<int, QString> &langs = fileStreamLanguages.value(path);
+        for (auto it = types.constBegin(); it != types.constEnd(); ++it) {
+            if (it.value() == "subtitle") {
+                const QString norm = normalizeLangCode(langs.value(it.key()));
+                if (!norm.isEmpty() && norm != "und" && !m_detectedSubLangs.contains(norm))
+                    m_detectedSubLangs.append(norm);
+            }
+        }
+    }
+    std::sort(m_detectedSubLangs.begin(), m_detectedSubLangs.end());
+    subFilterCombo->blockSignals(true);
+    subFilterCombo->clear();
+    subFilterCombo->addItem(tr("Todos los idiomas"), "");
+    for (const QString &lang : m_detectedSubLangs)
+        subFilterCombo->addItem(SubtitleTranslator::languageName(lang), lang);
+    int idx = subFilterCombo->findData(prev);
+    subFilterCombo->setCurrentIndex(idx >= 0 ? idx : 0);
+    subFilterCombo->blockSignals(false);
+    if (idx < 0) m_subLangFilter.clear();
+}
+
+void MainWindow::applySubtitleFilterToFile(const QString &path)
+{
+    if (m_subLangFilter.isEmpty()) return;
+    QMap<int, QString> sel = fileSelections.value(path);
+    const QMap<int, QString> &types = fileStreamTypes.value(path);
+    const QMap<int, QString> &langs = fileStreamLanguages.value(path);
+    const QMap<int, QString> &codecs = fileStreamCodecs.value(path);
+    for (auto it = types.constBegin(); it != types.constEnd(); ++it) {
+        if (it.value() != "subtitle") continue;
+        int idx = it.key();
+        if (normalizeLangCode(langs.value(idx)) == m_subLangFilter) {
+            sel[idx] = "subtitle";
+            fileStreamCodecs[path][idx] = codecs.value(idx);
+        } else {
+            sel.remove(idx);
+        }
+    }
+    fileSelections[path] = sel;
+}
+
+void MainWindow::onSubLangFilterChanged(int)
+{
+    m_subLangFilter = subFilterCombo->currentData().toString();
+    if (m_subLangFilter.isEmpty()) return;  // "Todos": se mantiene la selección manual
+
+    // Un filtro activo toma el control: desactiva la selección global de SUBS
+    globalSelectionTypes.remove("subtitle");
+    const int n = fileListWidget ? fileListWidget->count() : 0;
+    for (int i = 0; i < n; ++i)
+        applySubtitleFilterToFile(fileListWidget->item(i)->data(Qt::UserRole).toString());
+
+    // Refrescar visualmente los checkboxes del archivo visible
+    if (!lastSelectedFile.isEmpty()) {
+        const QMap<int, QString> &sel = fileSelections.value(lastSelectedFile);
+        for (QCheckBox *cb : streamCheckBoxes)
+            cb->setChecked(sel.contains(cb->property("streamIndex").toInt()));
+        for (int i = 0; i < fileListWidget->count(); ++i) {
+            QListWidgetItem *item = fileListWidget->item(i);
+            if (item->data(Qt::UserRole).toString() == lastSelectedFile) {
+                item->setForeground(QBrush(sel.isEmpty() ? QColor("#D0D0D0") : QColor("#FF8800")));
+                break;
+            }
+        }
+    }
+    statusBar()->showMessage(tr("Filtro: solo subtítulos en ") + SubtitleTranslator::languageName(m_subLangFilter));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Remux: incrustar la traducción en el vídeo
+// ─────────────────────────────────────────────────────────────────────────────
+void MainWindow::startMuxQueue()
+{
+    if (m_muxQueue.isEmpty()) return;
+    m_muxActive = true;
+    m_muxIndex = 0;
+    extractButton->setEnabled(false);
+    cancelButton->setEnabled(true);
+    showLogArea();
+    logArea->append(tr("<br><font color='#FF8800'><b>=== INCRUSTANDO SUBTÍTULOS (REMUX) ===</b></font>"));
+    processNextMux();
+}
+
+void MainWindow::processNextMux()
+{
+    if (m_muxIndex >= m_muxQueue.size()) {
+        m_muxActive = false;
+        logArea->append(tr("<br><font color='#39FF14'><b>=== ✓ PROCESO FINALIZADO ===</b></font>"));
+        statusBar()->showMessage(tr("✓ Finalizado — %1 archivo(s) incrustado(s)")
+                                     .arg(m_muxQueue.size()));
+        extractButton->setEnabled(true);
+        cancelButton->setEnabled(false);
+        progressBar->setValue(100);
+        if (trayIcon->isSystemTrayAvailable())
+            trayIcon->showMessage("Elements Extract", tr("Subtítulos incrustados correctamente."),
+                                  QSystemTrayIcon::Information, 4000);
+        return;
+    }
+
+    const MuxJobInfo &job = m_muxQueue[m_muxIndex];
+    QFileInfo vi(job.videoInput);
+    if (!QFile::exists(job.translatedSub)) {
+        logArea->append(tr("<font color='#FF4444'>  › No se encontró la traducción, omitido: %1</font>")
+                            .arg(QFileInfo(job.translatedSub).fileName()));
+        m_muxIndex++;
+        processNextMux();
+        return;
+    }
+
+    QString outDir = ensureOutputSubdir(tr("Remuxados"));
+    if (outDir.isEmpty()) {
+        logArea->append(tr("<font color='#FF4444'>  › No se ha especificado carpeta de destino, omitido.</font>"));
+        m_muxIndex++;
+        processNextMux();
+        return;
+    }
+
+    bool toMp4 = vi.suffix().toLower() == "mp4";
+    QString container = toMp4 ? "mp4" : "mkv";
+    QString subCodec  = toMp4 ? "mov_text" : "srt";
+    QString outPath = getUniqueFilePath(outDir + "/" + vi.completeBaseName()
+                                        + "." + job.langCode + "." + container);
+
+    // El contenedor MP4 necesita el código ISO-639-2 de 3 letras; Matroska admite el de 2
+    QString metadataLang = job.langCode;
+    if (toMp4) {
+        static const QMap<QString, QString> three = {
+            {"en", "eng"}, {"es", "spa"}, {"fr", "fre"}, {"pt", "por"},
+            {"de", "deu"}, {"it", "ita"}, {"ja", "jpn"}, {"zh", "zho"},
+            {"ko", "kor"}, {"ru", "rus"}, {"ar", "ara"}, {"hi", "hin"},
+            {"nl", "nld"}, {"sv", "swe"}, {"pl", "pol"}, {"tr", "tur"}
+        };
+        metadataLang = three.value(metadataLang, metadataLang);
+    }
+
+    currentFileDuration = fileDurations.value(job.videoInput, 0);
+    progressBar->setValue(0);
+    statusBar()->showMessage(tr("Incrustando %1/%2: %3")
+                                 .arg(m_muxIndex + 1)
+                                 .arg(m_muxQueue.size())
+                                 .arg(vi.fileName()));
+    logArea->append(tr("<br><font color='#00BFFF'><b>[%1/%2] %3</b></font>")
+                        .arg(m_muxIndex + 1)
+                        .arg(m_muxQueue.size())
+                        .arg(vi.fileName().toHtmlEscaped()));
+    logArea->append(tr("  › Incrustando %1 → %2")
+                        .arg(QFileInfo(job.translatedSub).fileName())
+                        .arg(outPath));
+
+    QStringList args;
+    args << "-i" << vi.absoluteFilePath()
+         << "-i" << job.translatedSub
+         << "-map" << "0:v"
+         << "-map" << "0:a?"
+         << "-map" << "1:0"
+         << "-c" << "copy"
+         << "-c:s" << subCodec
+         << "-metadata:s:s:0" << ("language=" + metadataLang)
+         << "-y" << outPath;
+    logArea->append("<font color='#888888'>  $ " + QString("ffmpeg %1").arg(args.join(" ")).toHtmlEscaped() + "</font>");
+    process->start(ffmpegExecutable(), args);
 }
 
 QString MainWindow::getUniqueFilePath(const QString &fullPath)
@@ -1379,6 +1668,13 @@ void MainWindow::retranslateUi()
     if (audioAllButton) audioAllButton->setText(tr("AUDIO"));
     if (subsAllButton)  subsAllButton->setText(tr("SUBS"));
     if (clearAllButton) clearAllButton->setText(tr("Limpiar"));
+    if (subFilterLabel) subFilterLabel->setText(tr("Solo subs:"));
+    if (subFilterCombo) {
+        subFilterCombo->setToolTip(
+            tr("Selecciona los subtítulos de un idioma concreto en TODOS los archivos del lote.\n"
+               "Mientras esté activo, la extracción y la traducción trabajarán solo con ese idioma."));
+        refreshSubLangFilter();
+    }
 
     // ── Formato de salida ──
     if (formatGroupBox) formatGroupBox->setTitle(tr("FORMATO DE SALIDA"));
@@ -1405,6 +1701,12 @@ void MainWindow::retranslateUi()
         translateOnExtractCheck->setToolTip(
             tr("Si está marcado, al extraer subtítulos se traducirán automáticamente\n"
             "al idioma de destino seleccionado."));
+    }
+    if (muxOnExtractCheck) {
+        muxOnExtractCheck->setText(tr("Incrustar la traducción (remux)"));
+        muxOnExtractCheck->setToolTip(
+            tr("Tras traducir, genera un archivo .mkv/.mp4 con el vídeo y el audio originales\n"
+            "y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin pérdida)."));
     }
     if (manageModelsButton) {
         manageModelsButton->setText(tr("Modelos"));
@@ -1622,7 +1924,17 @@ void MainWindow::onTranslationProgress(int current, int total)
 
 void MainWindow::onFileTranslated(const QString &input, const QString &output)
 {
-    Q_UNUSED(input);
+    // Asociar la traducción con su vídeo de origen para el remux posterior
+    if (muxOnExtractCheck && muxOnExtractCheck->isChecked()) {
+        for (const SubExtractInfo &se : m_extractedSubs) {
+            if (se.subPath == input) {
+                m_muxQueue.append({se.videoInput, output,
+                                   dstLangCombo->currentData().toString()});
+                break;
+            }
+        }
+    }
+
     if (!subtitleTranslator->isBatchActive())
         translationProgressBar->setValue(100);
     translationStatusLabel->setText(tr("Traducción completada: ") + QFileInfo(output).fileName());
@@ -1648,6 +1960,13 @@ void MainWindow::onTranslationFinished()
     translationProgressBar->setValue(100);
     translationProgressBar->setVisible(false);
     translationStatusLabel->setText(tr("Traducción completada"));
+
+    // Si el usuario pidió incrustar, pasar a la fase de remux
+    if (muxOnExtractCheck && muxOnExtractCheck->isChecked() && !m_muxQueue.isEmpty()) {
+        startMuxQueue();
+        return;
+    }
+
     extractButton->setEnabled(true);
     cancelButton->setEnabled(false);
 

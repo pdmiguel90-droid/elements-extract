@@ -46,6 +46,8 @@ So I thought: *what if I could take the file I already have on disk and translat
 - 🖱️ **Drag & Drop** — drop files straight onto the window
 - ⌨️ **Keyboard shortcuts** — `Ctrl+O`, `Del`, `Ctrl+Enter`, `Escape`, `F1`
 - 🌐 **Offline subtitle translation** — translate extracted subtitles to the language you want (en, es, fr, pt)
+- ➡️ **Mux the translation (remux)** — the translated subtitle is embedded into a new .mkv/.mp4 with the original video and audio, without re-encoding (MKVToolNix style)
+- 🎯 **Subtitle language filter** — select and translate only the subtitles of a given language across the whole batch
 - 🔄 **Triangular translation** — when no direct model exists (e.g. pt→es), it uses intermediates (pt→en→es)
 - 🤖 **Automatic language detection** — detects subtitle language from file metadata
 - ⬇️ **Downloadable models** — download translation models from translatelocally.com (once only)
@@ -183,6 +185,10 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 2. Tick **"Translate when extracting"**
 3. Extract as usual — the translated subtitles are saved as `file.en.srt`
 4. If no direct model exists (e.g. pt→es), **triangular translation** is used automatically
+
+> 💡 **Work with a single language**: the **"Only subs"** dropdown selects the subtitles of a given language across all batch files at once (files without that language are skipped). While the filter is active, translation uses that language as source automatically.
+
+> 🎬 **Embed the translation**: with **"Embed the translation (remux)"** ticked, a new `.mkv`/`.mp4` is produced (`file.<lang>.mkv`) with the original video and audio plus the translated subtitle track embedded (no re-encoding). Output goes to `Elements Extract/Remuxados`.
 
 ### Model management
 
