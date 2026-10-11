@@ -59,6 +59,23 @@ y el motor bergamot se descarga de la variable de GitHub Actions
 `BERGAMOT_BASE_URL` (URL con `bergamot.real` y `libopenblas.so.0`). Sin esa
 variable el `.deb` compilado sale sin motor de traducción.
 
+### Motor para Windows (bergamot.exe)
+
+No existe binario oficial de `bergamot` para Windows, así que este repo incluye
+el workflow `bergamot-windows.yml`, que compila el CLI (target `bergamot` de
+`browsermt/bergamot-translator` v0.4.5) con MSVC + vcpkg (`protobuf`, `pcre2` y
+MKL static) y lo publica. Para obtener el motor:
+
+1. **Actions → bergamot-windows → Run workflow** (o haz push de un tag `bergamot-*`).
+2. Al terminar, descarga `bergamot.exe` del artefacto `bergamot-win64` o, si
+   usaste un tag, queda adjunto al release.
+3. Crea la variable de Actions **`BERGAMOT_WIN_URL`** apuntando a la URL del asset, p. ej.
+   `https://github.com/<usuario>/elements-extract/releases/download/bergamot-v0.4.5/bergamot.exe`.
+4. El workflow `windows` descargará ese `bergamot.exe` y lo empaquetará en el zip de la app.
+
+Sin `BERGAMOT_WIN_URL`, el zip de Windows sale sin motor (extracción y remux
+funcionan, pero la traducción avisa de que no se encontró el motor).
+
 ### Mirror público en GitHub Pages (opcional)
 
 El workflow `mirror.yml` publica los tar.gz (es/en/fr tiny) + `models.json` en la

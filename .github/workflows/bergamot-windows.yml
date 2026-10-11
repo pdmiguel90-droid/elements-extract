@@ -1,0 +1,98 @@
+name: bergamot-windows
+
+# Compila el CLI de bergamot-translator para Windows (x64) y publica
+# bergamot.exe como asset de release. Luego apunta la variable del repo
+# BERGAMOT_WIN_URL a la URL del asset para que el workflow `windows`
+# lo empaquete en el zip de la app.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['bergamot-*']
+
+permissions:
+  contents: write
+
+env:
+  BERGAMOT_REF: v0.4.5
+  MKL_URL: "https://data.statmt.org/romang/marian-regression-tests/ci/mkl-2020.1-windows-static.zip"
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout bergamot-translator
+        uses: actions/checkout@v5
+        with:
+          repository: browsermt/bergamot-translator
+          ref: ${{ env.BERGAMOT_REF }}
+          submodules: recursive
+          path: bergamot
+
+      - name: Download MKL (static)
+        shell: pwsh
+        run: |
+          curl.exe -sL "$env:MKL_URL" -o mkl.zip
+          Expand-Archive -Force mkl.zip "$env:GITHUB_WORKSPACE\mkl"
+          "MKLROOT=$env:GITHUB_WORKSPACE\mkl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Disable vcpkg debug builds
+        shell: pwsh
+        working-directory: ${{ env.VCPKG_INSTALLATION_ROOT }}\triplets
+        run: |
+          Add-Content -Path x64-windows-static.cmake -Value "set(VCPKG_BUILD_TYPE release)"
+          Add-Content -Path x64-windows.cmake -Value "set(VCPKG_BUILD_TYPE release)"
+
+      - name: Install dependencies with vcpkg
+        shell: pwsh
+        working-directory: ${{ env.VCPKG_INSTALLATION_ROOT }}
+        run: |
+          $env:VCPKG_BUILD_TYPE = 'release'
+          $env:VCPKG_DEFAULT_TRIPLET = 'x64-windows-static'
+          .\vcpkg install protobuf:x64-windows-static pcre2:x64-windows-static
+
+      - name: Configure
+        shell: pwsh
+        working-directory: ${{ github.workspace }}\bergamot
+        run: |
+          cmake -S . -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DUSE_STATIC_LIBS=ON `
+            -DVCPKG_TARGET_TRIPLET='x64-windows-static' `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+
+      - name: Build CLI
+        shell: pwsh
+        working-directory: ${{ github.workspace }}\bergamot
+        run: cmake --build build --config Release --target bergamot --parallel
+
+      - name: Verify
+        shell: pwsh
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\bergamot\build\app\Release\bergamot.exe"
+          if (!(Test-Path $exe)) {
+            Write-Error "bergamot.exe no encontrado en la ruta esperada"
+            Get-ChildItem -Recurse "$env:GITHUB_WORKSPACE\bergamot\build\app" -ErrorAction SilentlyContinue | Select-Object FullName
+            exit 1
+          }
+          & $exe --version
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item "$env:GITHUB_WORKSPACE\bergamot\build\app\Release\bergamot.exe" out/bergamot.exe
+          Compress-Archive -Path out/* -DestinationPath bergamot-win64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: bergamot-win64
+          path: bergamot-win64.zip
+          retention-days: 30
+
+      - name: Publish to release (tag only)
+        if: startsWith(github.ref, 'refs/tags/bergamot-')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: out/bergamot.exe
+          generate_release_notes: false
