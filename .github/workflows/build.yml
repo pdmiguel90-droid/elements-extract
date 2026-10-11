@@ -1,0 +1,89 @@
+name: build
+  
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  BERGAMOT_BASE_URL: ${{ vars.BERGAMOT_BASE_URL }}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake qtbase5-dev ffmpeg
+
+      - name: Fetch bundled models via mirror
+        run: |
+          python3 tools/mirror-models.py --out mirror --models en-es-tiny,es-en-tiny
+          for id in en-es-tiny es-en-tiny; do
+            mkdir -p "models/$id"
+            tar -xzf "mirror/$id.tar.gz" -C "models/$id"
+          done
+
+      - name: Prepare bergamot runtime
+        run: |
+          chmod +x bin/bergamot
+          if [ -n "$BERGAMOT_BASE_URL" ]; then
+            curl -fsSL "$BERGAMOT_BASE_URL/bergamot.real" -o bin/bergamot.real
+            curl -fsSL "$BERGAMOT_BASE_URL/libopenblas.so.0" -o bin/libopenblas.so.0
+            chmod +x bin/bergamot.real
+          else
+            echo "BERGAMOT_BASE_URL no definida: el .deb ira sin motor de traduccion"
+          fi
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j$(nproc)
+
+      - name: Smoke test translation
+        if: ${{ env.BERGAMOT_BASE_URL != '' }}
+        run: |
+          cd models/es-en-tiny
+          out=$(printf 'Hello world, this is a test.\n' | LD_LIBRARY_PATH=../../bin ../../bin/bergamot.real \
+            --model-config-paths config.intgemm8bitalpha.yml --cpu-threads 2 2>&1 || true)
+          echo "$out"
+          if [ "${out%%$'\n'*}" = "Hello world, this is a test." ]; then
+            echo "ERROR: salida de identidad (modelo o shortlist rotos)"; exit 1
+          fi
+
+      - name: Package .deb
+        run: |
+          cpack --config build/CPackConfig.cmake
+          ls -lh *.deb
+
+      - name: Checksums
+        run: |
+          sha256sum elements-extract-*.deb > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: elements-extract-deb
+          path: |
+            elements-extract-*.deb
+            SHA256SUMS
+          retention-days: 30
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            elements-extract-*.deb
+            SHA256SUMS
+          generate_release_notes: true

@@ -54,7 +54,8 @@ Thumbs.db
 
 # Translation models (downloaded at runtime)
 models/
-bin/
+bin/bergamot.real
+bin/libopenblas.so.0
 
 # Archivos generados por el empaquetado Debian
 *.gz
