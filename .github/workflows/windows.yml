@@ -49,9 +49,13 @@ jobs:
           curl -fsSL "$env:BERGAMOT_WIN_URL" -o bin/bergamot.exe
 
       - name: Configure
+        shell: bash
         run: |
-          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
-            -DCMAKE_PREFIX_PATH="$pwd/qt/$env:QT_VERSION/$env:QT_ARCH" `
+          QT_DIR="$GITHUB_WORKSPACE/qt/$QT_VERSION/$QT_ARCH"
+          echo "QT_DIR=$QT_DIR"
+          ls "$QT_DIR/lib/cmake/Qt6/Qt6Config.cmake" && echo Q6_CONFIG_OK
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 \
+            -DCMAKE_PREFIX_PATH="$QT_DIR" \
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build

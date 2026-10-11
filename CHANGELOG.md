@@ -10,7 +10,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 ### Añadido
 - Filtro de subtítulos por idioma: selecciona a la vez los subtítulos de un idioma concreto en todos los archivos del lote ("Solo subs")
 - Incrustación de la traducción (remux): tras traducir, genera un `.mkv`/`.mp4` con el vídeo/audio originales y la pista de subtítulos traducida, sin re-codificar
-- Soporte Qt6 con fallback a Qt5 en tiempo de configuración (QSettings en formato INI portable)
+- Migración completa a Qt6 (mandatorio): dependencias, empaquetado .deb y AppImage usan Qt6
 - Empaquetado AppImage con los modelos incluidos
 - CI: build + release `.deb`, AppImage, mirror público de modelos en GitHub Pages y vigilancia semanal del catálogo
 - Pipeline local para convertir modelos OPUS-MT/Tatoeba al formato Bergamot de la app

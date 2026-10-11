@@ -5,7 +5,7 @@
 **Elements Extract** is a graphical track extractor for audio, video and subtitles with batch processing that also **translates subtitles into your language 100 % offline**, right on your own machine.
 
 ![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)
-![Qt5](https://img.shields.io/badge/Qt-5.x-green.svg)
+![Qt6](https://img.shields.io/badge/Qt-6.x-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Linux-orange.svg)
 ![Build](https://img.shields.io/badge/Build-CMake-lightgrey.svg)
 
@@ -102,7 +102,7 @@ So I thought: *what if I could take the file I already have on disk and translat
 
 | Dependency | Minimum version | Used for |
 |-------------|----------------|-----|
-| Qt5 Widgets | 5.12 | Graphical interface |
+| Qt6 Widgets | 6.2 | Graphical interface |
 | FFmpeg      | 4.0  | Track extraction engine |
 | ffprobe     | 4.0  | Stream and metadata analysis |
 | CMake       | 3.5  | Build system |
@@ -113,19 +113,19 @@ So I thought: *what if I could take the file I already have on disk and translat
 ### Install dependencies on Debian/Ubuntu
 
 ```bash
-sudo apt install qt5-default qtbase5-dev cmake build-essential ffmpeg
+sudo apt install qt6-base-dev libgl1-mesa-dev cmake build-essential ffmpeg
 ```
 
 ### Install dependencies on Fedora
 
 ```bash
-sudo dnf install qt5-qtbase-devel cmake gcc-c++ ffmpeg
+sudo dnf install qt6-qtbase-devel cmake gcc-c++ ffmpeg
 ```
 
 ### Install dependencies on Arch Linux
 
 ```bash
-sudo pacman -S qt5-base cmake base-devel ffmpeg
+sudo pacman -S qt6-base cmake base-devel ffmpeg
 ```
 
 ---
@@ -231,4 +231,4 @@ See the [LICENSE](LICENSE) file for details.
 ## Credits
 
 Developed by **pdmiguel90-droid**  
-Built with [Qt5](https://www.qt.io/), [FFmpeg](https://ffmpeg.org/) and C++17.
+Built with [Qt6](https://www.qt.io/), [FFmpeg](https://ffmpeg.org/) and C++17.

@@ -5,7 +5,7 @@
 **Elements Extract** é um extrator gráfico de faixas de áudio, vídeo e legendas com processamento em lote que também **traduz legendas para o seu idioma 100 % offline**, direto no seu computador.
 
 ![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)
-![Qt5](https://img.shields.io/badge/Qt-5.x-green.svg)
+![Qt6](https://img.shields.io/badge/Qt-6.x-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Linux-orange.svg)
 ![Build](https://img.shields.io/badge/Build-CMake-lightgrey.svg)
 
@@ -102,7 +102,7 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 
 | Dependência | Versão mínima | Uso |
 |-------------|----------------|-----|
-| Qt5 Widgets | 5.12 | Interface gráfica |
+| Qt6 Widgets | 6.2 | Interface gráfica |
 | FFmpeg      | 4.0  | Motor de extração de faixas |
 | ffprobe     | 4.0  | Análise de streams e metadados |
 | CMake       | 3.5  | Sistema de compilação |
@@ -113,19 +113,19 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 ### Instalar dependências no Debian/Ubuntu
 
 ```bash
-sudo apt install qt5-default qtbase5-dev cmake build-essential ffmpeg
+sudo apt install qt6-base-dev libgl1-mesa-dev cmake build-essential ffmpeg
 ```
 
 ### Instalar dependências no Fedora
 
 ```bash
-sudo dnf install qt5-qtbase-devel cmake gcc-c++ ffmpeg
+sudo dnf install qt6-qtbase-devel cmake gcc-c++ ffmpeg
 ```
 
 ### Instalar dependências no Arch Linux
 
 ```bash
-sudo pacman -S qt5-base cmake base-devel ffmpeg
+sudo pacman -S qt6-base cmake base-devel ffmpeg
 ```
 
 ---
@@ -231,4 +231,4 @@ Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
 ## Créditos
 
 Desenvolvido por **pdmiguel90-droid**  
-Construído com [Qt5](https://www.qt.io/), [FFmpeg](https://ffmpeg.org/) e C++17.
+Construído com [Qt6](https://www.qt.io/), [FFmpeg](https://ffmpeg.org/) e C++17.

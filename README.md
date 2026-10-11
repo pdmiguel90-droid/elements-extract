@@ -8,7 +8,7 @@
 > 🛠️ **Desarrolladores:** el mantenimiento, reemplazo y refresco de los modelos de traducción se documenta en [docs/modelos.md](docs/modelos.md).
 
 ![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)
-![Qt5](https://img.shields.io/badge/Qt-5.x-green.svg)
+![Qt6](https://img.shields.io/badge/Qt-6.x-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Linux-orange.svg)
 ![Build](https://img.shields.io/badge/Build-CMake-lightgrey.svg)
 
