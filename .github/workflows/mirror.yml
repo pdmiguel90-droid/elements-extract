@@ -1,0 +1,35 @@
+name: mirror
+
+on:
+  schedule:
+    - cron: '30 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Fetch mirror
+        run: |
+          python3 tools/mirror-models.py \
+            --out mirror \
+            --models en-es-tiny,es-en-tiny,en-fr-tiny,fr-en-tiny \
+            --base-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+
+      - name: Publish to gh-pages
+        run: |
+          cd mirror
+          git init -b gh-pages
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "mirror $(date -u +%F)"
+          git push -f \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            HEAD:gh-pages

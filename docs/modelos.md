@@ -59,6 +59,21 @@ y el motor bergamot se descarga de la variable de GitHub Actions
 `BERGAMOT_BASE_URL` (URL con `bergamot.real` y `libopenblas.so.0`). Sin esa
 variable el `.deb` compilado sale sin motor de traducción.
 
+### Mirror público en GitHub Pages (opcional)
+
+El workflow `mirror.yml` publica los tar.gz (es/en/fr tiny) + `models.json` en la
+rama `gh-pages` cada lunes. Para activarlo:
+
+1. En el repo: **Settings → Pages → Build and deployment → Source: Deploy from
+   a branch → `gh-pages` / (root)**.
+2. Apunta la app al registro propio:
+   `ELEMENTS_EXTRACT_MODEL_REGISTRY="https://<tu-usuario>.github.io/elements-extract/models.json"`
+   (o el QSettings `[models]/registryUrl`).
+
+Nota: `pt↔en` no está en el catálogo público de Kaggle/statmt/translateLocally,
+así que el mirror no lo incluye: queda fuera por diseño (el bundle lo lleva
+empaquetado).
+
 ## 3. Qué espera la app de cada modelo
 
 Un directorio de modelo instalado (o el contenido del tar.gz) debe incluir:
