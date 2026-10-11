@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QLocale>
+#include <QSettings>
 #include <QTranslator>
 
 int main(int argc, char *argv[])
@@ -10,6 +11,8 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     a.setApplicationName("Elements Extract");
     a.setOrganizationName("LocalApp");
+
+    QSettings::setDefaultFormat(QSettings::IniFormat);
 
     // Load saved language preference
     QSettings settings("LocalApp", "FFmpegExtractor");

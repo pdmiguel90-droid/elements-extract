@@ -8,7 +8,21 @@
 #include <QRegularExpression>
 #include <QFileInfo>
 #include <QDir>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QStringConverter>
+#else
 #include <QTextCodec>
+#endif
+
+static inline void setStreamUtf8(QTextStream &ts)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    ts.setEncoding(QStringConverter::Utf8);
+#else
+    if (QTextCodec *codec = QTextCodec::codecForName("UTF-8"))
+        ts.setCodec(codec);
+#endif
+}
 
 // ── Subtitle cue data structure ─────────────────────────────────────────────
 struct SubtitleCue {
@@ -54,8 +68,7 @@ public:
             return cues;
 
         QTextStream in(&file);
-        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-        if (codec) in.setCodec(codec);
+        setStreamUtf8(in);
 
         static QRegularExpression reTime(
             QRegularExpression::anchoredPattern(
@@ -110,8 +123,7 @@ public:
             return cues;
 
         QTextStream in(&file);
-        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-        if (codec) in.setCodec(codec);
+        setStreamUtf8(in);
 
         bool inEvents = false;
         int startCol = 1, endCol = 3, textCol = 9;
@@ -190,8 +202,7 @@ public:
             return cues;
 
         QTextStream in(&file);
-        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-        if (codec) in.setCodec(codec);
+        setStreamUtf8(in);
 
         static QRegularExpression reTime(
             R"((\d{1,2}):(\d{2}):(\d{2})\.(\d{3})\s*-->\s*(\d{1,2}):(\d{2}):(\d{2})\.(\d{3}))");
@@ -259,8 +270,7 @@ public:
             return false;
 
         QTextStream out(&file);
-        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-        if (codec) out.setCodec(codec);
+        setStreamUtf8(out);
 
         for (int i = 0; i < cues.size(); ++i) {
             const SubtitleCue &cue = cues[i];

@@ -1143,7 +1143,13 @@ void MainWindow::processNextInBatch()
     }
 
     if (process->state() != QProcess::NotRunning) return;  // ffmpeg aún en marcha: no relanzar
-    process->start("ffmpeg", finalArgs);
+    QString ffmpegBin = QCoreApplication::applicationDirPath()
+                        + QDir::separator() + QStringLiteral("ffmpeg")
+#ifdef Q_OS_WIN
+                        + QStringLiteral(".exe")
+#endif
+                        ;
+    process->start(QFileInfo::exists(ffmpegBin) ? ffmpegBin : QStringLiteral("ffmpeg"), finalArgs);
 }
 
 void MainWindow::readProcessOutput()

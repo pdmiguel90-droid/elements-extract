@@ -2,6 +2,7 @@
 
 # Directorio de build de CMake
 build/
+build-*/
 cmake-build-*/
 CMakeCache.txt
 CMakeFiles/

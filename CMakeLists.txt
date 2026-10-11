@@ -13,7 +13,16 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
-find_package(Qt5 COMPONENTS Widgets Network REQUIRED)
+# Detect Qt: prefer Qt6, fallback to Qt5
+find_package(Qt6 COMPONENTS Core Widgets Network QUIET)
+if(Qt6_FOUND)
+    set(QT_VERSION_MAJOR 6)
+else()
+    find_package(Qt5 5.15 COMPONENTS Core Widgets Network REQUIRED)
+    set(QT_VERSION_MAJOR 5)
+endif()
+
+message(STATUS "Building with Qt${QT_VERSION_MAJOR} (${Qt${QT_VERSION_MAJOR}_VERSION})")
 
 add_executable(elements-extract
     main.cpp
@@ -36,8 +45,8 @@ add_executable(elements-extract
 )
 
 target_link_libraries(elements-extract PRIVATE
-    Qt5::Widgets
-    Qt5::Network
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Network
 )
 
 # --- Instalación ---
@@ -54,6 +63,14 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/bin/bergamot.real)
 endif()
 if(EXISTS ${CMAKE_SOURCE_DIR}/bin/libopenblas.so.0)
     install(FILES ${CMAKE_SOURCE_DIR}/bin/libopenblas.so.0 DESTINATION share/elements-extract/bin)
+endif()
+if(WIN32)
+    if(EXISTS ${CMAKE_SOURCE_DIR}/bin/ffmpeg.exe)
+        install(PROGRAMS ${CMAKE_SOURCE_DIR}/bin/ffmpeg.exe DESTINATION .)
+    endif()
+    if(EXISTS ${CMAKE_SOURCE_DIR}/bin/bergamot.exe)
+        install(PROGRAMS ${CMAKE_SOURCE_DIR}/bin/bergamot.exe DESTINATION share/elements-extract/bin)
+    endif()
 endif()
 
 # Install models without executable bit on .sh files
@@ -83,11 +100,20 @@ set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_CONTACT "pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "ffmpeg (>= 4.0), libqt5widgets5 (>= 5.15), libqt5network5 (>= 5.15), libc6 (>= 2.31)")
+if(QT_VERSION_MAJOR EQUAL 6)
+    set(QT_PKG_DEPS "libqt6widgets6 (>= 6.2), libqt6network6 (>= 6.2)")
+else()
+    set(QT_PKG_DEPS "libqt5widgets5 (>= 5.15), libqt5network5 (>= 5.15)")
+endif()
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "ffmpeg (>= 4.0), ${QT_PKG_DEPS}, libc6 (>= 2.31)")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/pdmiguel90-droid/elements-extract")
 
-set(CPACK_GENERATOR "DEB")
+if(WIN32)
+    set(CPACK_GENERATOR "ZIP")
+else()
+    set(CPACK_GENERATOR "DEB")
+endif()
 
 include(CPack)

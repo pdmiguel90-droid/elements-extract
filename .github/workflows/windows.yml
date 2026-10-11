@@ -1,0 +1,85 @@
+name: windows
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  QT_VERSION: 6.8.3
+  QT_ARCH: win64_msvc2022_64
+  BERGAMOT_WIN_URL: ${{ vars.BERGAMOT_WIN_URL }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Qt (aqtinstall)
+        run: |
+          python -m pip install --quiet aqtinstall
+          python -m aqt install-qt windows desktop $env:QT_VERSION $env:QT_ARCH -O qt
+
+      - name: Fetch bundled models via mirror
+        shell: bash
+        run: |
+          python tools/mirror-models.py --out mirror --models en-es-tiny,es-en-tiny
+          for id in en-es-tiny es-en-tiny; do
+            mkdir -p "models/$id"
+            tar -xzf "mirror/$id.tar.gz" -C "models/$id"
+          done
+
+      - name: Download ffmpeg
+        run: |
+          curl -sL https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -o ffmpeg.zip
+          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg
+          $ff = Get-ChildItem -Recurse ffmpeg -Filter ffmpeg.exe | Select-Object -First 1
+          New-Item -ItemType Directory -Force -Path bin | Out-Null
+          Copy-Item $ff.FullName bin/ffmpeg.exe
+
+      - name: Download bergamot (optional)
+        if: ${{ env.BERGAMOT_WIN_URL != '' }}
+        run: |
+          curl -fsSL "$env:BERGAMOT_WIN_URL" -o bin/bergamot.exe
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_PREFIX_PATH="$pwd/qt/$env:QT_VERSION/$env:QT_ARCH" `
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Stage
+        run: cmake --install build --config Release --prefix stage
+
+      - name: windeployqt
+        run: |
+          qt/$env:QT_VERSION/$env:QT_ARCH/bin/windeployqt.exe stage/elements-extract.exe
+
+      - name: Package zip
+        run: |
+          $ver = (Select-String -Path CMakeLists.txt -Pattern 'VERSION (\d+\.\d+\.\d+)').Matches[0].Groups[1].Value
+          Compress-Archive -Path stage/* -DestinationPath "elements-extract-$ver-win64.zip"
+          Get-FileHash "elements-extract-$ver-win64.zip" -Algorithm SHA256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: elements-extract-win64
+          path: elements-extract-*-win64.zip
+          retention-days: 30
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: elements-extract-*-win64.zip
+          generate_release_notes: true
