@@ -60,3 +60,8 @@ bin/libopenblas.so.0
 
 # Archivos generados por el empaquetado Debian
 *.gz
+
+# Empaquetado AppImage
+*.AppImage
+squashfs-root/
+tools/.cache/

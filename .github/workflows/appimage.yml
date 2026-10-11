@@ -1,0 +1,83 @@
+name: appimage
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  BERGAMOT_BASE_URL: ${{ vars.BERGAMOT_BASE_URL }}
+
+jobs:
+  appimage:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake qt6-base-dev libqt6svg6 file patchelf
+
+      - name: Fetch bundled models via mirror
+        run: |
+          python3 tools/mirror-models.py --out mirror --models en-es-tiny,es-en-tiny,en-fr-tiny,fr-en-tiny
+          for id in en-es-tiny es-en-tiny en-fr-tiny fr-en-tiny; do
+            mkdir -p "models/$id"
+            tar -xzf "mirror/$id.tar.gz" -C "models/$id"
+          done
+
+      - name: Prepare bergamot runtime
+        run: |
+          chmod +x bin/bergamot
+          if [ -n "$BERGAMOT_BASE_URL" ]; then
+            curl -fsSL "$BERGAMOT_BASE_URL/bergamot.real" -o bin/bergamot.real
+            curl -fsSL "$BERGAMOT_BASE_URL/libopenblas.so.0" -o bin/libopenblas.so.0
+            chmod +x bin/bergamot.real
+          else
+            echo "BERGAMOT_BASE_URL no definida: el AppImage ira sin motor de traduccion"
+          fi
+
+      - name: Build AppImage
+        run: ./tools/build-appimage.sh
+
+      - name: Verify AppImage contents
+        run: |
+          APPIMAGE_EXTRACT_AND_RUN=1 ./elements-extract-*-x86_64.AppImage --appimage-extract >/dev/null
+          test -x squashfs-root/AppRun
+          test -f squashfs-root/usr/lib/elements-extract/platforms/libqxcb.so
+          test -f squashfs-root/usr/bin/qt.conf
+          ls squashfs-root/usr/share/elements-extract/models
+          if [ -n "$BERGAMOT_BASE_URL" ]; then
+            test -f squashfs-root/usr/share/elements-extract/bin/bergamot.real
+          fi
+          rm -rf squashfs-root
+
+      - name: Checksums
+        run: |
+          sha256sum elements-extract-*-x86_64.AppImage > SHA256SUMS-appimage
+          cat SHA256SUMS-appimage
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: elements-extract-appimage
+          path: |
+            elements-extract-*-x86_64.AppImage
+            SHA256SUMS-appimage
+          retention-days: 30
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            elements-extract-*-x86_64.AppImage
+            SHA256SUMS-appimage
+          generate_release_notes: true
