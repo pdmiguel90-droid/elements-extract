@@ -24,6 +24,24 @@ ModelDownloader::ModelDownloader(QObject *parent)
             this, &ModelDownloader::onRegistryReply);
     connect(m_downloadProgressTimer, &QTimer::timeout,
             this, &ModelDownloader::onDownloadProgressTimer);
+
+    const QByteArray env = qgetenv("ELEMENTS_EXTRACT_MODEL_REGISTRY");
+    if (!env.isEmpty()) {
+        const QString overrideUrl = QString::fromUtf8(env).trimmed();
+        if (!overrideUrl.isEmpty()) {
+            m_registryUrl = overrideUrl;
+            qInfo() << "Model registry override (env):" << m_registryUrl;
+        }
+    } else {
+        QSettings s("LocalApp", "FFmpegExtractor");
+        s.beginGroup("models");
+        const QString overrideUrl = s.value("registryUrl").toString().trimmed();
+        s.endGroup();
+        if (!overrideUrl.isEmpty()) {
+            m_registryUrl = overrideUrl;
+            qInfo() << "Model registry override (settings):" << m_registryUrl;
+        }
+    }
 }
 
 ModelDownloader::~ModelDownloader()
