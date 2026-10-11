@@ -79,7 +79,8 @@ jobs:
         run: cmake --install build --config Release --prefix stage
 
       - name: windeployqt
-        run: "$env:QT_ROOT_WIN/bin/windeployqt.exe stage/elements-extract.exe"
+        run: |
+          & "$env:QT_ROOT_WIN/bin/windeployqt.exe" stage/elements-extract.exe
 
       - name: Package zip
         run: |
