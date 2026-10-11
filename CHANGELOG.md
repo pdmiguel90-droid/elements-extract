@@ -16,6 +16,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - Pipeline local para convertir modelos OPUS-MT/Tatoeba al formato Bergamot de la app
 - Port a Windows (workflow CI)
 
+### Cambiado
+- Remux con validación previa: se omite el archivo si no tiene pista de vídeo y, si el `.mp4` contiene códecs no copiables (audio `pcm_*`, `vorbis`, `flac`, `dts`, `truehd`…), se incrusta automáticamente en `.mkv` en lugar de generar un MP4 defectuoso
+- Remux con notificación de errores: se registra el motivo real de cada fallo y al terminar se muestra un resumen con los archivos incrustados/omitidos
+- Ayuda (F1), README (es/en/pt) y diálogo "Acerca de" actualizados con el filtro por idioma y el remux
+
+### Corregido
+- CI Windows: se usa el runner `windows-2022` (VS 2022) y se localiza dinámicamente la ruta real de Qt6 instalada por aqtinstall (`qt/<ver>/msvc2022_64`)
+- CI Windows: `windeployqt` invoca el binario de `stage/bin` y `ffmpeg.exe` se instala junto al ejecutable; la búsqueda del motor `bergamot` añade la extensión `.exe` en Windows
+- CI Linux/AppImage: se instalan los headers de OpenGL/EGL requeridos por Qt6 y se fuerza la detección de Qt6
+
 ---
 
 ## [1.0.0] - 2025-05-12
