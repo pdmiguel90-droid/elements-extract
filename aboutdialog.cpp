@@ -55,8 +55,8 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     // ── Descripción ─────────────────────────────────────────────────────────
     QLabel *desc = new QLabel(
         tr("Extractor gráfico de pistas de audio, vídeo y subtítulos.\n"
-        "Procesamiento por lotes con selección individual por archivo\n"
-        "y traducción automática de subtítulos sin conexión."));
+        "Procesamiento por lotes, filtro de subtítulos por idioma\n"
+        "y traducción automática con incrustación (remux) sin conexión."));
     desc->setAlignment(Qt::AlignCenter);
     desc->setWordWrap(true);
     root->addWidget(desc);

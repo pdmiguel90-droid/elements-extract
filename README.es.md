@@ -188,7 +188,7 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 
 > 💡 **Trabajar solo con un idioma**: el desplegable **«Solo subs»** selecciona a la vez los subtítulos de un idioma concreto en todos los archivos del lote (si un archivo no tiene ese idioma, se omite). Con el filtro activo, la traducción usa ese idioma como origen automáticamente.
 
-> 🎬 **Incrustar la traducción**: con la casilla **«Incrustar la traducción (remux)»**, al terminar se genera un `.mkv`/`.mp4` nuevo (`archivo.<idioma>.mkv`) con el vídeo y el audio originales y la pista de subtítulos traducida dentro (sin re-codificar). Se guardan en `Elements Extract/Remuxados`.
+> 🎬 **Incrustar la traducción**: con la casilla **«Incrustar la traducción (remux)»**, al terminar se genera un `.mkv`/`.mp4` nuevo (`archivo.<idioma>.mkv`) con el vídeo y el audio originales y la pista de subtítulos traducida dentro (sin re-codificar). Se guardan en `Elements Extract/Remuxados`. Antes de incrustar, la app valida cada archivo: sin pista de vídeo lo omite, y si el `.mp4` tiene códecs no copiables (audio `pcm_*`, `vorbis`, `flac`, `dts`, `truehd`…), pasa a `.mkv` automáticamente. Al final muestra un resumen con los incrustados/omitidos y el motivo de cada fallo.
 
 ### Gestión de modelos
 

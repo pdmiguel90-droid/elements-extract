@@ -188,7 +188,7 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 
 > 💡 **Trabalhar com um único idioma**: a lista **"Apenas legendas"** seleciona de uma vez as legendas de um idioma específico em todos os arquivos do lote (arquivos sem esse idioma são ignorados). Com o filtro ativo, a tradução usa esse idioma como origem automaticamente.
 
-> 🎬 **Incrustar a tradução**: com a caixa **"Incrustar a tradução (remux)"** marcada, é gerado um novo `.mkv`/`.mp4` (`arquivo.<idioma>.mkv`) com o vídeo e o áudio originais e a faixa de legendas traduzidas incorporada (sem re-codificar). É salvo em `Elements Extract/Remuxados`.
+> 🎬 **Incrustar a tradução**: com a caixa **"Incrustar a tradução (remux)"** marcada, é gerado um novo `.mkv`/`.mp4` (`arquivo.<idioma>.mkv`) com o vídeo e o áudio originais e a faixa de legendas traduzidas incorporada (sem re-codificar). É salvo em `Elements Extract/Remuxados`. Antes de incorporar, cada arquivo é validado: sem faixa de vídeo é ignorado e, se o `.mp4` tiver codecs não copiáveis (áudio `pcm_*`, `vorbis`, `flac`, `dts`, `truehd`…), muda para `.mkv` automaticamente. No final mostra um resumo com incorporadas/ignoradas e o motivo de cada falha.
 
 ### Gerenciamento de modelos
 
