@@ -29,6 +29,53 @@ jobs:
           submodules: recursive
           path: bergamot
 
+      # MSVC 14.4x (VS 2022 17.14, imagen windows-2022 actual) eliminó por
+      # completo el no-estándar std::hash_compare (microsoft/STL#5764). El
+      # protobuf-lite 3.6.1 embebido en sentencepiece lo usa, así que lo
+      # definimos aquí. Es idempotente y no toca ninguna línea existente.
+      - name: Patch vendored protobuf-lite (std::hash_compare)
+        shell: pwsh
+        run: |
+          $hash = Get-ChildItem -Path "$env:GITHUB_WORKSPACE\bergamot" -Recurse -Filter hash.h |
+            Where-Object { $_.FullName -match 'protobuf-lite.*stubs[\\/]hash\.h$' } |
+            Select-Object -First 1
+          if (-not $hash) { Write-Error "No se encontró hash.h de protobuf-lite"; exit 1 }
+          $path = $hash.FullName
+          Write-Host "Parcheando $path"
+          $content = Get-Content -Raw -LiteralPath $path
+          if ($content -match 'msvc-hash-compare-compat') {
+            Write-Host "Ya parcheado; se omite."; exit 0
+          }
+          $shimLines = @(
+            '// msvc-hash-compare-compat: MSVC 14.4x removed std::hash_compare (microsoft/STL#5764).',
+            '#if defined(_MSC_VER)',
+            '#include <functional>',
+            '#include <cstddef>',
+            'namespace std {',
+            'template <typename _HcKey, typename _HcPr = std::less<_HcKey> >',
+            'struct hash_compare {',
+            '  enum { bucket_size = 4, min_buckets = 8 };',
+            '  _HcPr comp;',
+            '  explicit hash_compare(const _HcPr& _Pred = _HcPr()) : comp(_Pred) {}',
+            '  size_t operator()(const _HcKey& _Keyval) const {',
+            '    return std::hash<_HcKey>()(_Keyval);',
+            '  }',
+            '  bool operator()(const _HcKey& _K1, const _HcKey& _K2) const {',
+            '    return comp(_K1, _K2);',
+            '  }',
+            '};',
+            '}  // namespace std',
+            '#endif'
+          )
+          $shim = ($shimLines -join "`n") + "`n"
+          $anchor = '#include <google/protobuf/stubs/common.h>'
+          if ($content -notmatch [regex]::Escape($anchor)) {
+            Write-Error "No se encontró el ancla de inclusión en hash.h"; exit 1
+          }
+          $content = $content -replace [regex]::Escape($anchor), ($anchor + "`n" + $shim)
+          Set-Content -NoNewline -LiteralPath $path -Value $content
+          Write-Host "Parcheado correctamente."
+
       - name: Download MKL (static)
         shell: pwsh
         run: |
