@@ -30,6 +30,8 @@ describe la infra que ya existe y la única vía real de refresco.
 | Vigilancia | `tools/check-model-updates.py` + `tools/model-catalog.json` | Detecta modelos nuevos / bump de versión / eliminados; exit 1 si hay cambios |
 | Mirror | `tools/mirror-models.py` | Descarga tar.gz verificando SHA-256 y genera un `models.json` propio |
 | Instalación | App (Settings) | `url` (tar.gz) + `checksum` + `version` → descarga, verifica, extrae |
+| CI / Release | `.github/workflows/build.yml` | Compila, test de humo y genera el `.deb`; Release automático al tag `v*` |
+| Vigilancia semanal | `.github/workflows/watchdog.yml` | Cron ejecutando `check-model-updates.py --no-write` |
 
 Uso típico para quedar independiente de Mozilla:
 
@@ -47,9 +49,15 @@ ELEMENTS_EXTRACT_MODEL_REGISTRY="file:///ruta/models-mirror/models.json" ./eleme
 #   ~/.config/LocalApp/FFmpegExtractor.conf  →  [models] registryUrl=...
 ```
 
-Nota: `models/` y `bin/` están en `.gitignore`; el `.deb` empaqueta lo que haya
+Nota: `models/` y `bin/` están en `.gitignore` (salvo el launcher `bin/bergamot`,
+el `.deb` empaqueta lo que haya
 en `models/` al compilar (`CMakeLists.txt:60`). El "bundle por defecto" actual
 (6 pares: es/en/fr + pt) se mantiene tal cual mientras exista en esa carpeta.
+
+En la CI los modelos llegan vía `mirror-models.py` (pares `en-es-tiny`/`es-en-tiny`)
+y el motor bergamot se descarga de la variable de GitHub Actions
+`BERGAMOT_BASE_URL` (URL con `bergamot.real` y `libopenblas.so.0`). Sin esa
+variable el `.deb` compilado sale sin motor de traducción.
 
 ## 3. Qué espera la app de cada modelo
 

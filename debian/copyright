@@ -7,6 +7,26 @@ Files: *
 Copyright: 2025 pdmiguel90-droid
 License: GPL-3.0+
 
+Files: bin/bergamot.real
+Copyright: 2020-2024 Mozilla Foundation and bergamot-translator contributors
+License: MPL-2.0
+ Mozilla Public License, version 2.0 (https://www.mozilla.org/MPL/2.0/)
+
+Files: bin/libopenblas.so.0
+Copyright: 2011-2024 OpenBLAS contributors
+License: BSD-3-Clause
+ SPDX: BSD-3-Clause (https://spdx.org/licenses/BSD-3-Clause.html)
+
+Files: models/*
+Copyright: Mozilla Foundation, Bergamot project (student.tiny models) and
+ Firefox Translations contributors (pares pt, formato v2)
+License: CC-BY-4.0
+ Creative Commons Attribution 4.0 International
+ (https://creativecommons.org/licenses/by/4.0/legalcode)
+ .
+ Estos paquetes se redistribuyen tal cual los publican data.statmt.org/bergamot
+ y Firefox Remote Settings; verificar la atribución original por modelo.
+
 License: GPL-3.0+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
