@@ -77,28 +77,41 @@ OPUS-MT (Helsinki-NLP) sí publica modelos más recientes (serie `tc-big`,
 ~2023) y cubre `pt↔en`, con mejor calidad que `student.tiny11`. No hay pt↔es
 directo en esa serie (resolución triangular pt→en→es o es→pt vía en).
 
-Formato de publicación: PyTorch/safetensors. Para Bergamot hay que producir el
-artefacto marian cuantizado. Pasos:
+Existe un conversor en el repo: `tools/convert-opusmt.py`. Descarga el mejor
+artefacto marian **descargable** del par (Tatoeba-MT-/OPUS-MT-models en
+`object.pouta.csc.fi`), lo convierte a int8 bergamot, genera el `lex.s2t.bin`
+(obligatorio; este bergamot devuelve identidad sin él) y emite el directorio en
+formato de §3 + la entrada JSON del registro:
 
-1. Obtener el tarball marian del modelo (`model.npz`, `srcvocab`/`trgvocab`,
-   `config.yml`) desde la publicación OPUS-MT (~ `data.statmt.org/OPUS-MT/`).
-2. Convertir a int8 bergamot (repo `browsermt/bergamot-translator`):
-   `marian-conv --gemm-type intgemm8`  → `model.intgemm.alphas.bin`.
-3. Generar el lexicón `lex.s2t.bin` (herramientas `browsermt/bergamot-models`,
-   `quick_lex` con corpus bilingüe + sentencepiece).
-4. Empaquetar el directorio según §3 (config + vocab único), crear `tar.gz`,
-   calcular `sha256sum` y añadir la entrada al `models.json` (`shortName`,
-   `url`, `checksum`, `size`, `version` >= 2, `srcTags`/`trgTag`).
-5. Validar antes de publicar:
-   ```bash
-   cd model-dir && ../bin/bergamot --model-config-paths config.intgemm8bitalpha.yml --cpu-threads 2
-   printf 'Hello world\n' | ...
-   ```
-6. Publicar y apuntar la app al nuevo registro.
+```bash
+# 1. construir marian-conv una sola vez (mismo marian que tu bergamot):
+git clone --recurse-submodules https://github.com/browsermt/marian-dev.git
+cd marian-dev && mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCOMPILE_CUDA=off \
+         -DCOMPILE_SERVER=off -DCOMPILE_TESTS=off
+make -j$(nproc) && cp marian ../marian-conv   # despacha por argv[0]
 
-Es un pipeline de ingeniería, no un clic: para la v1 de la app se recomienda
-mantener la generación tiny congelada (que funciona y es lo que Firefox sirve
-hoy) y resolver pt↔en (ya incluido en el bundle).
+# 2. convertir un par (p. ej. en→pt):
+tools/convert-opusmt.py --pair eng-por --out /tmp/particulas \
+    --bergamot bin/bergamot --marian-conv /ruta/marian-conv
+
+# 3. publicar el tar.gz + entrada del registro que imprime; apuntar la app:
+ELEMENTS_EXTRACT_MODEL_REGISTRY="file:///tmp/particulas/models.json" ./elements-extract
+```
+
+Limitaciones verificadas (no sorpresa al ejecutar):
+
+- La serie `tc-big` (2023) **no publica su `model.npz`** en descargables para
+  es/fr/pt: el par se resuelve a los releases marian clásicos (2021-2022,
+  280 MB–1 GB por zip; es la serie de mejor calidad con formato marian accesible).
+  Si algún día consigues un `.npz` de tc-big, `--url` lo convierte igual.
+- El shortlist se genera por heurística de frecuencias de piezas (sin corpus
+  bilingüe): válido para decodificar, pero de menor calidad que uno derivado de
+  datos. Puedes aportar el tuyo con `--lex-txt` (formato `trg\tsrc\tprob`).
+- Varios modelos OPUS usan truecasing (`source.tcmodel`); bergamot no lo aplica
+  → la salida puede perder algo de calidad (el script avisa).
+- No probado end-to-end en esta máquina (faltan deps de compilación de marian);
+  la validación `--bergamot` traduce una frase y avisa si la salida es identidad.
 
 ## 5. Red de seguridad (opcional)
 
