@@ -46,9 +46,19 @@ public:
     QList<RemoteModel> fetchAvailableModels();
     QList<RemoteModel> installedModels();
 
-    bool isModelInstalled(const QString &modelId);
-    bool isModelInstalled(const QString &sourceLang, const QString &targetLang);
+    bool isModelInstalled(const QString &modelId) const;
+    bool isModelInstalled(const QString &sourceLang, const QString &targetLang) const;
     bool isModelUpdateAvailable(const RemoteModel &model) const;
+
+    // ── Registry (descargables, instalados o no) ─────────────────────────────
+    // ¿Se ha cargado el registro online al menos una vez en esta sesión?
+    bool isRegistryLoaded() const { return m_registryLoaded; }
+    bool registryHasModel(const QString &modelId) const;
+    // Ids del registro necesarios para src→dst (1 directo o 2 triangulares,
+    // prefiriendo tiny). Vacío si el registro ni siquiera lo ofrece o aún no
+    // se ha cargado. No exige instalación: para eso está isModelInstalled.
+    QStringList registryPathForPair(const QString &sourceLang,
+                                    const QString &targetLang) const;
 
     // ── Download management ─────────────────────────────────────────────────
     void downloadModel(const QString &modelId);
@@ -89,6 +99,7 @@ private:
     QTimer   *m_downloadProgressTimer;
 
     QList<RemoteModel> m_cachedModels;
+    bool m_registryLoaded = false;
 
     void extractModelArchive(const QString &archivePath, const QString &modelId);
     bool verifyChecksum(const QString &filePath, const QString &expectedChecksum);

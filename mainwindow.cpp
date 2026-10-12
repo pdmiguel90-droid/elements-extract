@@ -91,6 +91,9 @@ MainWindow::MainWindow(QWidget *parent)
     // Initialize model downloader — use SAME directory as translator
     modelDownloader = new ModelDownloader(this);
     modelDownloader->setModelsDirectory(modelsPath);
+    // Calentar la caché del registro online (async): permite avisar qué
+    // modelos existen para descargar cuando falte uno al traducir.
+    modelDownloader->fetchAvailableModels();
 
     // Connect translation signals
     connect(subtitleTranslator, &SubtitleTranslator::progress,
@@ -1039,8 +1042,22 @@ void MainWindow::processNextInBatch()
                     logArea->append(QString("<font color='#FFCC00'><b>  › " + tr("Sin traducción %1 → %2: no hay modelo instalado (ni directo ni triangular).") + "</b></font>")
                         .arg(SubtitleTranslator::languageName(srcLang))
                         .arg(SubtitleTranslator::languageName(dstLang)));
-                    logArea->append(tr("  › Solo se pueden traducir subtítulos en English, Español, Français o Português. "
-                                       "Cambia el filtro \"Solo subs\" o el idioma origen, o instala el modelo desde \"Gestionar modelos\"."));
+                    // Cotejar con el catálogo online: ¿existe pero falta
+                    // descargar, o no existe en absoluto?
+                    const QStringList downloadable = modelDownloader
+                        ? modelDownloader->registryPathForPair(srcLang, dstLang)
+                        : QStringList();
+                    if (!downloadable.isEmpty()) {
+                        logArea->append(QString("<font color='#FFCC00'>  › " + tr("Pero sí existe para descargar: %1. Ábrelo en Ajustes → Configuración y Modelos… → pestaña Modelos de Traducción → ONLINE (doble clic para descargar).") + "</font>")
+                            .arg(downloadable.join(" → ")));
+                    } else if (modelDownloader && !modelDownloader->isRegistryLoaded()) {
+                        logArea->append(tr("  › No se pudo comprobar el catálogo online (sin conexión o aún cargando). "
+                                          "Con internet, abre Ajustes → Configuración y Modelos… → ONLINE para ver si existe."));
+                    } else {
+                        logArea->append(tr("  › Tampoco existe en el catálogo online (el ruso, por ejemplo, no tiene modelo publicado). "
+                                          "Solo se pueden traducir subtítulos en English, Español, Français o Português: "
+                                          "cambia el filtro \"Solo subs\" o el idioma origen."));
+                    }
                 }
                 QStringList subPaths;
                 int skippedOtherLang = 0;
@@ -2095,7 +2112,8 @@ void MainWindow::showModelManager()
     info.setIcon(QMessageBox::Information);
     info.setText(
         tr("<b>Modelos de traducción</b><br><br>"
-           "Los modelos se descargan automáticamente cuando se necesita un par de idiomas no disponible.<br><br>"
+           "Si te falta un modelo para un par de idiomas, descárgalo desde Ajustes → Configuración y Modelos… → pestaña Modelos de Traducción → ONLINE (doble clic). "
+           "La app te avisará en el registro si el modelo que necesitas existe para descargar.<br><br>"
            "<b>Modelos incluidos:</b><br>"
            "• English → Español (en→es)<br>"
            "• Español → English (es→en)<br>"

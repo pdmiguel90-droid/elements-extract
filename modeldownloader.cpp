@@ -8,6 +8,7 @@
 #include <QDir>
 #include <QCryptographicHash>
 #include <QProcess>
+#include <QSet>
 #include <QDebug>
 
 static const QString DEFAULT_REGISTRY_URL = "https://translatelocally.com/models.json";
@@ -111,13 +112,13 @@ QList<RemoteModel> ModelDownloader::installedModels()
     return installed;
 }
 
-bool ModelDownloader::isModelInstalled(const QString &modelId)
+bool ModelDownloader::isModelInstalled(const QString &modelId) const
 {
     return QFile::exists(m_modelsDir + "/" + modelId + "/config.yml") ||
            QFile::exists(m_modelsDir + "/" + modelId + "/config.intgemm8bitalpha.yml");
 }
 
-bool ModelDownloader::isModelInstalled(const QString &sourceLang, const QString &targetLang)
+bool ModelDownloader::isModelInstalled(const QString &sourceLang, const QString &targetLang) const
 {
     return isModelInstalled(modelIdForPair(sourceLang, targetLang, "tiny")) ||
            isModelInstalled(modelIdForPair(sourceLang, targetLang, "base"));
@@ -346,8 +347,78 @@ void ModelDownloader::onRegistryReply(QNetworkReply *reply)
         m_cachedModels.append(model);
     }
 
+    m_registryLoaded = true;
     emit modelsFetched(m_cachedModels);
     reply->deleteLater();
+}
+
+bool ModelDownloader::registryHasModel(const QString &modelId) const
+{
+    for (const RemoteModel &m : m_cachedModels) {
+        if (m.id == modelId) return true;
+    }
+    return false;
+}
+
+QStringList ModelDownloader::registryPathForPair(const QString &sourceLang,
+                                                 const QString &targetLang) const
+{
+    if (m_cachedModels.isEmpty() || sourceLang.isEmpty() || targetLang.isEmpty()
+        || sourceLang == targetLang) {
+        return {};
+    }
+
+    auto bestId = [this](const QString &src, const QString &trg) -> QString {
+        const QString tiny = modelIdForPair(src, trg, "tiny");
+        if (registryHasModel(tiny)) return tiny;
+        const QString base = modelIdForPair(src, trg, "base");
+        if (registryHasModel(base)) return base;
+        // El registro podría traer otros tamaños futuros: aceptar cualquiera
+        for (const RemoteModel &m : m_cachedModels) {
+            if (m.sourceLang == src && m.targetLang == trg) return m.id;
+        }
+        return {};
+    };
+
+    // Nada que descargar si ya está instalado (directo)
+    if (isModelInstalled(sourceLang, targetLang)) return {};
+
+    // 1) Modelo directo en el registro (no instalado → hay que descargarlo)
+    QString direct = bestId(sourceLang, targetLang);
+    if (!direct.isEmpty()) return {direct};
+
+    // 2) Ruta triangular: intermedios del registro más los que entiende el
+    // traductor (que también pueden estar ya instalados aunque el registro
+    // actual ya no los publique, como pt-en). De cada salto se descuenta lo
+    // ya instalado: solo se devuelve lo que falta por descargar.
+    QSet<QString> mids = {"en", "es", "fr", "pt"};
+    for (const RemoteModel &m : m_cachedModels) {
+        if (m.sourceLang == sourceLang && !m.targetLang.isEmpty() && m.targetLang != targetLang)
+            mids.insert(m.targetLang);
+    }
+    // El inglés es el pivote habitual: probarlo primero para un mensaje estable
+    QStringList ordered;
+    if (mids.contains("en")) ordered << "en";
+    for (const QString &mid : mids) {
+        if (mid != "en") ordered << mid;
+    }
+    for (const QString &mid : ordered) {
+        if (mid == sourceLang || mid == targetLang) continue;
+        QStringList need;
+        if (!isModelInstalled(sourceLang, mid)) {
+            QString id = bestId(sourceLang, mid);
+            if (id.isEmpty()) continue;
+            need << id;
+        }
+        if (!isModelInstalled(mid, targetLang)) {
+            QString id = bestId(mid, targetLang);
+            if (id.isEmpty()) continue;
+            need << id;
+        }
+        if (!need.isEmpty()) return need;
+    }
+
+    return {};
 }
 
 void ModelDownloader::extractModelArchive(const QString &archivePath, const QString &modelId)
