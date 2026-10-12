@@ -1028,6 +1028,10 @@ void MainWindow::cancelExtraction()
         process->kill();
         logArea->append(tr("<br><font color='#FF4444'><b>[CANCELADO] El proceso fue interrumpido por el usuario.</b></font>"));
         statusBar()->showMessage(tr("Cancelado"));
+        // El ffmpeg abortado deja ficheros a medio escribir (a veces de 0
+        // bytes): podarlos para no arrastrarlos a la siguiente ejecución.
+        if (currentBatchIndex >= 0 && currentBatchIndex < batchFiles.size())
+            pruneEmptyExtractions(batchFiles.at(currentBatchIndex));
     }
     extractButton->setEnabled(true);
     cancelButton->setEnabled(false);
@@ -1145,8 +1149,10 @@ void MainWindow::processNextInBatch()
         int c = 2;
         while (usedPaths.contains(p)) {
             QFileInfo fi(name);
-            p = getUniqueFilePath(fi.absolutePath() + "/" + fi.completeBaseName()
-                                  + "_v" + QString::number(c) + "." + fi.suffix());
+            // baseName (solo última extensión): conserva el idioma
+            // ("X.eng_v2.srt", no el críptico "X_v2.srt" de completeBaseName).
+            p = getUniqueFilePath(fi.absolutePath() + "/" + fi.baseName()
+                                   + "_v" + QString::number(c) + "." + fi.suffix());
             ++c;
         }
         usedPaths.insert(p);
@@ -1289,6 +1295,7 @@ void MainWindow::processNextInBatch()
     }
 
     if (process->state() != QProcess::NotRunning) return;  // ffmpeg aún en marcha: no relanzar
+    logArea->append("<font color='#888888'>  $ " + QString("ffmpeg %1").arg(finalArgs.join(" ")).toHtmlEscaped() + "</font>");
     process->start(ffmpegExecutable(), finalArgs);
 }
 
@@ -1350,10 +1357,33 @@ void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     } else if (currentBatchIndex >= 0) {
         logArea->append(tr("<font color='#FF4444'>  › Error en este archivo.</font>"));
     }
-    if (currentBatchIndex >= 0) {
+    if (currentBatchIndex >= 0 && currentBatchIndex < batchFiles.size()) {
+        // Podar salidas vacías o inexistentes de este archivo: ffmpeg crea el
+        // fichero al arrancar aunque luego falle (o se cancele), y un .srt de
+        // 0 bytes solo produciría un confuso "No se pudieron leer..." al traducir.
+        pruneEmptyExtractions(batchFiles.at(currentBatchIndex));
         currentBatchIndex++;
         processNextInBatch();
     }
+}
+
+// Elimina de m_extractedSubs (y del disco) las salidas vacías/inexistentes
+// del vídeo indicado. Devuelve cuántas podó.
+int MainWindow::pruneEmptyExtractions(const QString &videoInput)
+{
+    int pruned = 0;
+    for (int i = m_extractedSubs.size() - 1; i >= 0; --i) {
+        if (m_extractedSubs.at(i).videoInput != videoInput) continue;
+        QFileInfo fi(m_extractedSubs.at(i).subPath);
+        if (!fi.exists() || fi.size() == 0) {
+            logArea->append(QString("<font color='#FFCC00'>  › " + tr("Extracción vacía o fallida, excluida de la traducción: %1") + "</font>")
+                .arg(fi.fileName()));
+            if (fi.exists()) QFile::remove(m_extractedSubs.at(i).subPath);
+            m_extractedSubs.removeAt(i);
+            ++pruned;
+        }
+    }
+    return pruned;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
