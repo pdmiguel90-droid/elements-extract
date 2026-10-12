@@ -1,0 +1,29 @@
+name: Propuesta / Feature request
+description: Sugiere una mejora / Suggest an improvement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cuéntanos la idea (español o English).
+  - type: textarea
+    id: idea
+    attributes:
+      label: Propuesta / Proposal
+      description: Qué problema resuelve y cómo lo usarías
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - Extracción
+        - Traducción / modelos
+        - Remux
+        - Interfaz / i18n
+        - Empaquetado (deb, AppImage, Flatpak, Windows)
+        - CI
+        - Otro
+    validations:
+      required: true

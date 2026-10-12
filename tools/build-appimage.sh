@@ -34,8 +34,12 @@ done
 [ -f "$APPDIR/usr/share/elements-extract/bin/libopenblas.so.0" ] && cp "$APPDIR/usr/share/elements-extract/bin/libopenblas.so.0" "$APPDIR/usr/lib/"
 printf '[Paths]\nPlugins = ../lib/elements-extract\n' > "$APPDIR/usr/bin/qt.conf"
 
-cp ffmpeg-extractor.desktop "$APPDIR/"
-cp ffmpeg-extractor.svg "$APPDIR/"
+cp io.github.pdmiguel90droid.ElementsExtract.desktop "$APPDIR/"
+cp ffmpeg-extractor.svg "$APPDIR/io.github.pdmiguel90droid.ElementsExtract.svg"
+# Nombres legacy de builds anteriores: duplicarían el lanzador y el icono
+rm -f "$APPDIR/ffmpeg-extractor.desktop" "$APPDIR/ffmpeg-extractor.svg" \
+      "$APPDIR/usr/share/applications/ffmpeg-extractor.desktop" \
+      "$APPDIR/usr/share/icons/hicolor/scalable/apps/ffmpeg-extractor.svg"
 
 mkdir -p "$CACHE"
 for t in linuxdeploy-x86_64.AppImage appimagetool-x86_64.AppImage; do
@@ -57,8 +61,8 @@ rm -f "$OUT"
 "$CACHE/linuxdeploy-x86_64.AppImage" \
     --appdir "$APPDIR" \
     -e "$APPDIR/usr/bin/elements-extract" \
-    -d "$APPDIR/ffmpeg-extractor.desktop" \
-    -i "$APPDIR/ffmpeg-extractor.svg"
+    -d "$APPDIR/io.github.pdmiguel90droid.ElementsExtract.desktop" \
+    -i "$APPDIR/io.github.pdmiguel90droid.ElementsExtract.svg"
 
 cat > "$APPDIR/.AppRun.new" <<EOF
 #!/bin/bash
@@ -70,6 +74,13 @@ EOF
 chmod +x "$APPDIR/.AppRun.new"
 mv -f "$APPDIR/.AppRun.new" "$APPDIR/AppRun"
 
-"$CACHE/appimagetool-x86_64.AppImage" "$APPDIR" "$OUT"
+# Update-info para AppImageHub y actualizaciones delta (zsync). El .zsync
+# se genera junto al AppImage en los Releases (tags v*).
+UPDATE_INFO="${UPDATE_INFO:-gh-releases-zsync|pdmiguel90-droid|elements-extract|latest|elements-extract-*x86_64.AppImage.zsync}"
+if [ -n "$UPDATE_INFO" ]; then
+    "$CACHE/appimagetool-x86_64.AppImage" -u "$UPDATE_INFO" "$APPDIR" "$OUT"
+else
+    "$CACHE/appimagetool-x86_64.AppImage" "$APPDIR" "$OUT"
+fi
 sha256sum "$OUT"
 echo "[*] AppImage: $OUT"

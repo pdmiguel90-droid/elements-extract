@@ -75,14 +75,21 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Initialize translation engine
     subtitleTranslator = new SubtitleTranslator(this);
-    // Check development path first, then installed path
+    // Check development path first, then installed path. Los modelos
+    // descargados necesitan un directorio ESCRIBIBLE (/usr/share o /app no
+    // lo son para .deb/Flatpak): si el instalado no es escribible se usa el
+    // de datos del usuario. Los incluidos se siguen encontrando por las
+    // rutas de reserva de modelPathForPair().
     QString devModelsPath = QCoreApplication::applicationDirPath() + "/../models";
     QString installedModelsPath = QCoreApplication::applicationDirPath() + "/../share/elements-extract/models";
     QString modelsPath;
     if (QDir(devModelsPath).exists()) {
         modelsPath = devModelsPath;
-    } else {
+    } else if (QDir(installedModelsPath).exists()
+               && QFileInfo(installedModelsPath).isWritable()) {
         modelsPath = installedModelsPath;
+    } else {
+        modelsPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
     }
     subtitleTranslator->setModelDirectory(modelsPath);
 

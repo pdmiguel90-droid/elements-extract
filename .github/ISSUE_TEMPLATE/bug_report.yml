@@ -1,0 +1,46 @@
+name: Reporte de error / Bug report
+description: Informa un fallo de la app / Report a failure
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportar. Completa lo que puedas (español o English).
+  - type: input
+    id: version
+    attributes:
+      label: Versión / Version
+      description: "Ej: 1.2.0 (.deb, AppImage, Windows zip, compilado a mano)"
+      placeholder: "1.2.0 AppImage"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Sistema / OS
+      options:
+        - Linux (.deb)
+        - Linux (AppImage)
+        - Windows
+        - Otro (indicar abajo)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: ¿Qué pasó? / What happened?
+      description: Qué esperabas y qué ocurrió en su lugar
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Registro de la app / App log
+      description: Pega el bloque del panel LOG desde "=== INICIANDO EXTRACCIÓN ===" (incluye el comando ffmpeg)
+      render: text
+  - type: textarea
+    id: file
+    attributes:
+      label: Archivo de prueba / Test file
+      description: "ffprobe del archivo si aplica: ffprobe -v quiet -show_entries stream=index,codec_name,codec_type:stream_tags=language -of flat ARCHIVO"
+      render: text

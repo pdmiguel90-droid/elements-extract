@@ -63,5 +63,14 @@ bin/libopenblas.so.0
 
 # Empaquetado AppImage
 *.AppImage
+*.zsync
 squashfs-root/
 tools/.cache/
+
+# Paquetes Debian locales
+*.deb
+
+# Builds de Flatpak
+.flatpak-builder/
+build-dir/
+repo/

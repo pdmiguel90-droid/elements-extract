@@ -46,7 +46,8 @@ target_link_libraries(elements-extract PRIVATE
 
 # --- Instalación ---
 install(TARGETS elements-extract DESTINATION bin)
-install(FILES ffmpeg-extractor.desktop DESTINATION share/applications PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(FILES io.github.pdmiguel90droid.ElementsExtract.desktop DESTINATION share/applications PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(FILES share/metainfo/io.github.pdmiguel90droid.ElementsExtract.metainfo.xml DESTINATION share/metainfo)
 install(FILES ffmpeg-extractor.svg DESTINATION share/icons/hicolor/scalable/apps RENAME io.github.pdmiguel90droid.ElementsExtract.svg)
 
 # Install translation engine binary and models (bergamot optional)

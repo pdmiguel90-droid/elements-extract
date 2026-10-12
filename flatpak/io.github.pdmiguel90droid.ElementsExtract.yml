@@ -1,0 +1,57 @@
+app-id: io.github.pdmiguel90droid.ElementsExtract
+runtime: org.kde.Platform
+runtime-version: '6.8'
+sdk: org.kde.Sdk
+command: elements-extract
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  # Red: catálogo de modelos + descargas a ~/.var/app/.../data
+  - --share=network
+  # La app lee/escribe medios en cualquier carpeta elegida por el usuario
+  - --filesystem=home
+  # Icono de bandeja (StatusNotifier)
+  - --talk-name=org.kde.StatusNotifierWatcher
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /share/doc
+  - /share/man
+modules:
+  # ffmpeg mínimo autocontenido: solo demux/mux de contenedores y
+  # códecs de subtítulo nativos (la app copia audio/vídeo con -c copy).
+  # Sin librerías externas (ass/ssa nativos de ffmpeg bastan).
+  - name: ffmpeg-minimal
+    buildsystem: autotools
+    config-opts:
+      - --disable-everything
+      - --disable-doc
+      - --disable-debug
+      - --enable-protocol=file,pipe
+      - --enable-demuxer=matroska,mov,mp4,m4v,avi,mpegts,srt,ass,ssa
+      - --enable-muxer=matroska,mp4,mov,srt,ass
+      - --enable-decoder=subrip,ass,ssa,srt,mov_text
+      - --enable-encoder=srt,ass,ssa,mov_text
+      - --enable-parser=h264,hevc,aac,ac3
+      - --enable-bsf=h264_mp4toannexb,hevc_mp4toannexb,aac_adtstoasc
+    sources:
+      - type: archive
+        url: https://ffmpeg.org/releases/ffmpeg-7.1.2.tar.xz
+        sha256: 089bc60fb59d6aecc5d994ff530fd0dcb3ee39aa55867849a2bbc4e555f9c304
+    cleanup:
+      - /bin/ffprobe
+      - /bin/ffplay
+      - /share/ffmpeg/examples
+
+  - name: elements-extract
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    sources:
+      - type: git
+        url: https://github.com/pdmiguel90-droid/elements-extract.git
+        # TODO: fijar al tag que se envíe a Flathub, p. ej. tag: v1.3.0
+        branch: main
