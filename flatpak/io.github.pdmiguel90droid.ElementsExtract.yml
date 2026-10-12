@@ -55,3 +55,20 @@ modules:
         url: https://github.com/pdmiguel90-droid/elements-extract.git
         # TODO: fijar al tag que se envíe a Flathub, p. ej. tag: v1.3.0
         branch: main
+
+  # Motor bergamot precompilado (workflow bergamot-linux.yml, sin MKL).
+  # Descomentar cuando exista el asset en el Release con tag bergamot-v0.4.5-1,
+  # rellenando el sha256 con el contenido de bergamot-linux64.sha256.
+  # Instala bergamot.real (+ .so) junto al resto en share/elements-extract/bin.
+  # - name: bergamot-engine
+  #   buildsystem: simple
+  #   build-commands:
+  #     - mkdir -p /app/share/elements-extract/bin
+  #     - tar -xzf bergamot-linux64.tar.gz -C /app/share/elements-extract/bin/
+  #     - chmod +x /app/share/elements-extract/bin/bergamot.real
+  #   sources:
+  #     - type: extra-data
+  #       filename: bergamot-linux64.tar.gz
+  #       url: https://github.com/pdmiguel90-droid/elements-extract/releases/download/bergamot-v0.4.5-1/bergamot-linux64.tar.gz
+  #       sha256: TODO-rellenar-desde-bergamot-linux64.sha256
+  #       size: 0
