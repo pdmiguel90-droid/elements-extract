@@ -2372,6 +2372,9 @@ void MainWindow::changeUILanguage(const QString &langCode)
     QString actualLang = langCode;
     if (actualLang == "system") {
         actualLang = QLocale::system().name();
+        // Locale C/POSIX: sin idioma asignable → inglés por defecto.
+        if (actualLang == "C" || actualLang.startsWith("C.") || actualLang == "POSIX")
+            actualLang = "en";
     }
 
     bool loaded = translator->load("elements_extract_" + actualLang, ":/translations");

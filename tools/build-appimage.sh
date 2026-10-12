@@ -36,6 +36,7 @@ printf '[Paths]\nPlugins = ../lib/elements-extract\n' > "$APPDIR/usr/bin/qt.conf
 
 cp io.github.pdmiguel90droid.ElementsExtract.desktop "$APPDIR/"
 cp ffmpeg-extractor.svg "$APPDIR/io.github.pdmiguel90droid.ElementsExtract.svg"
+cp io.github.pdmiguel90droid.ElementsExtract.png "$APPDIR/"
 # Nombres legacy de builds anteriores: duplicarían el lanzador y el icono
 rm -f "$APPDIR/ffmpeg-extractor.desktop" "$APPDIR/ffmpeg-extractor.svg" \
       "$APPDIR/usr/share/applications/ffmpeg-extractor.desktop" \
@@ -74,6 +75,8 @@ EOF
 chmod +x "$APPDIR/.AppRun.new"
 mv -f "$APPDIR/.AppRun.new" "$APPDIR/AppRun"
 
+# .DirIcon en PNG (el lint de AppImage lo exige para miniaturas)
+ln -sf io.github.pdmiguel90droid.ElementsExtract.png "$APPDIR/.DirIcon"
 # Update-info para AppImageHub y actualizaciones delta (zsync). El .zsync
 # se genera junto al AppImage en los Releases (tags v*).
 UPDATE_INFO="${UPDATE_INFO:-gh-releases-zsync|pdmiguel90-droid|elements-extract|latest|elements-extract-*x86_64.AppImage.zsync}"

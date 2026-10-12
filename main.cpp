@@ -22,6 +22,10 @@ int main(int argc, char *argv[])
     QTranslator *translator = new QTranslator(&a);
     if (langCode == "system") {
         langCode = QLocale::system().name(); // e.g. "es_ES", "en_US", "pt_BR"
+        // Locale C/POSIX (CI, contenedores, test de AppImageHub): sin idioma
+        // asignable → inglés por defecto en vez del español fuente.
+        if (langCode == "C" || langCode.startsWith("C.") || langCode == "POSIX")
+            langCode = "en";
     }
 
     // Try loading translation from resources
