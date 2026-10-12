@@ -1149,9 +1149,9 @@ void MainWindow::processNextInBatch()
         int c = 2;
         while (usedPaths.contains(p)) {
             QFileInfo fi(name);
-            // baseName (solo última extensión): conserva el idioma
-            // ("X.eng_v2.srt", no el críptico "X_v2.srt" de completeBaseName).
-            p = getUniqueFilePath(fi.absolutePath() + "/" + fi.baseName()
+            // completeBaseName (solo recorta la última extensión): conserva
+            // el idioma ("X.eng_v2.srt", no el críptico "X_v2.srt").
+            p = getUniqueFilePath(fi.absolutePath() + "/" + fi.completeBaseName()
                                    + "_v" + QString::number(c) + "." + fi.suffix());
             ++c;
         }
@@ -1698,10 +1698,12 @@ QString MainWindow::getUniqueFilePath(const QString &fullPath)
     if (!QFile::exists(fullPath)) return fullPath;
     QFileInfo info(fullPath);
     int c = 2;
-    while (QFile::exists(info.absolutePath() + "/" + info.baseName()
+    // completeBaseName (solo recorta la última extensión): conserva el idioma
+    // ("X.eng_v2.srt", no el críptico "X_v2.srt" que producía baseName).
+    while (QFile::exists(info.absolutePath() + "/" + info.completeBaseName()
                          + "_v" + QString::number(c) + "." + info.suffix())) c++;
-    return info.absolutePath() + "/" + info.baseName()
-           + "_v" + QString::number(c) + "." + info.suffix();
+    return info.absolutePath() + "/" + info.completeBaseName()
+            + "_v" + QString::number(c) + "." + info.suffix();
 }
 
 QString MainWindow::ensureOutputSubdir(const QString &subName)
