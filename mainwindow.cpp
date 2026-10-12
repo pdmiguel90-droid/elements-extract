@@ -815,6 +815,23 @@ void MainWindow::autoDetectSourceLanguage()
 
 void MainWindow::onStreamToggled(int) { saveCurrentSelections(); }
 
+void MainWindow::onStreamClicked(bool checked)
+{
+    // Solo pistas de subtítulo cubiertas por el filtro activo: recordar la
+    // decisión manual para que applySubtitleFilterToFile no la revierta.
+    if (m_subLangFilter.isEmpty() || lastSelectedFile.isEmpty()) return;
+    QCheckBox *cb = qobject_cast<QCheckBox *>(sender());
+    if (!cb || cb->property("streamType").toString() != "subtitle") return;
+    const int idx = cb->property("streamIndex").toInt();
+    const QString lang = normalizeLangCode(
+        fileStreamLanguages.value(lastSelectedFile).value(idx));
+    if (lang != m_subLangFilter) return;
+    QSet<int> &set = m_filterDeselected[lastSelectedFile];
+    if (checked) set.remove(idx);
+    else set.insert(idx);
+    if (set.isEmpty()) m_filterDeselected.remove(lastSelectedFile);
+}
+
 void MainWindow::selectAllVideo()
 {
     if (globalSelectionTypes.contains("video")) globalSelectionTypes.remove("video");
@@ -925,6 +942,9 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
         if (saved.contains(index) || globalSelectionTypes.contains(type))
             cb->setChecked(true);
         connect(cb, &QCheckBox::stateChanged, this, &MainWindow::onStreamToggled);
+        // clicked solo lo emite la interacción del usuario (setChecked no):
+        // sirve para recordar desmarcados manuales frente al filtro.
+        connect(cb, &QCheckBox::clicked, this, &MainWindow::onStreamClicked);
         streamsLayout->addWidget(cb);
         streamCheckBoxes.append(cb);
     }
@@ -976,11 +996,12 @@ QString MainWindow::extensionForCodec(const QString &codec, const QString &type)
 void MainWindow::startExtraction()
 {
     saveCurrentSelections();
+    int filterSkipped = 0;
     if (!m_subLangFilter.isEmpty()) {
         globalSelectionTypes.remove("subtitle");
         const int n = fileListWidget->count();
         for (int i = 0; i < n; ++i)
-            applySubtitleFilterToFile(fileListWidget->item(i)->data(Qt::UserRole).toString());
+            filterSkipped += applySubtitleFilterToFile(fileListWidget->item(i)->data(Qt::UserRole).toString());
     }
     batchFiles.clear();
     m_extractedSubs.clear();
@@ -995,6 +1016,9 @@ void MainWindow::startExtraction()
     showLogArea();
     logArea->clear();
     logArea->append(tr("<font color='#FF8800'><b>=== INICIANDO EXTRACCIÓN ===</b></font>"));
+    if (filterSkipped > 0)
+        logArea->append(QString("<font color='#888888'>  › " + tr("%1 pista(s) desmarcadas a mano, excluidas aunque coincidan con el filtro.") + "</font>")
+            .arg(filterSkipped));
     extractButton->setEnabled(false);
     cancelButton->setEnabled(true);
     progressBar->setValue(0);
@@ -1491,17 +1515,25 @@ void MainWindow::refreshSubLangFilter()
     if (idx < 0) m_subLangFilter.clear();
 }
 
-void MainWindow::applySubtitleFilterToFile(const QString &path)
+int MainWindow::applySubtitleFilterToFile(const QString &path)
 {
-    if (m_subLangFilter.isEmpty()) return;
+    if (m_subLangFilter.isEmpty()) return 0;
     QMap<int, QString> sel = fileSelections.value(path);
     const QMap<int, QString> &types = fileStreamTypes.value(path);
     const QMap<int, QString> &langs = fileStreamLanguages.value(path);
     const QMap<int, QString> &codecs = fileStreamCodecs.value(path);
+    const QSet<int> deselected = m_filterDeselected.value(path);
+    int skipped = 0;
     for (auto it = types.constBegin(); it != types.constEnd(); ++it) {
         if (it.value() != "subtitle") continue;
         int idx = it.key();
         if (normalizeLangCode(langs.value(idx)) == m_subLangFilter) {
+            if (deselected.contains(idx)) {
+                // Desmarcado a mano: se respeta aunque coincida con el filtro
+                sel.remove(idx);
+                ++skipped;
+                continue;
+            }
             sel[idx] = "subtitle";
             fileStreamCodecs[path][idx] = codecs.value(idx);
         } else {
@@ -1509,11 +1541,14 @@ void MainWindow::applySubtitleFilterToFile(const QString &path)
         }
     }
     fileSelections[path] = sel;
+    return skipped;
 }
 
 void MainWindow::onSubLangFilterChanged(int)
 {
     m_subLangFilter = subFilterCombo->currentData().toString();
+    // Cambiar de filtro reinicia las exclusiones manuales (nueva intención)
+    m_filterDeselected.clear();
     if (m_subLangFilter.isEmpty()) return;  // "Todos": se mantiene la selección manual
 
     // Un filtro activo toma el control: desactiva la selección global de SUBS
@@ -1525,8 +1560,13 @@ void MainWindow::onSubLangFilterChanged(int)
     // Refrescar visualmente los checkboxes del archivo visible
     if (!lastSelectedFile.isEmpty()) {
         const QMap<int, QString> &sel = fileSelections.value(lastSelectedFile);
-        for (QCheckBox *cb : streamCheckBoxes)
-            cb->setChecked(sel.contains(cb->property("streamIndex").toInt()));
+        int subCount = 0;
+        for (QCheckBox *cb : streamCheckBoxes) {
+            const bool on = sel.contains(cb->property("streamIndex").toInt());
+            cb->setChecked(on);
+            if (on && cb->property("streamType").toString() == "subtitle")
+                ++subCount;
+        }
         for (int i = 0; i < fileListWidget->count(); ++i) {
             QListWidgetItem *item = fileListWidget->item(i);
             if (item->data(Qt::UserRole).toString() == lastSelectedFile) {
@@ -1534,6 +1574,10 @@ void MainWindow::onSubLangFilterChanged(int)
                 break;
             }
         }
+        if (subCount > 1)
+            logArea->append(QString("<font color='#FFCC00'>  › " + tr("El filtro coincide con %1 pistas en %2: desmarca las que no necesites.") + "</font>")
+                .arg(subCount)
+                .arg(QFileInfo(lastSelectedFile).fileName().toHtmlEscaped()));
     }
     statusBar()->showMessage(tr("Filtro: solo subtítulos en ") + SubtitleTranslator::languageName(m_subLangFilter));
 }

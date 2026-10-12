@@ -72,6 +72,7 @@ private slots:
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void onFileSelectionChanged();
     void onStreamToggled(int state);
+    void onStreamClicked(bool checked);
     void selectAllVideo();
     void selectAllAudio();
     void selectAllSubs();
@@ -131,7 +132,7 @@ private:
     // una vez el motivo accionable (descargable / sin conexión / inexistente)
     // y devuelve lista vacía.
     QStringList checkInstalledTranslationPath(const QString &srcLang, const QString &dstLang);
-    void    applySubtitleFilterToFile(const QString &path);
+    int     applySubtitleFilterToFile(const QString &path);
     QString ffmpegExecutable() const;
     qint64  parseTimestamp(const QString &ts);
     void    updateProgressFromLine(const QString &line);
@@ -230,6 +231,7 @@ private:
     QStringList    m_muxTail;             // últimas líneas de ffmpeg durante el remux
     QStringList    m_detectedSubLangs;       // idiomas de subs detectados en el lote
     QString        m_subLangFilter;          // "" = todos; si no, código a filtrar
+    QMap<QString, QSet<int>> m_filterDeselected; // desmarcados a mano que el filtro no repone
     int            currentBatchIndex;
     QMap<QString, qint64> fileDurations; // duración en ms por archivo
     qint64 currentFileDuration;
