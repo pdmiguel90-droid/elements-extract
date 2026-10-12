@@ -9,11 +9,12 @@ on:
 permissions:
   contents: write
 
-env:
-  BERGAMOT_BASE_URL: ${{ vars.BERGAMOT_BASE_URL }}
-
 jobs:
+  bergamot:
+    uses: ./.github/workflows/bergamot-linux.yml
+
   build:
+    needs: bergamot
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -34,16 +35,17 @@ jobs:
             tar -xzf "mirror/$id.tar.gz" -C "models/$id"
           done
 
-      - name: Prepare bergamot runtime
+      - name: Download bergamot engine (built in this run)
+        uses: actions/download-artifact@v5
+        with:
+          name: bergamot-linux64
+          path: bergamot-dl
+
+      - name: Unpack bergamot runtime
         run: |
-          chmod +x bin/bergamot
-          if [ -n "$BERGAMOT_BASE_URL" ]; then
-            curl -fsSL "$BERGAMOT_BASE_URL/bergamot.real" -o bin/bergamot.real
-            curl -fsSL "$BERGAMOT_BASE_URL/libopenblas.so.0" -o bin/libopenblas.so.0
-            chmod +x bin/bergamot.real
-          else
-            echo "BERGAMOT_BASE_URL no definida: el .deb ira sin motor de traduccion"
-          fi
+          tar -xzf bergamot-dl/bergamot-linux64.tar.gz -C bin/
+          chmod +x bin/bergamot bin/bergamot.real
+          ls -la bin/
 
       - name: Build
         run: |
@@ -51,7 +53,6 @@ jobs:
           cmake --build build -j$(nproc)
 
       - name: Smoke test translation
-        if: ${{ env.BERGAMOT_BASE_URL != '' }}
         run: |
           cd models/es-en-tiny
           out=$(printf 'Hello world, this is a test.\n' | LD_LIBRARY_PATH=../../bin ../../bin/bergamot.real \

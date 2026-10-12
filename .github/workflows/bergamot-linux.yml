@@ -1,0 +1,125 @@
+name: bergamot-linux
+
+# Compila el CLI de bergamot-translator para Linux (x64) y publica
+# bergamot-linux64.tar.gz (bergamot.real + .so acompañantes) como artifact
+# y como asset de release. Los workflows `build` (.deb) y `appimage` lo
+# consumen vía download-artifact (sin espejos externos).
+#
+# Decisiones de build (redistribuible, sin blobs privativos):
+# - USE_MKL=OFF  → OpenBLAS del sistema (BSD), nada de Intel MKL.
+# - BUILD_ARCH=x86-64 → binario portable (NO -march=native del runner).
+# - ubuntu-22.04 → libstdc++ compatible con Debian 12 / AppImage.
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    tags: ['bergamot-*']
+
+permissions:
+  contents: write
+
+env:
+  BERGAMOT_REF: v0.4.5
+
+jobs:
+  build-bergamot:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout bergamot-translator
+        uses: actions/checkout@v5
+        with:
+          repository: browsermt/bergamot-translator
+          ref: ${{ env.BERGAMOT_REF }}
+          submodules: recursive
+          path: bergamot
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake git pkg-config ccache \
+            libopenblas-dev libprotobuf-dev protobuf-compiler \
+            libpcre2-dev libboost-all-dev
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: bergamot-linux-${{ env.BERGAMOT_REF }}
+
+      - name: Configure
+        working-directory: ${{ github.workspace }}/bergamot
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DUSE_MKL=OFF \
+            -DUSE_STATIC_LIBS=ON \
+            -DBUILD_ARCH=x86-64 \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build CLI
+        working-directory: ${{ github.workspace }}/bergamot
+        run: cmake --build build --config Release --target bergamot --parallel
+
+      - name: Audit shared dependencies
+        working-directory: ${{ github.workspace }}/bergamot
+        run: |
+          echo "=== ldd build/app/bergamot ==="
+          ldd build/app/bergamot
+          echo "=== NEEDED (solo informativo; el empaquetado recoge openblas/gfortran) ==="
+          readelf -d build/app/bergamot | grep NEEDED || true
+          # Falla si aparece algo fuera de lo esperado (MKL, CUDA, etc.)
+          if ldd build/app/bergamot | grep -iE "mkl|cuda|cublas|nvrtc"; then
+            echo "ERROR: dependencia inesperada (MKL/CUDA) en el binario"
+            exit 1
+          fi
+
+      - name: Smoke test (translate one line)
+        working-directory: ${{ github.workspace }}/bergamot
+        run: |
+          curl -fsSL "https://data.statmt.org/bergamot/models/esen/enes.student.tiny11.v1.a7203a8f8e9daea8.tar.gz" \
+            -o /tmp/en-es-tiny.tar.gz
+          mkdir -p /tmp/en-es-tiny && tar -xzf /tmp/en-es-tiny.tar.gz -C /tmp/en-es-tiny
+          cd /tmp/en-es-tiny
+          out=$(printf 'Hello world, this is a test.\n' | \
+            "$GITHUB_WORKSPACE/bergamot/build/app/bergamot" \
+              --model-config-paths config.intgemm8bitalpha.yml --cpu-threads 2 2>&1 || true)
+          echo "$out"
+          if [ "${out%%$'\n'*}" = "Hello world, this is a test." ]; then
+            echo "ERROR: salida de identidad (modelo o shortlist rotos)"; exit 1
+          fi
+
+      - name: Package
+        run: |
+          mkdir -p out stage-lib
+          cp bergamot/build/app/bergamot out/bergamot.real
+          chmod +x out/bergamot.real
+          # Recoger .so acompañantes si el enlace fue dinámico (openblas,
+          # gfortran, quadmath): el wrapper bin/bergamot ya ajusta LD_LIBRARY_PATH
+          for lib in $(ldd bergamot/build/app/bergamot | grep -oE '/[^ ]*lib(openblas|gfortran|quadmath)[^ ]*'); do
+            cp -L "$lib" stage-lib/ 2>/dev/null || true
+          done
+          # Sin duplicados y solo ficheros reales
+          ls stage-lib/ 2>/dev/null || echo "(sin .so acompañantes: enlace estático)"
+          cp stage-lib/* out/ 2>/dev/null || true
+          tar -czf bergamot-linux64.tar.gz -C out .
+          tar -tzf bergamot-linux64.tar.gz
+          sha256sum bergamot-linux64.tar.gz | tee bergamot-linux64.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: bergamot-linux64
+          path: |
+            bergamot-linux64.tar.gz
+            bergamot-linux64.sha256
+          retention-days: 30
+
+      - name: Publish to release (tag only)
+        if: startsWith(github.ref, 'refs/tags/bergamot-')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            bergamot-linux64.tar.gz
+            bergamot-linux64.sha256
+          generate_release_notes: false

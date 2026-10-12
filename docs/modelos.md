@@ -55,9 +55,12 @@ en `models/` al compilar (`CMakeLists.txt:60`). El "bundle por defecto" actual
 (6 pares: es/en/fr + pt) se mantiene tal cual mientras exista en esa carpeta.
 
 En la CI los modelos llegan vía `mirror-models.py` (pares `en-es-tiny`/`es-en-tiny`)
-y el motor bergamot se descarga de la variable de GitHub Actions
-`BERGAMOT_BASE_URL` (URL con `bergamot.real` y `libopenblas.so.0`). Sin esa
-variable el `.deb` compilado sale sin motor de traducción.
+y el motor bergamot **se compila en el propio run** con el workflow reutilizable
+`bergamot-linux.yml` (`browsermt/bergamot-translator` v0.4.5, `USE_MKL=OFF` →
+OpenBLAS, `BUILD_ARCH=x86-64` portable, Ubuntu 22.04). Los workflows `build`
+(.deb) y `appimage` lo consumen vía `download-artifact` (`bergamot-linux64.tar.gz`
+con `bergamot.real` + `.so` acompañantes) y siempre llevan motor: ya no hay
+espejo externo ni variable `BERGAMOT_BASE_URL` (eliminada).
 
 ### Motor para Windows (bergamot.exe)
 

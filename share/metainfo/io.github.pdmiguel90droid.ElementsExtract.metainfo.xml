@@ -39,10 +39,8 @@
     <name>pdmiguel90-droid</name>
   </developer>
 
-  <!-- Flathub pide un contacto para avisos de compilación.
-       Sustituye el ejemplo por tu email real antes de enviar a Flathub.
-  <update_contact>pdmiguel90-droid_AT_example.com</update_contact>
-  -->
+  <!-- Flathub usa este contacto para avisos de compilación -->
+  <update_contact>pdmiguel90_AT_gmail.com</update_contact>
 
   <launchable type="desktop-id">io.github.pdmiguel90droid.ElementsExtract.desktop</launchable>
 

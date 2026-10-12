@@ -9,11 +9,12 @@ on:
 permissions:
   contents: write
 
-env:
-  BERGAMOT_BASE_URL: ${{ vars.BERGAMOT_BASE_URL }}
-
 jobs:
+  bergamot:
+    uses: ./.github/workflows/bergamot-linux.yml
+
   appimage:
+    needs: bergamot
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -34,16 +35,17 @@ jobs:
             tar -xzf "mirror/$id.tar.gz" -C "models/$id"
           done
 
-      - name: Prepare bergamot runtime
+      - name: Download bergamot engine (built in this run)
+        uses: actions/download-artifact@v5
+        with:
+          name: bergamot-linux64
+          path: bergamot-dl
+
+      - name: Unpack bergamot runtime
         run: |
-          chmod +x bin/bergamot
-          if [ -n "$BERGAMOT_BASE_URL" ]; then
-            curl -fsSL "$BERGAMOT_BASE_URL/bergamot.real" -o bin/bergamot.real
-            curl -fsSL "$BERGAMOT_BASE_URL/libopenblas.so.0" -o bin/libopenblas.so.0
-            chmod +x bin/bergamot.real
-          else
-            echo "BERGAMOT_BASE_URL no definida: el AppImage ira sin motor de traduccion"
-          fi
+          tar -xzf bergamot-dl/bergamot-linux64.tar.gz -C bin/
+          chmod +x bin/bergamot bin/bergamot.real
+          ls -la bin/
 
       - name: Sanity checks (Qt6)
         run: |
@@ -61,9 +63,7 @@ jobs:
           test -f squashfs-root/usr/lib/elements-extract/platforms/libqxcb.so
           test -f squashfs-root/usr/bin/qt.conf
           ls squashfs-root/usr/share/elements-extract/models
-          if [ -n "$BERGAMOT_BASE_URL" ]; then
-            test -f squashfs-root/usr/share/elements-extract/bin/bergamot.real
-          fi
+          test -f squashfs-root/usr/share/elements-extract/bin/bergamot.real
           rm -rf squashfs-root
 
       - name: Checksums
