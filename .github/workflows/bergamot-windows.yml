@@ -135,7 +135,7 @@ jobs:
           Compress-Archive -Path out/* -DestinationPath bergamot-win64.zip
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: bergamot-win64
           path: bergamot-win64.zip
