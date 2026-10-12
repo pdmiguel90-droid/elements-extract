@@ -88,6 +88,7 @@ private:
     QComboBox *m_defaultSrcLangCombo;
     QComboBox *m_defaultDstLangCombo;
     QCheckBox *m_autoTranslateCheck;
+    QCheckBox *m_cleanupAfterMuxCheck;
     QComboBox *m_themeCombo;
     QComboBox *m_uiLangCombo;
 

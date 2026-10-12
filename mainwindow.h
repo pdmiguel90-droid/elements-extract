@@ -37,13 +37,22 @@ struct SubExtractInfo {
     QString videoInput;
     QString subPath;
     QString subLang;      // código normalizado (ej: "es")
+    QString subTitle;     // título original de la pista (puede estar vacío)
 };
 
-// Trabajo de remux: sub ya traducido → incrustar en el vídeo original
+// Un sub ya traducido, listo para incrustar
+struct MuxSubItem {
+    QString translatedSub;  // .srt traducido
+    QString sourceSub;      // .srt extraído original (para limpieza opcional)
+    QString langCode;       // idioma destino (ej: "es")
+    QString title;          // título de la pista (puede estar vacío)
+};
+
+// Trabajo de remux: TODOS los subs traducidos de un mismo vídeo van en una
+// sola salida (un único mp4/mkv con N pistas, no un vídeo por sub).
 struct MuxJobInfo {
     QString videoInput;
-    QString translatedSub;
-    QString langCode;
+    QList<MuxSubItem> subs;
 };
 
 class MainWindow : public QMainWindow
@@ -128,6 +137,7 @@ private:
     QString getUniqueFilePath(const QString &fullPath);
     QString ensureOutputSubdir(const QString &subName);
     int     pruneEmptyExtractions(const QString &videoInput);
+    void    cleanupMuxIntermediates(const MuxJobInfo &job);
     // Ruta instalada (directa o triangular) para src→dst; si no hay, registra
     // una vez el motivo accionable (descargable / sin conexión / inexistente)
     // y devuelve lista vacía.
@@ -219,6 +229,8 @@ private:
     QMap<QString, QMap<int, QString>> fileStreamTypes;
     // file → { streamIndex → languageCode }
     QMap<QString, QMap<int, QString>> fileStreamLanguages;
+    // file → { streamIndex → trackTitle }
+    QMap<QString, QMap<int, QString>> fileStreamTitles;
     QSet<QString>  globalSelectionTypes;
     QStringList    batchFiles;
     QList<SubExtractInfo> m_extractedSubs;   // subs extraídos + su vídeo de origen

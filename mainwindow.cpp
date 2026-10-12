@@ -907,18 +907,21 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
     QMap<int, QString> langMap;
     QMap<int, QString> typeMap;
     QMap<int, QString> codecMap;
+    QMap<int, QString> titleMap;
     for (int i = 0; i < streams.size(); ++i) {
         QJsonObject s = streams.at(i).toObject();
         int     index = s.value("index").toInt();
         QString type  = s.value("codec_type").toString();
         QString codec = s.value("codec_name").toString();
         QString lang  = s.value("tags").toObject().value("language").toString();
+        QString title = s.value("tags").toObject().value("title").toString();
         int     w     = s.value("width").toInt();
         int     h     = s.value("height").toInt();
 
         typeMap[index] = type;
         codecMap[index] = codec;
         if (!lang.isEmpty()) langMap[index] = lang;
+        if (!title.isEmpty()) titleMap[index] = title;
 
         if (type == "video" && videoInfo.isEmpty() && w > 0)
             videoInfo = QString("%1x%2 %3").arg(w).arg(h).arg(codec.toUpper());
@@ -951,6 +954,7 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
 
     fileStreamLanguages[lastSelectedFile] = langMap;
     fileStreamTypes[lastSelectedFile] = typeMap;
+    fileStreamTitles[lastSelectedFile] = titleMap;
     if (!fileStreamCodecs.contains(lastSelectedFile))
         fileStreamCodecs[lastSelectedFile] = codecMap;
 
@@ -1202,6 +1206,7 @@ void MainWindow::processNextInBatch()
     QMap<int, QString> selectedCodecs = fileStreamCodecs.value(inputPath);
     QMap<int, QString> strTypes = fileStreamTypes.value(inputPath);
     QMap<int, QString> strLangs = fileStreamLanguages.value(inputPath);
+    QMap<int, QString> strTitles = fileStreamTitles.value(inputPath);
     QStringList finalArgs;
     finalArgs << "-i" << inputPath;
     bool anyAction = false;
@@ -1262,15 +1267,16 @@ void MainWindow::processNextInBatch()
             if (type == "subtitle") {
                 // Solo se puede traducir/incrustar un sub de texto único
                 int textSubCount = 0;
-                QString recLang;
+                QString recLang, recTitle;
                 for (auto it = strTypes.constBegin(); it != strTypes.constEnd(); ++it) {
                     if (it.value() == "subtitle" && subtitleCodecIsText(selectedCodecs.value(it.key()))) {
                         ++textSubCount;
                         recLang = strLangs.value(it.key());
+                        recTitle = strTitles.value(it.key());
                     }
                 }
                 if (textSubCount == 1 && !normalizeLangCode(recLang).isEmpty())
-                    m_extractedSubs.append({inputPath, outPath, normalizeLangCode(recLang)});
+                    m_extractedSubs.append({inputPath, outPath, normalizeLangCode(recLang), recTitle});
                 else
                     logArea->append(tr("<font color='#FFCC00'>  › Subtítulo omitido para traducción (varias pistas de texto o formato de imagen): %1</font>").arg(outPath));
             }
@@ -1310,7 +1316,8 @@ void MainWindow::processNextInBatch()
             if (translatableSub) {
                 QString normLang = normalizeLangCode(strLangs.value(index));
                 m_extractedSubs.append({inputPath, outPath,
-                                       (normLang.isEmpty() || normLang == "und") ? QString() : normLang});
+                                       (normLang.isEmpty() || normLang == "und") ? QString() : normLang,
+                                       strTitles.value(index)});
             }
             anyAction = true;
         }
@@ -1355,6 +1362,7 @@ void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
         if (exitStatus == QProcess::NormalExit && exitCode == 0) {
             logArea->append(tr("<font color='#39FF14'>  › OK</font>"));
             m_muxOk++;
+            cleanupMuxIntermediates(m_muxQueue[m_muxIndex]);
         } else {
             const MuxJobInfo &job = m_muxQueue[m_muxIndex];
             QStringList hits;
@@ -1394,6 +1402,31 @@ void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
         currentBatchIndex++;
         processNextInBatch();
     }
+}
+
+// Tras un remux correcto, borra los .srt intermedios (extraídos y
+// traducidos) si el usuario lo pidió en Ajustes. Solo en éxito: si el remux
+// falla se conservan para diagnosticar.
+void MainWindow::cleanupMuxIntermediates(const MuxJobInfo &job)
+{
+    QSettings s("LocalApp", "FFmpegExtractor");
+    if (!s.value("cleanupAfterMux", false).toBool()) return;
+    QStringList removed;
+    for (const MuxSubItem &ms : job.subs) {
+        for (const QString &path : {ms.translatedSub, ms.sourceSub}) {
+            if (!path.isEmpty() && QFile::exists(path) && QFile::remove(path))
+                removed << QFileInfo(path).fileName();
+        }
+    }
+    // Las entradas de m_extractedSubs de este vídeo ya no apuntan a nada
+    for (int i = m_extractedSubs.size() - 1; i >= 0; --i) {
+        if (m_extractedSubs.at(i).videoInput != job.videoInput) continue;
+        if (!QFile::exists(m_extractedSubs.at(i).subPath))
+            m_extractedSubs.removeAt(i);
+    }
+    if (!removed.isEmpty())
+        logArea->append(QString("<font color='#888888'>  › " + tr("Intermedios eliminados: %1") + "</font>")
+                            .arg(removed.join(", ")));
 }
 
 // Elimina de m_extractedSubs (y del disco) las salidas vacías/inexistentes
@@ -1649,8 +1682,19 @@ void MainWindow::processNextMux()
 
     const MuxJobInfo &job = m_muxQueue[m_muxIndex];
     QFileInfo vi(job.videoInput);
+    // Si alguna traducción falta, se incrusta el resto avisando (no se pierde
+    // todo el vídeo por un sub).
+    QList<MuxSubItem> validSubs;
+    for (const MuxSubItem &ms : job.subs) {
+        if (QFile::exists(ms.translatedSub)) {
+            validSubs.append(ms);
+        } else {
+            logArea->append(tr("<font color='#FFCC00'>  › No se encontró la traducción, se omite esa pista: %1</font>")
+                                .arg(QFileInfo(ms.translatedSub).fileName().toHtmlEscaped()));
+        }
+    }
     QString reason;
-    if (!QFile::exists(job.translatedSub)) {
+    if (validSubs.isEmpty()) {
         reason = tr("no se encontró la traducción");
     } else if (outputLineEdit->text().trimmed().isEmpty()) {
         reason = tr("no hay carpeta de destino configurada");
@@ -1697,22 +1741,23 @@ void MainWindow::processNextMux()
         }
     }
 
+    // El contenedor MP4 necesita el código ISO-639-2 de 3 letras; Matroska admite el de 2
+    static const QMap<QString, QString> three = {
+        {"en", "eng"}, {"es", "spa"}, {"fr", "fre"}, {"pt", "por"},
+        {"de", "deu"}, {"it", "ita"}, {"ja", "jpn"}, {"zh", "zho"},
+        {"ko", "kor"}, {"ru", "rus"}, {"ar", "ara"}, {"hi", "hin"},
+        {"nl", "nld"}, {"sv", "swe"}, {"pl", "pol"}, {"tr", "tur"}
+    };
+
     QString container = toMp4 ? "mp4" : "mkv";
     QString subCodec  = toMp4 ? "mov_text" : "srt";
+    QStringList muxLangs;
+    for (const MuxSubItem &ms : validSubs)
+        if (!ms.langCode.isEmpty() && !muxLangs.contains(ms.langCode))
+            muxLangs << ms.langCode;
+    if (muxLangs.isEmpty()) muxLangs << "und";
     QString outPath = getUniqueFilePath(outDir + "/" + vi.completeBaseName()
-                                        + "." + job.langCode + "." + container);
-
-    // El contenedor MP4 necesita el código ISO-639-2 de 3 letras; Matroska admite el de 2
-    QString metadataLang = job.langCode;
-    if (toMp4) {
-        static const QMap<QString, QString> three = {
-            {"en", "eng"}, {"es", "spa"}, {"fr", "fre"}, {"pt", "por"},
-            {"de", "deu"}, {"it", "ita"}, {"ja", "jpn"}, {"zh", "zho"},
-            {"ko", "kor"}, {"ru", "rus"}, {"ar", "ara"}, {"hi", "hin"},
-            {"nl", "nld"}, {"sv", "swe"}, {"pl", "pol"}, {"tr", "tur"}
-        };
-        metadataLang = three.value(metadataLang, metadataLang);
-    }
+                                        + "." + muxLangs.join("+") + "." + container);
 
     currentFileDuration = fileDurations.value(job.videoInput, 0);
     progressBar->setValue(0);
@@ -1724,20 +1769,33 @@ void MainWindow::processNextMux()
                         .arg(m_muxIndex + 1)
                         .arg(m_muxQueue.size())
                         .arg(vi.fileName().toHtmlEscaped()));
-    logArea->append(tr("  › Incrustando %1 → %2")
-                        .arg(QFileInfo(job.translatedSub).fileName())
+    logArea->append(tr("  › Incrustando %1 pista(s) → %2")
+                        .arg(validSubs.size())
                         .arg(outPath));
+    for (const MuxSubItem &ms : validSubs)
+        logArea->append(QString("<font color='#888888'>  › · %1%2</font>")
+                            .arg(QFileInfo(ms.translatedSub).fileName().toHtmlEscaped(),
+                                 ms.title.trimmed().isEmpty() ? QString()
+                                 : QString(" (%1)").arg(ms.title.trimmed().toHtmlEscaped())));
 
     QStringList args;
-    args << "-i" << vi.absoluteFilePath()
-         << "-i" << job.translatedSub
-         << "-map" << "0:v"
-         << "-map" << "0:a?"
-         << "-map" << "1:0"
-         << "-c" << "copy"
-         << "-c:s" << subCodec
-         << "-metadata:s:s:0" << ("language=" + metadataLang)
-         << "-y" << outPath;
+    args << "-i" << vi.absoluteFilePath();
+    for (const MuxSubItem &ms : validSubs)
+        args << "-i" << ms.translatedSub;
+    args << "-map" << "0:v"
+         << "-map" << "0:a?";
+    for (int k = 0; k < validSubs.size(); ++k)
+        args << "-map" << QString("%1:0").arg(k + 1);
+    args << "-c" << "copy"
+         << "-c:s" << subCodec;
+    for (int k = 0; k < validSubs.size(); ++k) {
+        QString metadataLang = validSubs[k].langCode;
+        if (toMp4) metadataLang = three.value(metadataLang, metadataLang);
+        args << QString("-metadata:s:s:%1").arg(k) << ("language=" + metadataLang);
+        if (!validSubs[k].title.trimmed().isEmpty())
+            args << QString("-metadata:s:s:%1").arg(k) << ("title=" + validSubs[k].title.trimmed());
+    }
+    args << "-y" << outPath;
     logArea->append("<font color='#888888'>  $ " + QString("ffmpeg %1").arg(args.join(" ")).toHtmlEscaped() + "</font>");
     process->start(ffmpegExecutable(), args);
 }
@@ -2169,12 +2227,29 @@ void MainWindow::onTranslationProgress(int current, int total)
 
 void MainWindow::onFileTranslated(const QString &input, const QString &output)
 {
-    // Asociar la traducción con su vídeo de origen para el remux posterior
+    // Asociar la traducción con su vídeo de origen para el remux posterior.
+    // Los subs del mismo vídeo se agrupan en UN solo trabajo: una única
+    // salida con todas las pistas incrustadas (no un vídeo por sub).
     if (muxOnExtractCheck && muxOnExtractCheck->isChecked()) {
         for (const SubExtractInfo &se : m_extractedSubs) {
             if (se.subPath == input) {
-                m_muxQueue.append({se.videoInput, output,
-                                   dstLangCombo->currentData().toString()});
+                MuxSubItem item;
+                item.translatedSub = output;
+                item.sourceSub = se.subPath;
+                item.langCode = dstLangCombo->currentData().toString();
+                item.title = se.subTitle;
+                int ji = -1;
+                for (int i = 0; i < m_muxQueue.size(); ++i) {
+                    if (m_muxQueue[i].videoInput == se.videoInput) { ji = i; break; }
+                }
+                if (ji < 0) {
+                    MuxJobInfo job;
+                    job.videoInput = se.videoInput;
+                    job.subs.append(item);
+                    m_muxQueue.append(job);
+                } else {
+                    m_muxQueue[ji].subs.append(item);
+                }
                 break;
             }
         }

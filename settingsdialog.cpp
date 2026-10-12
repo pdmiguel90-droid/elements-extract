@@ -93,6 +93,14 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
         emit settingsChanged();
     });
     optLay->addWidget(m_autoTranslateCheck);
+    m_cleanupAfterMuxCheck = new QCheckBox(tr("Eliminar los .srt intermedios tras incrustarlos (remux)"));
+    m_cleanupAfterMuxCheck->setToolTip(tr("Borra los subtítulos extraídos y traducidos de cada vídeo cuando su remux termina correctamente. Sin remux no se borra nada."));
+    connect(m_cleanupAfterMuxCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        QSettings s("LocalApp", "FFmpegExtractor");
+        s.setValue("cleanupAfterMux", checked);
+        emit settingsChanged();
+    });
+    optLay->addWidget(m_cleanupAfterMuxCheck);
     genLay->addWidget(m_optBox);
 
     // Appearance (Theme + Language)
@@ -246,6 +254,7 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
     m_defaultSrcLangCombo->blockSignals(false);
     m_defaultDstLangCombo->blockSignals(false);
     m_autoTranslateCheck->setChecked(s.value("autoTranslate",false).toBool());
+    m_cleanupAfterMuxCheck->setChecked(s.value("cleanupAfterMux",false).toBool());
 
     // F1: persistir idiomas por defecto al cambiarlos
     connect(m_defaultSrcLangCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) {
@@ -311,6 +320,10 @@ void SettingsDialog::retranslateUi()
     if (m_optBox)       m_optBox->setTitle(tr("Opciones"));
     if (m_autoTranslateCheck)
         m_autoTranslateCheck->setText(tr("Traducir subtítulos automáticamente al extraer"));
+    if (m_cleanupAfterMuxCheck) {
+        m_cleanupAfterMuxCheck->setText(tr("Eliminar los .srt intermedios tras incrustarlos (remux)"));
+        m_cleanupAfterMuxCheck->setToolTip(tr("Borra los subtítulos extraídos y traducidos de cada vídeo cuando su remux termina correctamente. Sin remux no se borra nada."));
+    }
     if (m_appearanceBox) m_appearanceBox->setTitle(tr("Apariencia"));
     if (m_themeLbl)     m_themeLbl->setText(tr("Tema:"));
     if (m_langLbl)      m_langLbl->setText(tr("Idioma de interfaz:"));
