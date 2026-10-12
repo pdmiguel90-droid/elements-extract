@@ -57,9 +57,11 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
+      # --parallel 2 (NO nproc): los TUs de marian consumen varios GB cada uno
+      # y con 4 en paralelo el runner se queda sin RAM (SIGTERM/exit 143).
       - name: Build CLI
         working-directory: ${{ github.workspace }}/bergamot
-        run: cmake --build build --config Release --target bergamot --parallel
+        run: cmake --build build --config Release --target bergamot --parallel 2
 
       - name: Audit shared dependencies
         working-directory: ${{ github.workspace }}/bergamot
