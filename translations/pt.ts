@@ -186,7 +186,7 @@ Linguagem</translation>
     <message>
         <location filename="../mainwindow.cpp" line="140" />
         <location filename="../mainwindow.cpp" line="185" />
-        <location filename="../mainwindow.cpp" line="1731" />
+        <location filename="../mainwindow.cpp" line="1759" />
         <source>Salir</source>
         <translation>Sair</translation>
     </message>
@@ -197,200 +197,200 @@ Linguagem</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="178" />
-        <location filename="../mainwindow.cpp" line="1727" />
+        <location filename="../mainwindow.cpp" line="1755" />
         <source>Archivo</source>
         <translation>Arquivo</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="180" />
-        <location filename="../mainwindow.cpp" line="1730" />
+        <location filename="../mainwindow.cpp" line="1758" />
         <source>Añadir archivos…</source>
         <translation>Adicionar arquivos…</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="189" />
-        <location filename="../mainwindow.cpp" line="1728" />
+        <location filename="../mainwindow.cpp" line="1756" />
         <source>Ajustes</source>
         <translation>Configurações</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="191" />
-        <location filename="../mainwindow.cpp" line="1732" />
+        <location filename="../mainwindow.cpp" line="1760" />
         <source>Configuración y Modelos…</source>
         <translation>Configurações e Modelos…</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="195" />
-        <location filename="../mainwindow.cpp" line="1729" />
+        <location filename="../mainwindow.cpp" line="1757" />
         <source>Ayuda</source>
         <translation>Ajuda</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="197" />
-        <location filename="../mainwindow.cpp" line="1733" />
+        <location filename="../mainwindow.cpp" line="1761" />
         <source>Manual de uso</source>
         <translation>Manual do usuário</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="202" />
-        <location filename="../mainwindow.cpp" line="1734" />
+        <location filename="../mainwindow.cpp" line="1762" />
         <source>Acerca de…</source>
         <translation>Sobre…</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="233" />
-        <location filename="../mainwindow.cpp" line="1737" />
+        <location filename="../mainwindow.cpp" line="1765" />
         <source>LOTE DE ARCHIVOS</source>
         <translation>LOTE DE ARQUIVOS</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="245" />
-        <location filename="../mainwindow.cpp" line="1740" />
+        <location filename="../mainwindow.cpp" line="1768" />
         <source>Añadir</source>
         <translation> Adicionar</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="246" />
-        <location filename="../mainwindow.cpp" line="1744" />
+        <location filename="../mainwindow.cpp" line="1772" />
         <source>Quitar</source>
         <translation> Remover</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="247" />
-        <location filename="../mainwindow.cpp" line="1741" />
+        <location filename="../mainwindow.cpp" line="1769" />
         <source>Añadir archivos de video (Ctrl+O)</source>
         <translation>Adicionar arquivos de vídeo (Ctrl+O)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="248" />
-        <location filename="../mainwindow.cpp" line="1745" />
+        <location filename="../mainwindow.cpp" line="1773" />
         <source>Quitar archivos seleccionados (Del)</source>
         <translation>Remover arquivos selecionados (Del)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="256" />
-        <location filename="../mainwindow.cpp" line="1738" />
+        <location filename="../mainwindow.cpp" line="1766" />
         <source>PISTAS</source>
         <translation>FAIXAS</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="260" />
-        <location filename="../mainwindow.cpp" line="1748" />
+        <location filename="../mainwindow.cpp" line="1776" />
         <source>Selecciona un archivo para ver sus pistas</source>
         <translation>Selecione um arquivo para ver suas faixas</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="271" />
-        <location filename="../mainwindow.cpp" line="1749" />
+        <location filename="../mainwindow.cpp" line="1777" />
         <source>VIDEO</source>
         <translation> VÍDEO</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="272" />
-        <location filename="../mainwindow.cpp" line="1750" />
+        <location filename="../mainwindow.cpp" line="1778" />
         <source>AUDIO</source>
         <translation> ÁUDIO</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="273" />
-        <location filename="../mainwindow.cpp" line="1751" />
+        <location filename="../mainwindow.cpp" line="1779" />
         <source>SUBS</source>
         <translation> LEGENDAS</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="274" />
-        <location filename="../mainwindow.cpp" line="1752" />
+        <location filename="../mainwindow.cpp" line="1780" />
         <source>Limpiar</source>
         <translation> Limpar</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="292" />
-        <location filename="../mainwindow.cpp" line="1753" />
+        <location filename="../mainwindow.cpp" line="1781" />
         <source>Solo subs:</source>
         <translation>Apenas legendas:</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="295" />
-        <location filename="../mainwindow.cpp" line="1408" />
+        <location filename="../mainwindow.cpp" line="1436" />
         <source>Todos los idiomas</source>
         <translation>Todos os idiomas</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="297" />
-        <location filename="../mainwindow.cpp" line="1756" />
+        <location filename="../mainwindow.cpp" line="1784" />
         <source>Selecciona los subtítulos de un idioma concreto en TODOS los archivos del lote.
 Mientras esté activo, la extracción y la traducción trabajarán solo con ese idioma.</source>
         <translation>Seleciona as legendas de um idioma específico em TODOS os arquivos do lote. Enquanto ativo, a extração e a tradução trabalharão apenas com esse idioma.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="323" />
-        <location filename="../mainwindow.cpp" line="1762" />
+        <location filename="../mainwindow.cpp" line="1790" />
         <source>FORMATO DE SALIDA</source>
         <translation>FORMATO DE SAÍDA</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="334" />
-        <location filename="../mainwindow.cpp" line="1772" />
+        <location filename="../mainwindow.cpp" line="1800" />
         <source>Original</source>
         <translation>Original</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="345" />
-        <location filename="../mainwindow.cpp" line="1763" />
+        <location filename="../mainwindow.cpp" line="1791" />
         <source>Audio:</source>
         <translation>Áudio:</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="346" />
-        <location filename="../mainwindow.cpp" line="1764" />
+        <location filename="../mainwindow.cpp" line="1792" />
         <source>Video:</source>
         <translation>Vídeo:</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="347" />
-        <location filename="../mainwindow.cpp" line="1765" />
+        <location filename="../mainwindow.cpp" line="1793" />
         <source>Res:</source>
         <translation>Res:</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="348" />
-        <location filename="../mainwindow.cpp" line="1766" />
+        <location filename="../mainwindow.cpp" line="1794" />
         <source>Subs:</source>
         <translation>Legendas:</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="357" />
-        <location filename="../mainwindow.cpp" line="1768" />
+        <location filename="../mainwindow.cpp" line="1796" />
         <source>Copiar pista original sin re-codificar (Rápido y previene errores)</source>
         <translation>Copiar faixa original sem re-encoding (Rápido e previne erros)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="374" />
-        <location filename="../mainwindow.cpp" line="1778" />
+        <location filename="../mainwindow.cpp" line="1806" />
         <source>TRADUCCIÓN DE SUBTÍTULOS</source>
         <translation>TRADUÇÃO DE LEGENDAS</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="379" />
-        <location filename="../mainwindow.cpp" line="1779" />
+        <location filename="../mainwindow.cpp" line="1807" />
         <source>Origen:</source>
         <translation>Origem:</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="385" />
-        <location filename="../mainwindow.cpp" line="1780" />
+        <location filename="../mainwindow.cpp" line="1808" />
         <source>Destino:</source>
         <translation>Destino:</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="397" />
-        <location filename="../mainwindow.cpp" line="1782" />
+        <location filename="../mainwindow.cpp" line="1810" />
         <source>Traducir al extraer</source>
         <translation>Traduzir ao extrair</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="399" />
-        <location filename="../mainwindow.cpp" line="1784" />
+        <location filename="../mainwindow.cpp" line="1812" />
         <source>Si está marcado, al extraer subtítulos se traducirán automáticamente
 al idioma de destino seleccionado.</source>
         <translation>Se marcado, as legendas extraídas serão traduzidas automaticamente
@@ -398,130 +398,130 @@ para o idioma de destino selecionado.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="407" />
-        <location filename="../mainwindow.cpp" line="1788" />
+        <location filename="../mainwindow.cpp" line="1816" />
         <source>Incrustar la traducción (remux)</source>
         <translation>Incrustar a tradução (remux)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="409" />
-        <location filename="../mainwindow.cpp" line="1790" />
+        <location filename="../mainwindow.cpp" line="1818" />
         <source>Tras traducir, genera un archivo .mkv/.mp4 con el vídeo y el audio originales
 y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin pérdida).</source>
         <translation>Após traduzir, gera um arquivo .mkv/.mp4 com o vídeo e o áudio originais e a faixa de legendas traduzidas incorporada, sem re-codificar (rápido e sem perda).</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="415" />
-        <location filename="../mainwindow.cpp" line="1794" />
+        <location filename="../mainwindow.cpp" line="1822" />
         <source>Modelos</source>
         <translation>Modelos</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="416" />
-        <location filename="../mainwindow.cpp" line="1795" />
+        <location filename="../mainwindow.cpp" line="1823" />
         <source>Gestionar modelos de traducción</source>
         <translation>Gerenciar modelos de tradução</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="418" />
-        <location filename="../mainwindow.cpp" line="1798" />
+        <location filename="../mainwindow.cpp" line="1826" />
         <source>Traducir subtítulos</source>
         <translation>Traduzir legendas</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="420" />
-        <location filename="../mainwindow.cpp" line="1800" />
+        <location filename="../mainwindow.cpp" line="1828" />
         <source>Seleccionar subtítulos ya existentes en disco y traducirlos en lote</source>
         <translation>Selecionar legendas existentes no disco e traduzi-las em lote</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="433" />
-        <location filename="../mainwindow.cpp" line="1803" />
+        <location filename="../mainwindow.cpp" line="1831" />
         <source>Selecciona subtítulos y marca "Traducir al extraer"</source>
         <translation>Selecione legendas e marque "Traduzir ao extrair"</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="445" />
-        <location filename="../mainwindow.cpp" line="1808" />
+        <location filename="../mainwindow.cpp" line="1836" />
         <source>Carpeta donde se guardarán los archivos extraídos…</source>
         <translation>Pasta onde os arquivos extraídos serão salvos…</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="450" />
-        <location filename="../mainwindow.cpp" line="1811" />
+        <location filename="../mainwindow.cpp" line="1839" />
         <source>Seleccionar carpeta de destino</source>
         <translation>Selecionar pasta de destino</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="451" />
-        <location filename="../mainwindow.cpp" line="1814" />
+        <location filename="../mainwindow.cpp" line="1842" />
         <source>Abrir</source>
         <translation>Abrir</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="452" />
-        <location filename="../mainwindow.cpp" line="1815" />
+        <location filename="../mainwindow.cpp" line="1843" />
         <source>Abrir carpeta de destino en el explorador</source>
         <translation>Abrir pasta de destino no explorador de arquivos</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="526" />
-        <location filename="../mainwindow.cpp" line="1832" />
+        <location filename="../mainwindow.cpp" line="1860" />
         <source>Sistema listo. Añade archivos y selecciona las pistas a extraer.</source>
         <translation>Sistema pronto. Adicione arquivos e selecione as faixas para extrair.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="468" />
-        <location filename="../mainwindow.cpp" line="1820" />
+        <location filename="../mainwindow.cpp" line="1848" />
         <source>Cancelar</source>
         <translation>Cancelar</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="442" />
-        <location filename="../mainwindow.cpp" line="1806" />
+        <location filename="../mainwindow.cpp" line="1834" />
         <source>DESTINO</source>
         <translation>DESTINO</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="449" />
-        <location filename="../mainwindow.cpp" line="1810" />
+        <location filename="../mainwindow.cpp" line="1838" />
         <source>Examinar…</source>
         <translation>Procurar…</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="471" />
-        <location filename="../mainwindow.cpp" line="1821" />
+        <location filename="../mainwindow.cpp" line="1849" />
         <source>Cancelar el proceso en curso (Escape)</source>
         <translation>Cancelar o processo em andamento (Escape)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="474" />
-        <location filename="../mainwindow.cpp" line="1824" />
+        <location filename="../mainwindow.cpp" line="1852" />
         <source>INICIAR EXTRACCIÓN</source>
         <translation>  INICIAR EXTRAÇÃO</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="478" />
-        <location filename="../mainwindow.cpp" line="1825" />
+        <location filename="../mainwindow.cpp" line="1853" />
         <source>Iniciar la extracción de todas las pistas seleccionadas (Ctrl+Enter)</source>
         <translation>Iniciar a extração de todas as faixas selecionadas (Ctrl+Enter)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="516" />
         <location filename="../mainwindow.cpp" line="539" />
-        <location filename="../mainwindow.cpp" line="1828" />
+        <location filename="../mainwindow.cpp" line="1856" />
         <source>LOG ▾</source>
         <translation>LOG ▾</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="511" />
-        <location filename="../mainwindow.cpp" line="1829" />
+        <location filename="../mainwindow.cpp" line="1857" />
         <source>Mostrar / ocultar registro de actividad</source>
         <translation>Mostrar / ocultar registro de atividade</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="509" />
         <location filename="../mainwindow.cpp" line="516" />
-        <location filename="../mainwindow.cpp" line="1828" />
+        <location filename="../mainwindow.cpp" line="1856" />
         <source>LOG ▸</source>
         <translation>LOG ▸</translation>
     </message>
@@ -529,13 +529,13 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <location filename="../mainwindow.cpp" line="529" />
         <location filename="../mainwindow.cpp" line="591" />
         <location filename="../mainwindow.cpp" line="836" />
-        <location filename="../mainwindow.cpp" line="1724" />
+        <location filename="../mainwindow.cpp" line="1752" />
         <source>Listo</source>
         <translation>Pronto</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="531" />
-        <location filename="../mainwindow.cpp" line="1723" />
+        <location filename="../mainwindow.cpp" line="1751" />
         <source>Elements Extract FFmpeg</source>
         <translation>Elements Extract FFmpeg</translation>
     </message>
@@ -642,48 +642,54 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <translation>&lt;br&gt;&lt;font color='#FF4444'&gt;&lt;b&gt;[CANCELADO] O processo foi interrompido pelo usuário.&lt;/b&gt;&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1964" />
-        <location filename="../mainwindow.cpp" line="1976" />
+        <location filename="../mainwindow.cpp" line="1089" />
+        <location filename="../mainwindow.cpp" line="2080" />
+        <source>Remux omitido: no hay subtítulos traducidos para incrustar.</source>
+        <translation>Remux ignorado: não há legendas traduzidas para incorporar.</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1992" />
+        <location filename="../mainwindow.cpp" line="2004" />
         <source>Traducción</source>
         <translation>Tradução</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1965" />
+        <location filename="../mainwindow.cpp" line="1993" />
         <source>Selecciona idiomas de origen y destino distintos antes de traducir.</source>
         <translation>Selecione idiomas de origem e destino diferentes antes de traduzir.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1970" />
+        <location filename="../mainwindow.cpp" line="1998" />
         <source>Seleccionar subtítulos para traducir</source>
         <translation>Selecionar legendas para traduzir</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1971" />
+        <location filename="../mainwindow.cpp" line="1999" />
         <source>Subtítulos (*.srt *.ass *.ssa *.vtt);;Todos los archivos (*.*)</source>
         <translation>Legendas (*.srt *.ass *.ssa *.vtt);;Todos os arquivos (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1977" />
+        <location filename="../mainwindow.cpp" line="2005" />
         <source>Selecciona primero una carpeta de destino.</source>
         <translation>Selecione primeiro uma pasta de destino.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1982" />
+        <location filename="../mainwindow.cpp" line="2010" />
         <source>&lt;br&gt;&lt;font color='#FF8800'&gt;&lt;b&gt;=== TRADUCCIÓN POR LOTES ===&lt;/b&gt;&lt;/font&gt;</source>
         <translation>&lt;br&gt;&lt;font color='#FF8800'&gt;&lt;b&gt;=== TRADUÇÃO EM LOTE ===&lt;/b&gt;&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1983" />
+        <location filename="../mainwindow.cpp" line="2011" />
         <source>Traduciendo %1 archivo(s): %2 → %3</source>
         <translation>Traduzindo %1 arquivo(s): %2 → %3</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1990" />
+        <location filename="../mainwindow.cpp" line="2018" />
         <source>Traduciendo en lote...</source>
         <translation>Traduzindo em lote...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2003" />
+        <location filename="../mainwindow.cpp" line="2031" />
         <source>Traduciendo archivo %1 / %2…</source>
         <translation>Traduzindo arquivo %1 / %2…</translation>
     </message>
@@ -705,7 +711,7 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1013" />
-        <location filename="../mainwindow.cpp" line="1503" />
+        <location filename="../mainwindow.cpp" line="1531" />
         <source>&lt;br&gt;&lt;font color='#39FF14'&gt;&lt;b&gt;=== ✓ PROCESO FINALIZADO ===&lt;/b&gt;&lt;/font&gt;</source>
         <translation>&lt;br&gt;&lt;font color='#39FF14'&gt;&lt;b&gt;=== ✓ PROCESSO FINALIZADO ===&lt;/b&gt;&lt;/font&gt;</translation>
     </message>
@@ -715,280 +721,295 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <translation>✓ Finalizado — %1 arquivo(s) processado(s)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1044" />
+        <location filename="../mainwindow.cpp" line="1039" />
+        <source>Sin traducción %1 → %2: no hay modelo instalado (ni directo ni triangular).</source>
+        <translation>Sem tradução %1 → %2: nenhum modelo instalado (nem direto nem triangular).</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1042" />
+        <source>  › Solo se pueden traducir subtítulos en English, Español, Français o Português. Cambia el filtro "Solo subs" o el idioma origen, o instala el modelo desde "Gestionar modelos".</source>
+        <translation>  › Só é possível traduzir legendas em Inglês, Espanhol, Francês ou Português. Mude o filtro "Apenas legendas" ou o idioma de origem, ou instale o modelo em "Gerenciar modelos".</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1060" />
+        <source>%1 archivo(s) omitidos: no están en %2.</source>
+        <translation>%1 arquivo(s) ignorado(s): não estão em %2.</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1070" />
         <source>Traduciendo %1 archivo(s) de subtítulos...</source>
         <translation>Traduzindo %1 arquivo(s) de legendas...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1049" />
-        <location filename="../mainwindow.cpp" line="1974" />
+        <location filename="../mainwindow.cpp" line="1075" />
+        <location filename="../mainwindow.cpp" line="2002" />
         <source>Traducidos</source>
         <translation>Traduzidos</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1064" />
+        <location filename="../mainwindow.cpp" line="1092" />
         <source>El proceso por lotes ha finalizado correctamente.</source>
         <translation>O processo em lote foi finalizado corretamente.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1074" />
+        <location filename="../mainwindow.cpp" line="1102" />
         <source>Procesando %1/%2: %3</source>
         <translation>Processando %1/%2: %3</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1078" />
-        <location filename="../mainwindow.cpp" line="1597" />
+        <location filename="../mainwindow.cpp" line="1106" />
+        <location filename="../mainwindow.cpp" line="1625" />
         <source>&lt;br&gt;&lt;font color='#00BFFF'&gt;&lt;b&gt;[%1/%2] %3&lt;/b&gt;&lt;/font&gt;</source>
         <translation>&lt;br&gt;&lt;font color='#00BFFF'&gt;&lt;b&gt;[%1/%2] %3&lt;/b&gt;&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1084" />
+        <location filename="../mainwindow.cpp" line="1112" />
         <source>Extraídos</source>
         <translation>Extraídos</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1084" />
+        <location filename="../mainwindow.cpp" line="1112" />
         <source>Convertidos</source>
         <translation>Convertidos</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1086" />
+        <location filename="../mainwindow.cpp" line="1114" />
         <source>&lt;font color='#FF4444'&gt;  › No se ha especificado carpeta de destino, omitido.&lt;/font&gt;</source>
         <translation>&lt;font color='#FF4444'&gt;  › Nenhuma pasta de destino especificada, ignorado.&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1193" />
+        <location filename="../mainwindow.cpp" line="1221" />
         <source>&lt;font color='#FFCC00'&gt;  › Subtítulo omitido para traducción (varias pistas de texto o formato de imagen): %1&lt;/font&gt;</source>
         <translation>&lt;font color='#FFCC00'&gt;  › Legenda ignorada para tradução (várias faixas de texto ou formato de imagem): %1&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1238" />
+        <location filename="../mainwindow.cpp" line="1266" />
         <source>&lt;font color='#FFCC00'&gt;  › Sin pistas seleccionadas para este archivo, omitido.&lt;/font&gt;</source>
         <translation>&lt;font color='#FFCC00'&gt;  › Nenhuma faixa selecionada para este arquivo, ignorado.&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1273" />
         <location filename="../mainwindow.cpp" line="1301" />
+        <location filename="../mainwindow.cpp" line="1329" />
         <source>&lt;font color='#39FF14'&gt;  › OK&lt;/font&gt;</source>
         <translation>&lt;font color='#39FF14'&gt;  › OK&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1288" />
+        <location filename="../mainwindow.cpp" line="1316" />
         <source>error de ffmpeg</source>
         <translation>erro do ffmpeg</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1291" />
+        <location filename="../mainwindow.cpp" line="1319" />
         <source>&lt;font color='#FF4444'&gt;  › Error al incrustar, omitido.&lt;/font&gt;</source>
         <translation>&lt;font color='#FF4444'&gt;  › Erro ao incorporar, ignorado.&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1304" />
+        <location filename="../mainwindow.cpp" line="1332" />
         <source>&lt;font color='#FF4444'&gt;  › Error en este archivo.&lt;/font&gt;</source>
         <translation>&lt;font color='#FF4444'&gt;  › Erro neste arquivo.&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1355" />
+        <location filename="../mainwindow.cpp" line="1383" />
         <source>Destino</source>
         <translation>Destino</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1461" />
+        <location filename="../mainwindow.cpp" line="1489" />
         <source>Filtro: solo subtítulos en </source>
         <translation>Filtro: apenas legendas em </translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1479" />
+        <location filename="../mainwindow.cpp" line="1507" />
         <source>&lt;br&gt;&lt;font color='#FF8800'&gt;&lt;b&gt;=== INCRUSTANDO SUBTÍTULOS (REMUX) ===&lt;/b&gt;&lt;/font&gt;</source>
         <translation>&lt;br&gt;&lt;font color='#FF8800'&gt;&lt;b&gt;=== INCORPORANDO LEGENDAS (REMUX) ===&lt;/b&gt;&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1505" />
+        <location filename="../mainwindow.cpp" line="1533" />
         <source>&lt;font color='#FFCC00'&gt;&lt;b&gt;Incrustados: %1 · Omitidos/error: %2&lt;/b&gt;&lt;/font&gt;</source>
         <translation>&lt;font color='#FFCC00'&gt;&lt;b&gt;Incorporadas: %1 · Ignoradas/erro: %2&lt;/b&gt;&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1508" />
+        <location filename="../mainwindow.cpp" line="1536" />
         <source>&lt;font color='#FF8844'&gt;  › %1&lt;/font&gt;</source>
         <translation>&lt;font color='#FF8844'&gt;  › %1&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1510" />
+        <location filename="../mainwindow.cpp" line="1538" />
         <source>✓ Finalizado — %1 incrustados, %2 omitidos</source>
         <translation>✓ Concluído — %1 incorporadas, %2 ignoradas</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1517" />
+        <location filename="../mainwindow.cpp" line="1545" />
         <source>Subtítulos incrustados: %1 correctos, %2 con problemas.</source>
         <translation>Legendas incorporadas: %1 corretas, %2 com problemas.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1518" />
+        <location filename="../mainwindow.cpp" line="1546" />
         <source>Subtítulos incrustados correctamente.</source>
         <translation>Legendas incorporadas corretamente.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1528" />
+        <location filename="../mainwindow.cpp" line="1556" />
         <source>no se encontró la traducción</source>
         <translation>tradução não encontrada</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1530" />
+        <location filename="../mainwindow.cpp" line="1558" />
         <source>no hay carpeta de destino configurada</source>
         <translation>nenhuma pasta de destino configurada</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1537" />
+        <location filename="../mainwindow.cpp" line="1565" />
         <source>sin pista de vídeo: no se puede incrustar</source>
         <translation>sem faixa de vídeo: não é possível incorporar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1543" />
+        <location filename="../mainwindow.cpp" line="1571" />
         <source>&lt;font color='#FF8844'&gt;  › Omitido: %1 (%2)&lt;/font&gt;</source>
         <translation>&lt;font color='#FF8844'&gt;  › Ignorado: %1 (%2)&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1550" />
+        <location filename="../mainwindow.cpp" line="1578" />
         <source>Remuxados</source>
         <translation>Remuxados</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1562" />
+        <location filename="../mainwindow.cpp" line="1590" />
         <source>audio %1</source>
         <translation>áudio %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1564" />
+        <location filename="../mainwindow.cpp" line="1592" />
         <source>vídeo %1</source>
         <translation>vídeo %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1569" />
+        <location filename="../mainwindow.cpp" line="1597" />
         <source>&lt;font color='#FFCC00'&gt;  › %1 no es copiable a MP4 (%2) → se usará MKV&lt;/font&gt;</source>
         <translation>&lt;font color='#FFCC00'&gt;  › %1 não é copiável para MP4 (%2) → será usado MKV&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1593" />
+        <location filename="../mainwindow.cpp" line="1621" />
         <source>Incrustando %1/%2: %3</source>
         <translation>Incorporando %1/%2: %3</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1601" />
+        <location filename="../mainwindow.cpp" line="1629" />
         <source>  › Incrustando %1 → %2</source>
         <translation>  › Incorporando %1 → %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1684" />
+        <location filename="../mainwindow.cpp" line="1712" />
         <source>🎵 %1 audio</source>
         <translation>🎵 %1 áudio</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1685" />
+        <location filename="../mainwindow.cpp" line="1713" />
         <source>CC %1 subs</source>
         <translation>CC %1 legendas</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1931" />
+        <location filename="../mainwindow.cpp" line="1959" />
         <source>No se encontró el archivo: %1</source>
         <translation>Arquivo não encontrado: %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1940" />
+        <location filename="../mainwindow.cpp" line="1968" />
         <source>&lt;font color='#FFCC00'&gt;Idioma origen y destino son iguales.&lt;/font&gt;</source>
         <translation>&lt;font color='#FFCC00'&gt;Os idiomas de origem e destino são iguais.&lt;/font&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1948" />
+        <location filename="../mainwindow.cpp" line="1976" />
         <source>Traduciendo...</source>
         <translation>Traduzindo...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1950" />
+        <location filename="../mainwindow.cpp" line="1978" />
         <source>Traduciendo: %1 → %2</source>
         <translation>Traduzindo: %1 → %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2022" />
+        <location filename="../mainwindow.cpp" line="2050" />
         <source>Traducción completada: </source>
         <translation>Tradução concluída: </translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2024" />
+        <location filename="../mainwindow.cpp" line="2052" />
         <source>Traducción guardada: %1</source>
         <translation>Tradução salva: %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2031" />
+        <location filename="../mainwindow.cpp" line="2059" />
         <source>Error en la traducción</source>
         <translation>Erro na tradução</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2033" />
+        <location filename="../mainwindow.cpp" line="2061" />
         <source>Error de traducción: %1</source>
         <translation>Erro de tradução: %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2037" />
+        <location filename="../mainwindow.cpp" line="2065" />
         <source>Error de traducción</source>
         <translation>Erro de tradução</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2044" />
+        <location filename="../mainwindow.cpp" line="2072" />
         <source>Traducción completada</source>
         <translation>Tradução concluída</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2056" />
+        <location filename="../mainwindow.cpp" line="2086" />
         <source>La traducción ha finalizado correctamente.</source>
         <translation>A tradução foi finalizada corretamente.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2064" />
+        <location filename="../mainwindow.cpp" line="2094" />
         <source>Gestionar Modelos de Traducción</source>
         <translation>Gerenciar Modelos de Tradução</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2067" />
+        <location filename="../mainwindow.cpp" line="2097" />
         <source>&lt;b&gt;Modelos de traducción&lt;/b&gt;&lt;br&gt;&lt;br&gt;Los modelos se descargan automáticamente cuando se necesita un par de idiomas no disponible.&lt;br&gt;&lt;br&gt;&lt;b&gt;Modelos incluidos:&lt;/b&gt;&lt;br&gt;• English → Español (en→es)&lt;br&gt;• Español → English (es→en)&lt;br&gt;• English → Français (en→fr)&lt;br&gt;• Français → English (fr→en)&lt;br&gt;• English → Português (en→pt)&lt;br&gt;• Português → English (pt→en)&lt;br&gt;&lt;br&gt;&lt;b&gt;Directorio de modelos:&lt;/b&gt;&lt;br&gt;</source>
         <translation>&lt;b&gt;Modelos de tradução&lt;/b&gt;&lt;br&gt;&lt;br&gt;Os modelos são baixados automaticamente quando um par de idiomas necessário não está disponível.&lt;br&gt;&lt;br&gt;&lt;b&gt;Modelos incluídos:&lt;/b&gt;&lt;br&gt;• English → Español (en→es)&lt;br&gt;• Español → English (es→en)&lt;br&gt;• English → Français (en→fr)&lt;br&gt;• Français → English (fr→en)&lt;br&gt;• English → Português (en→pt)&lt;br&gt;• Português → English (pt→en)&lt;br&gt;&lt;br&gt;&lt;b&gt;Diretório de modelos:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2091" />
+        <location filename="../mainwindow.cpp" line="2121" />
         <source>Descargando modelo %1: %2%</source>
         <translation>Baixando modelo %1: %2%</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2098" />
+        <location filename="../mainwindow.cpp" line="2128" />
         <source>Modelo descargado: </source>
         <translation>Modelo baixado: </translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2099" />
+        <location filename="../mainwindow.cpp" line="2129" />
         <source>Modelo descargado: %1</source>
         <translation>Modelo baixado: %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2104" />
+        <location filename="../mainwindow.cpp" line="2134" />
         <source>Error descargando modelo: </source>
         <translation>Erro ao baixar modelo: </translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2105" />
+        <location filename="../mainwindow.cpp" line="2135" />
         <source>Error descargando %1: %2</source>
         <translation>Erro ao baixar %1: %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2147" />
+        <location filename="../mainwindow.cpp" line="2177" />
         <source>Idioma de interfaz cambiado a: %1</source>
         <translation>Idioma da interface alterado para: %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2150" />
+        <location filename="../mainwindow.cpp" line="2180" />
         <source>No se pudo cargar la traducción para: %1</source>
         <translation>Não foi possível carregar a tradução para: %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2169" />
+        <location filename="../mainwindow.cpp" line="2199" />
         <source>&lt;font color='#888888'&gt;Configuración actualizada&lt;/font&gt;</source>
         <translation>&lt;font color='#888888'&gt;Configurações atualizadas&lt;/font&gt;</translation>
     </message>
@@ -1249,14 +1270,14 @@ Baixá-lo novamente? (substitui a cópia local)</translation>
 <context>
     <name>SubtitleTranslator</name>
     <message>
-        <location filename="../subtitletranslator.cpp" line="170" />
-        <location filename="../subtitletranslator.cpp" line="267" />
+        <location filename="../subtitletranslator.cpp" line="175" />
+        <location filename="../subtitletranslator.cpp" line="272" />
         <source>No se pudieron leer los subtítulos del archivo: </source>
         <translation>Não foi possível ler as legendas do arquivo: </translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="179" />
-        <location filename="../subtitletranslator.cpp" line="276" />
+        <location filename="../subtitletranslator.cpp" line="184" />
+        <location filename="../subtitletranslator.cpp" line="281" />
         <source>No se encontró el motor de traducción (bergamot).
 Asegúrese de que está instalado correctamente.
 Buscado en: </source>
@@ -1265,7 +1286,7 @@ Verifique se está instalado corretamente.
 Procurado em: </translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="189" />
+        <location filename="../subtitletranslator.cpp" line="194" />
         <source>No se encontró un modelo de traducción para %1→%2.
 Ni modelo directo ni ruta triangular disponible.
 Modelos instalados disponibles para: en, es, fr, pt.</source>
@@ -1274,49 +1295,49 @@ Nem modelo direto nem caminho pivot disponível.
 Modelos instalados disponíveis para: en, es, fr, pt.</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="288" />
+        <location filename="../subtitletranslator.cpp" line="293" />
         <source>El modelo de traducción %1→%2 no está instalado.
 Directorio buscado: %3</source>
         <translation>O modelo de tradução %1→%2 não está instalado.
 Diretório procurado: %3</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="320" />
-        <location filename="../subtitletranslator.cpp" line="376" />
-        <location filename="../subtitletranslator.cpp" line="458" />
+        <location filename="../subtitletranslator.cpp" line="325" />
+        <location filename="../subtitletranslator.cpp" line="381" />
+        <location filename="../subtitletranslator.cpp" line="463" />
         <source>Error al escribir el archivo de salida: </source>
         <translation>Erro ao escrever o arquivo de saída: </translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="345" />
-        <location filename="../subtitletranslator.cpp" line="400" />
-        <location filename="../subtitletranslator.cpp" line="475" />
+        <location filename="../subtitletranslator.cpp" line="350" />
+        <location filename="../subtitletranslator.cpp" line="405" />
+        <location filename="../subtitletranslator.cpp" line="480" />
         <source>No se pudo iniciar el motor de traducción</source>
         <translation>Não foi possível iniciar o mecanismo de tradução</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="353" />
+        <location filename="../subtitletranslator.cpp" line="358" />
         <source>Tiempo de espera agotado del motor de traducción</source>
         <translation>Tempo de espera esgotado do mecanismo de tradução</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="359" />
-        <location filename="../subtitletranslator.cpp" line="435" />
+        <location filename="../subtitletranslator.cpp" line="364" />
+        <location filename="../subtitletranslator.cpp" line="440" />
         <source>Error del motor de traducción (código %1).</source>
         <translation>Erro do mecanismo de tradução (código %1).</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="478" />
+        <location filename="../subtitletranslator.cpp" line="483" />
         <source>El motor de traducción terminó inesperadamente</source>
         <translation>O mecanismo de tradução terminou inesperadamente</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="481" />
+        <location filename="../subtitletranslator.cpp" line="486" />
         <source>El motor de traducción excedió el tiempo límite</source>
         <translation>O mecanismo de tradução excedeu o limite de tempo</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="484" />
+        <location filename="../subtitletranslator.cpp" line="489" />
         <source>Error desconocido del motor de traducción</source>
         <translation>Erro desconhecido do mecanismo de tradução</translation>
     </message>

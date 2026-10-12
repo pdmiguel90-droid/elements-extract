@@ -79,7 +79,12 @@ QString SubtitleTranslator::languageName(const QString &code)
         {"en", "English"},
         {"es", "Español"},
         {"fr", "Français"},
-        {"pt", "Português"}
+        {"pt", "Português"},
+        // Solo para mensajes legibles: estos idiomas no tienen modelo local
+        {"de", "Deutsch"}, {"it", "Italiano"}, {"ru", "Ruso"},
+        {"zh", "Chino"}, {"ja", "Japonés"}, {"ko", "Coreano"},
+        {"ar", "Árabe"}, {"hi", "Hindi"}, {"nl", "Holandés"},
+        {"sv", "Sueco"}, {"pl", "Polaco"}, {"tr", "Turco"}
     };
     return names.value(code, code);
 }

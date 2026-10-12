@@ -1031,9 +1031,35 @@ void MainWindow::processNextInBatch()
             logArea->append(QString("<font color='#888888'>  [DEBUG] translateCheck=ON, srcLang='%1', dstLang='%2'</font>")
                 .arg(srcLang, dstLang));
             if (srcLang != dstLang) {
+                // Sin ruta de traducción (ni directa ni triangular) cada archivo
+                // fallaría y la cola de remux quedaría vacía: avisarlo una sola
+                // vez con un mensaje accionable en lugar de un error por archivo.
+                QStringList triPath = subtitleTranslator->findTranslationPath(srcLang, dstLang);
+                if (triPath.isEmpty()) {
+                    logArea->append(QString("<font color='#FFCC00'><b>  › " + tr("Sin traducción %1 → %2: no hay modelo instalado (ni directo ni triangular).") + "</b></font>")
+                        .arg(SubtitleTranslator::languageName(srcLang))
+                        .arg(SubtitleTranslator::languageName(dstLang)));
+                    logArea->append(tr("  › Solo se pueden traducir subtítulos en English, Español, Français o Português. "
+                                       "Cambia el filtro \"Solo subs\" o el idioma origen, o instala el modelo desde \"Gestionar modelos\"."));
+                }
                 QStringList subPaths;
-                for (const SubExtractInfo &se : m_extractedSubs)
-                    if (QFile::exists(se.subPath)) subPaths.append(se.subPath);
+                int skippedOtherLang = 0;
+                if (!triPath.isEmpty()) {
+                    for (const SubExtractInfo &se : m_extractedSubs) {
+                        if (!QFile::exists(se.subPath)) continue;
+                        // No traducir como <srcLang> un contenido extraído en otro
+                        // idioma: el motor lo traduciría como si fuera <srcLang>.
+                        if (!se.subLang.isEmpty() && se.subLang != srcLang) {
+                            ++skippedOtherLang;
+                            continue;
+                        }
+                        subPaths.append(se.subPath);
+                    }
+                }
+                if (skippedOtherLang > 0)
+                    logArea->append(QString("<font color='#FFCC00'>  › " + tr("%1 archivo(s) omitidos: no están en %2.") + "</font>")
+                        .arg(skippedOtherLang)
+                        .arg(SubtitleTranslator::languageName(srcLang)));
                 logArea->append(QString("<font color='#888888'>  [DEBUG] files to translate: %1</font>")
                     .arg(subPaths.size()));
 
@@ -1059,6 +1085,8 @@ void MainWindow::processNextInBatch()
             startMuxQueue();
             return;
         }
+        if (muxOnExtractCheck->isChecked() && m_muxQueue.isEmpty())
+            logArea->append(QString("<font color='#FFCC00'>  › " + tr("Remux omitido: no hay subtítulos traducidos para incrustar.") + "</font>"));
 
         if (trayIcon->isSystemTrayAvailable()) {
             trayIcon->showMessage("Elements Extract", tr("El proceso por lotes ha finalizado correctamente."), QSystemTrayIcon::Information, 4000);
@@ -2048,6 +2076,8 @@ void MainWindow::onTranslationFinished()
         startMuxQueue();
         return;
     }
+    if (muxOnExtractCheck && muxOnExtractCheck->isChecked() && m_muxQueue.isEmpty())
+        logArea->append(QString("<font color='#FFCC00'>  › " + tr("Remux omitido: no hay subtítulos traducidos para incrustar.") + "</font>"));
 
     extractButton->setEnabled(true);
     cancelButton->setEnabled(false);
