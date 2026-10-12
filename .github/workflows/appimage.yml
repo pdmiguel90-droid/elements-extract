@@ -36,7 +36,7 @@ jobs:
           done
 
       - name: Download bergamot engine (built in this run)
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: bergamot-linux64
           path: bergamot-dl

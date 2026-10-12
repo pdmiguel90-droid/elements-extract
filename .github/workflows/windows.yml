@@ -47,7 +47,7 @@ jobs:
           Copy-Item $ff.FullName bin/ffmpeg.exe
 
       - name: Download bergamot engine (built in this run)
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: bergamot-win64
 
