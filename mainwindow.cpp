@@ -1090,7 +1090,7 @@ void MainWindow::processNextInBatch()
             if (srcLang != dstLang) {
                 QStringList triPath = checkInstalledTranslationPath(srcLang, dstLang);
                 QStringList subPaths;
-                int skippedOtherLang = 0;
+                int skippedOtherLang = 0, unknownLang = 0;
                 if (!triPath.isEmpty()) {
                     for (const SubExtractInfo &se : m_extractedSubs) {
                         if (!QFile::exists(se.subPath)) continue;
@@ -1100,12 +1100,17 @@ void MainWindow::processNextInBatch()
                             ++skippedOtherLang;
                             continue;
                         }
+                        if (se.subLang.isEmpty()) ++unknownLang;
                         subPaths.append(se.subPath);
                     }
                 }
                 if (skippedOtherLang > 0)
                     logArea->append(QString("<font color='#FFCC00'>  › " + tr("%1 archivo(s) omitidos: no están en %2.") + "</font>")
                         .arg(skippedOtherLang)
+                        .arg(SubtitleTranslator::languageName(srcLang)));
+                if (unknownLang > 0)
+                    logArea->append(QString("<font color='#FFCC00'>  › " + tr("%1 archivo(s) sin idioma detectado: se traducen como %2; verifica el resultado.") + "</font>")
+                        .arg(unknownLang)
                         .arg(SubtitleTranslator::languageName(srcLang)));
                 logArea->append(QString("<font color='#888888'>  [DEBUG] files to translate: %1</font>")
                     .arg(subPaths.size()));
