@@ -753,29 +753,55 @@ void MainWindow::autoDetectSourceLanguage()
                     }
                     // else: continue with triangular translation (okBtn or close)
                 } else {
-                    // No model at all — recommend download
-                    QString modelId = mappedLang + "-" + dstLang + "-tiny";
+                    // Sin modelo instalado: ¿existe para descargar o no existe?
                     QString modelName = SubtitleTranslator::languageName(mappedLang) + " → " +
                                         SubtitleTranslator::languageName(dstLang);
+                    const QStringList downloadable = modelDownloader
+                        ? modelDownloader->registryPathForPair(mappedLang, dstLang)
+                        : QStringList();
+                    const bool checkable = !modelDownloader || modelDownloader->isRegistryLoaded();
 
                     QMessageBox msgBox(this);
-                    msgBox.setWindowTitle(tr("Modelo de traducción no encontrado"));
                     msgBox.setIcon(QMessageBox::Information);
-                    msgBox.setText(
-                        tr("No se encontró modelo de traducción para:<br><b>%1</b><br><br>"
-                           "Tampoco hay ruta triangular disponible.<br><br>"
-                           "Idioma detectado: %2 → %3")
-                            .arg(modelName)
-                            .arg(SubtitleTranslator::languageName(mappedLang))
-                            .arg(SubtitleTranslator::languageName(dstLang)));
+                    if (!downloadable.isEmpty()) {
+                        msgBox.setWindowTitle(tr("Modelo de traducción no instalado"));
+                        msgBox.setText(
+                            tr("No hay modelo instalado para:<br><b>%1</b><br><br>"
+                               "Pero existe para descargar: <b>%2</b><br><br>"
+                               "Idioma detectado: %3 → %4")
+                                .arg(modelName, downloadable.join(" → "))
+                                .arg(SubtitleTranslator::languageName(mappedLang))
+                                .arg(SubtitleTranslator::languageName(dstLang)));
+                    } else if (!checkable) {
+                        msgBox.setWindowTitle(tr("Modelo de traducción no encontrado"));
+                        msgBox.setText(
+                            tr("No hay modelo instalado para:<br><b>%1</b><br><br>"
+                               "No se pudo comprobar el catálogo online (sin conexión o aún cargando).<br><br>"
+                               "Idioma detectado: %2 → %3")
+                                .arg(modelName)
+                                .arg(SubtitleTranslator::languageName(mappedLang))
+                                .arg(SubtitleTranslator::languageName(dstLang)));
+                    } else {
+                        msgBox.setWindowTitle(tr("Modelo de traducción no disponible"));
+                        msgBox.setText(
+                            tr("No existe modelo de traducción para:<br><b>%1</b><br><br>"
+                               "Tampoco hay ruta triangular ni descarga disponible "
+                               "(el ruso, por ejemplo, no tiene modelo publicado).<br><br>"
+                               "Idioma detectado: %2 → %3")
+                                .arg(modelName)
+                                .arg(SubtitleTranslator::languageName(mappedLang))
+                                .arg(SubtitleTranslator::languageName(dstLang)));
+                    }
                     msgBox.setInformativeText(tr("¿Qué deseas hacer?"));
-                    QPushButton *downloadBtn = msgBox.addButton(tr("Descargar modelo"), QMessageBox::AcceptRole);
+                    QPushButton *downloadBtn = nullptr;
+                    if (!downloadable.isEmpty() || !checkable)
+                        downloadBtn = msgBox.addButton(tr("Descargar modelo"), QMessageBox::AcceptRole);
                     QPushButton *selectBtn = msgBox.addButton(tr("Cambiar idioma destino"), QMessageBox::ActionRole);
                     QPushButton *skipBtn = msgBox.addButton(tr("Continuar sin traducir"), QMessageBox::RejectRole);
-                    msgBox.setDefaultButton(downloadBtn);
+                    msgBox.setDefaultButton(downloadBtn ? downloadBtn : skipBtn);
                     msgBox.exec();
 
-                    if (msgBox.clickedButton() == downloadBtn) {
+                    if (downloadBtn && msgBox.clickedButton() == downloadBtn) {
                         showSettings();
                     } else if (msgBox.clickedButton() == selectBtn) {
                         dstLangCombo->setFocus();
@@ -1034,31 +1060,7 @@ void MainWindow::processNextInBatch()
             logArea->append(QString("<font color='#888888'>  [DEBUG] translateCheck=ON, srcLang='%1', dstLang='%2'</font>")
                 .arg(srcLang, dstLang));
             if (srcLang != dstLang) {
-                // Sin ruta de traducción (ni directa ni triangular) cada archivo
-                // fallaría y la cola de remux quedaría vacía: avisarlo una sola
-                // vez con un mensaje accionable en lugar de un error por archivo.
-                QStringList triPath = subtitleTranslator->findTranslationPath(srcLang, dstLang);
-                if (triPath.isEmpty()) {
-                    logArea->append(QString("<font color='#FFCC00'><b>  › " + tr("Sin traducción %1 → %2: no hay modelo instalado (ni directo ni triangular).") + "</b></font>")
-                        .arg(SubtitleTranslator::languageName(srcLang))
-                        .arg(SubtitleTranslator::languageName(dstLang)));
-                    // Cotejar con el catálogo online: ¿existe pero falta
-                    // descargar, o no existe en absoluto?
-                    const QStringList downloadable = modelDownloader
-                        ? modelDownloader->registryPathForPair(srcLang, dstLang)
-                        : QStringList();
-                    if (!downloadable.isEmpty()) {
-                        logArea->append(QString("<font color='#FFCC00'>  › " + tr("Pero sí existe para descargar: %1. Ábrelo en Ajustes → Configuración y Modelos… → pestaña Modelos de Traducción → ONLINE (doble clic para descargar).") + "</font>")
-                            .arg(downloadable.join(" → ")));
-                    } else if (modelDownloader && !modelDownloader->isRegistryLoaded()) {
-                        logArea->append(tr("  › No se pudo comprobar el catálogo online (sin conexión o aún cargando). "
-                                          "Con internet, abre Ajustes → Configuración y Modelos… → ONLINE para ver si existe."));
-                    } else {
-                        logArea->append(tr("  › Tampoco existe en el catálogo online (el ruso, por ejemplo, no tiene modelo publicado). "
-                                          "Solo se pueden traducir subtítulos en English, Español, Français o Português: "
-                                          "cambia el filtro \"Solo subs\" o el idioma origen."));
-                    }
-                }
+                QStringList triPath = checkInstalledTranslationPath(srcLang, dstLang);
                 QStringList subPaths;
                 int skippedOtherLang = 0;
                 if (!triPath.isEmpty()) {
@@ -1999,6 +2001,34 @@ void MainWindow::translateExtractedSubtitles(const QString &subtitlePath)
     subtitleTranslator->translateFile(subtitlePath, outputPath, srcLang, dstLang);
 }
 
+QStringList MainWindow::checkInstalledTranslationPath(const QString &srcLang, const QString &dstLang)
+{
+    // Sin ruta instalada (ni directa ni triangular) cada archivo fallaría:
+    // avisarlo una sola vez con un mensaje accionable en lugar de un error
+    // por archivo, cotejando con el catálogo online.
+    QStringList triPath = subtitleTranslator->findTranslationPath(srcLang, dstLang);
+    if (!triPath.isEmpty()) return triPath;
+
+    logArea->append(QString("<font color='#FFCC00'><b>  › " + tr("Sin traducción %1 → %2: no hay modelo instalado (ni directo ni triangular).") + "</b></font>")
+        .arg(SubtitleTranslator::languageName(srcLang))
+        .arg(SubtitleTranslator::languageName(dstLang)));
+    const QStringList downloadable = modelDownloader
+        ? modelDownloader->registryPathForPair(srcLang, dstLang)
+        : QStringList();
+    if (!downloadable.isEmpty()) {
+        logArea->append(QString("<font color='#FFCC00'>  › " + tr("Pero sí existe para descargar: %1. Ábrelo en Ajustes → Configuración y Modelos… → pestaña Modelos de Traducción → ONLINE (doble clic para descargar).") + "</font>")
+            .arg(downloadable.join(" → ")));
+    } else if (modelDownloader && !modelDownloader->isRegistryLoaded()) {
+        logArea->append(tr("  › No se pudo comprobar el catálogo online (sin conexión o aún cargando). "
+                          "Con internet, abre Ajustes → Configuración y Modelos… → ONLINE para ver si existe."));
+    } else {
+        logArea->append(tr("  › Tampoco existe en el catálogo online (el ruso, por ejemplo, no tiene modelo publicado). "
+                          "Solo se pueden traducir subtítulos en English, Español, Français o Português: "
+                          "cambia el filtro \"Solo subs\" o el idioma origen."));
+    }
+    return {};
+}
+
 void MainWindow::translateExistingFiles()
 {
     if (!subtitleTranslator) return;
@@ -2029,6 +2059,13 @@ void MainWindow::translateExistingFiles()
         .arg(files.size())
         .arg(SubtitleTranslator::languageName(srcLang))
         .arg(SubtitleTranslator::languageName(dstLang)));
+
+    // Mismo pre-chequeo que al extraer: sin modelo, guidance y salir limpio
+    if (checkInstalledTranslationPath(srcLang, dstLang).isEmpty()) {
+        translationProgressBar->setVisible(false);
+        translationStatusLabel->setText(tr("Sin modelo de traducción"));
+        return;
+    }
 
     translationProgressBar->setVisible(true);
     translationProgressBar->setValue(0);

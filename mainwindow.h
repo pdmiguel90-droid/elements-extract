@@ -126,6 +126,10 @@ private:
     void saveSettings();
     QString getUniqueFilePath(const QString &fullPath);
     QString ensureOutputSubdir(const QString &subName);
+    // Ruta instalada (directa o triangular) para src→dst; si no hay, registra
+    // una vez el motivo accionable (descargable / sin conexión / inexistente)
+    // y devuelve lista vacía.
+    QStringList checkInstalledTranslationPath(const QString &srcLang, const QString &dstLang);
     void    applySubtitleFilterToFile(const QString &path);
     QString ffmpegExecutable() const;
     qint64  parseTimestamp(const QString &ts);
