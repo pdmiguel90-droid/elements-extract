@@ -144,6 +144,8 @@ private:
     QStringList checkInstalledTranslationPath(const QString &srcLang, const QString &dstLang);
     int     applySubtitleFilterToFile(const QString &path);
     QString ffmpegExecutable() const;
+    QString ffprobeExecutable() const;
+    QString mediaToolExecutable(const QString &tool) const;
     qint64  parseTimestamp(const QString &ts);
     void    updateProgressFromLine(const QString &line);
     QString extensionForType(const QString &type);

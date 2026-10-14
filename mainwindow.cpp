@@ -632,7 +632,7 @@ void MainWindow::onFileSelectionChanged()
          << "-show_entries"
          << "stream=index,codec_type,codec_name,width,height:stream_tags=language:format=duration,size"
          << "-of" << "json" << currentFile;
-    probeProcess->start("ffprobe", args);
+    probeProcess->start(ffprobeExecutable(), args);
 }
 
 void MainWindow::saveCurrentSelections()
@@ -1519,12 +1519,26 @@ void MainWindow::clearStreamsList()
 
 QString MainWindow::ffmpegExecutable() const
 {
+    return mediaToolExecutable(QStringLiteral("ffmpeg"));
+}
+
+QString MainWindow::ffprobeExecutable() const
+{
+    return mediaToolExecutable(QStringLiteral("ffprobe"));
+}
+
+QString MainWindow::mediaToolExecutable(const QString &tool) const
+{
     QString bin = QCoreApplication::applicationDirPath()
-                  + QDir::separator() + QStringLiteral("ffmpeg");
+                  + QDir::separator() + tool;
 #ifdef Q_OS_WIN
     bin += QStringLiteral(".exe");
 #endif
-    return QFileInfo::exists(bin) ? bin : QStringLiteral("ffmpeg");
+    if (QFileInfo::exists(bin)) return bin;
+    // Buscar en PATH de forma portable (en Windows equivale a `where`)
+    const QString inPath = QStandardPaths::findExecutable(tool);
+    if (!inPath.isEmpty()) return inPath;
+    return tool;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

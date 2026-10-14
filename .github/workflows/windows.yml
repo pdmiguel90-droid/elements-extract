@@ -43,8 +43,10 @@ jobs:
           curl -sL https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -o ffmpeg.zip
           Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg
           $ff = Get-ChildItem -Recurse ffmpeg -Filter ffmpeg.exe | Select-Object -First 1
+          $fp = Get-ChildItem -Recurse ffmpeg -Filter ffprobe.exe | Select-Object -First 1
           New-Item -ItemType Directory -Force -Path bin | Out-Null
           Copy-Item $ff.FullName bin/ffmpeg.exe
+          if ($fp) { Copy-Item $fp.FullName bin/ffprobe.exe }
 
       - name: Download bergamot engine (built in this run)
         uses: actions/download-artifact@v8

@@ -600,14 +600,8 @@ QString SubtitleTranslator::findBergamotBinary()
         if (QFile::exists(path)) return path;
     }
 
-    // Try to find in PATH
-    QProcess which;
-    which.start("which", {"bergamot" + exe});
-    if (which.waitForFinished(3000) && which.exitCode() == 0) {
-        return QString::fromLocal8Bit(which.readAllStandardOutput()).trimmed();
-    }
-
-    return QString();
+    // Try to find in PATH (portable: equivale a `where` en Windows)
+    return QStandardPaths::findExecutable("bergamot" + exe);
 }
 
 QString SubtitleTranslator::modelPathForPair(const QString &src, const QString &trg)
