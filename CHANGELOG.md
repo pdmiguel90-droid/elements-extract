@@ -5,6 +5,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.1] - 2026-10-22
+
+### Corregido
+- Interfaz en inglés cuando el locale del sistema es `C`/`POSIX` (entornos de CI y tests automáticos de AppImageHub)
+- Windows: se empaqueta `ffprobe.exe` junto a `ffmpeg.exe` y la búsqueda de ejecutables es portable (`QStandardPaths::findExecutable`)
+- CI: publicación del espejo de modelos en `gh-pages` (exponer `GITHUB_TOKEN` al step de push)
+
+---
+
 ## [1.2.0] - 2026-10-11
 
 ### Añadido
