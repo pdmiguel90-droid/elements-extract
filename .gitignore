@@ -74,3 +74,7 @@ tools/.cache/
 .flatpak-builder/
 build-dir/
 repo/
+
+# Build artifacts (untracked)
+stage-deb/
+tools/__pycache__/
