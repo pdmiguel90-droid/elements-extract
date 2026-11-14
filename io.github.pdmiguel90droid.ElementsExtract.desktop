@@ -11,6 +11,6 @@ Exec=elements-extract %F
 Icon=io.github.pdmiguel90droid.ElementsExtract
 Terminal=false
 Categories=AudioVideo;Video;
-MimeType=video/x-matroska;video/mp4;video/avi;video/quicktime;video/x-ms-wmv;
+MimeType=video/x-matroska;video/mp4;video/avi;video/quicktime;video/x-ms-wmv;text/x-srt;application/x-subrip;
 Keywords=ffmpeg;extractor;audio;video;subtitulos;pistas;mkv;mp4;traduccion;
 StartupWMClass=elements-extract
