@@ -5,6 +5,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.2] - 2026-11-02
+
+### Añadido
+- Traducción de subtítulos sueltos: la app puede abrirse directamente con archivos `.srt`, `.ass`, `.ssa`, `.vtt` (clic derecho / "Abrir con...") y traducirlos sin pasar por la extracción de vídeo
+- Servicemenu de traducción en el `.deb` para integrarse en el menú contextual del escritorio
+- MimeType `text/x-srt;application/x-subrip` en el `.desktop` para que el sistema ofrezca la app al hacer clic derecho en subtítulos
+
+---
+
 ## [1.2.1] - 2026-10-22
 
 ### Corregido
