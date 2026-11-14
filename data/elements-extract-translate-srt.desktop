@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=text/x-srt,application/x-subrip,text/x-ass,text/x-vtt
+MimeType=text/x-srt,application/x-subrip,text/x-ass,text/x-vtt
+Name=Traducir con Elements Extract
+Name[es]=Traducir con Elements Extract
+Icon=io.github.pdmiguel90droid.ElementsExtract
+Exec=elements-extract %f
+X-KDE-Priority=TopLevel
