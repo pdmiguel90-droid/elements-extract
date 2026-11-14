@@ -2,6 +2,7 @@
 #include "theme.h"
 #include <QApplication>
 #include <QCoreApplication>
+#include <QFileInfo>
 #include <QLocale>
 #include <QSettings>
 #include <QTranslator>
@@ -57,7 +58,18 @@ int main(int argc, char *argv[])
     QStringList args = QCoreApplication::arguments();
     if (args.count() > 1) {
         args.removeFirst(); // Remove the executable name/path
-        w.loadFiles(args);
+        const QStringList subtitleSuffixes = {"srt", "ass", "ssa", "vtt"};
+        QStringList subs;
+        for (const QString &a : args) {
+            const QString suf = QFileInfo(a).suffix().toLower();
+            if (subtitleSuffixes.contains(suf)) subs << a;
+        }
+        // Si sólo hay archivos de subtítulo, abrir en modo traducción directa
+        if (subs.size() == args.size() && !subs.isEmpty()) {
+            w.translateSubtitleFiles(subs);
+        } else {
+            w.loadFiles(args);
+        }
     }
 
     w.show();

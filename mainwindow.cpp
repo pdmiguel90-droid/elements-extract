@@ -573,6 +573,29 @@ void MainWindow::loadFiles(const QStringList &files)
         fileListWidget->setCurrentRow(0);
 }
 
+// Modo traducción para subtítulos abiertos desde fuera de la app (menú
+// contextual del explorador, "Abrir con..."): no pasa por la extracción.
+void MainWindow::translateSubtitleFiles(const QStringList &files)
+{
+    QStringList subs;
+    for (const QString &f : files) {
+        const QString suffix = QFileInfo(f).suffix().toLower();
+        if (suffix == "srt" || suffix == "ass" || suffix == "ssa" || suffix == "vtt")
+            subs << f;
+    }
+    if (subs.isEmpty()) return;
+
+    if (outputLineEdit && outputLineEdit->text().trimmed().isEmpty())
+        outputLineEdit->setText(QFileInfo(subs.first()).absolutePath());
+
+    showLogArea();
+    logArea->append(QString("<font color='#00BFFF'>" +
+        tr("Modo traducción: %1 subtítulo(s) abierto(s) desde el sistema.") + "</font>")
+        .arg(subs.size()));
+
+    startBatchTranslation(subs);
+}
+
 void MainWindow::addFiles()
 {
     QStringList files = QFileDialog::getOpenFileNames(
@@ -2193,6 +2216,20 @@ void MainWindow::translateExistingFiles()
 {
     if (!subtitleTranslator) return;
 
+    QStringList files = QFileDialog::getOpenFileNames(
+        this, tr("Seleccionar subtítulos para traducir"), "",
+        tr("Subtítulos (*.srt *.ass *.ssa *.vtt);;Todos los archivos (*.*)"));
+    if (files.isEmpty()) return;
+
+    startBatchTranslation(files);
+}
+
+// Traduce los subtítulos indicados (sin diálogo de selección). Compartido por
+// el botón "Traducir subtítulos" y por la apertura desde el menú contextual.
+void MainWindow::startBatchTranslation(const QStringList &files)
+{
+    if (!subtitleTranslator || files.isEmpty()) return;
+
     QString srcLang = srcLangCombo->currentData().toString();
     QString dstLang = dstLangCombo->currentData().toString();
     if (srcLang.isEmpty() || dstLang.isEmpty() || srcLang == dstLang) {
@@ -2200,11 +2237,6 @@ void MainWindow::translateExistingFiles()
             tr("Selecciona idiomas de origen y destino distintos antes de traducir."));
         return;
     }
-
-    QStringList files = QFileDialog::getOpenFileNames(
-        this, tr("Seleccionar subtítulos para traducir"), "",
-        tr("Subtítulos (*.srt *.ass *.ssa *.vtt);;Todos los archivos (*.*)"));
-    if (files.isEmpty()) return;
 
     QString outDir = ensureOutputSubdir(tr("Traducidos"));
     if (outDir.isEmpty()) {

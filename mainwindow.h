@@ -63,6 +63,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void loadFiles(const QStringList &files);
+    // Subtitle files passed on the command line (e.g. right-click "Translate with Elements Extract"):
+    // set output folder from the first file and start the translation batch directly.
+    void translateSubtitleFiles(const QStringList &files);
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
@@ -101,6 +104,8 @@ private slots:
     void onTranslationFinished();
     void translateExtractedSubtitles(const QString &subtitlePath);
     void translateExistingFiles();
+    // Shared core of translateExistingFiles() and translateSubtitleFiles().
+    void startBatchTranslation(const QStringList &files);
 
     // ── Filtro por idioma + remux ──────────────────────────────────────────
     void refreshSubLangFilter();
