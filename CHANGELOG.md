@@ -5,6 +5,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.10] - 2026-11-22
+
+### Corregido
+- Los botones «Cancelar» e «INICIAR EXTRACCIÓN» ya no quedan ocultos al abrir el registro: viven en un pie fijo fuera del área desplazable de opciones.
+- El registro de actividad tiene una altura máxima para no reducir el área de trabajo.
+
+---
+
 ## [1.2.9] - 2026-11-22
 
 ### Añadido

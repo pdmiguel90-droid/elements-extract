@@ -645,7 +645,19 @@ void MainWindow::setupUi()
 
     configPanel->addStretch(1);
 
-    // ── Acciones ──
+    // Columna de configuración dentro de un QScrollArea: su contenido no debería
+    // fijar el tamaño mínimo de la ventana (eso impedía maximizar en pantallas bajas).
+    QScrollArea *configScroller = new QScrollArea();
+    configScroller->setWidgetResizable(true);
+    configScroller->setFrameShape(QFrame::NoFrame);
+    configScroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    configScroller->setWidget(configWidget);
+    configScroller->setMinimumWidth(340);
+    configScroller->setMaximumWidth(460);
+
+    // ── Acciones: pie fijo fuera del scroll ──
+    // Si la fila vivía dentro del QScrollArea, el botón principal quedaba al
+    // final del contenido y desaparecía al abrir el log (el scroll se encogía).
     QHBoxLayout *actionBtns = new QHBoxLayout();
     actionBtns->setSpacing(6);
     cancelButton = new QPushButton(QIcon(":/icons/cancel.svg"), tr("Cancelar"));
@@ -663,19 +675,17 @@ void MainWindow::setupUi()
 
     actionBtns->addWidget(cancelButton);
     actionBtns->addWidget(extractButton, 1);
-    configPanel->addLayout(actionBtns);
 
-    // Columna de configuración dentro de un QScrollArea: su contenido no debería
-    // fijar el tamaño mínimo de la ventana (eso impedía maximizar en pantallas bajas).
-    QScrollArea *configScroller = new QScrollArea();
-    configScroller->setWidgetResizable(true);
-    configScroller->setFrameShape(QFrame::NoFrame);
-    configScroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    configScroller->setWidget(configWidget);
-    configScroller->setMinimumWidth(340);
-    configScroller->setMaximumWidth(460);
+    QWidget *rightWidget = new QWidget();
+    QVBoxLayout *rightLayout = new QVBoxLayout(rightWidget);
+    rightLayout->setContentsMargins(0, 0, 0, 0);
+    rightLayout->setSpacing(6);
+    rightLayout->addWidget(configScroller, 1);
+    rightLayout->addLayout(actionBtns);
+    rightWidget->setMinimumWidth(340);
+    rightWidget->setMaximumWidth(460);
 
-    mainSplitter->addWidget(configScroller);
+    mainSplitter->addWidget(rightWidget);
     mainSplitter->setStretchFactor(0, 3);
     mainSplitter->setStretchFactor(1, 0);
     root->addWidget(mainSplitter, 3);
@@ -705,6 +715,8 @@ void MainWindow::setupUi()
     logArea = new QTextEdit();
     logArea->setReadOnly(true);
     logArea->setMinimumHeight(50);
+    // Tope para que el registro no se coma el área de trabajo al abrirlo.
+    logArea->setMaximumHeight(180);
     logArea->setVisible(false);
     logArea->setPlaceholderText(tr("Sistema listo. Añade archivos y selecciona las pistas a extraer."));
     root->addWidget(logArea, 1);

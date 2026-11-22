@@ -1,3 +1,9 @@
+elements-extract (1.2.10) unstable; urgency=medium
+
+  * Botones de acción en pie fijo y registro con altura máxima
+
+ -- pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>  Sun, 22 Nov 2026 23:30:00 +0000
+
 elements-extract (1.2.9) unstable; urgency=medium
 
   * Añadido notificador de versiones nuevas desde GitHub Releases
