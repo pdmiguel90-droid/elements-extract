@@ -188,6 +188,8 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 3. Extraia normalmente — as legendas traduzidas são salvas como `arquivo.es.srt`
 4. Se não houver modelo direto (ex.: pt→es), a **tradução triangular** é usada automaticamente
 
+> 🌐 **Legendas online**: também é possível buscar, baixar e traduzir legendas do [OpenSubtitles.com](https://www.opensubtitles.com) em **Arquivo → Buscar legendas na internet…** (`Ctrl+Shift+S`). É preciso ter conta própria, chave API, usuário e senha, informados em **Ajustes → Legendas online** e salvos apenas neste computador.
+
 > 💡 **Trabalhar com um único idioma**: a lista **"Apenas legendas"** seleciona de uma vez as legendas de um idioma específico em todos os arquivos do lote (arquivos sem esse idioma são ignorados). Com o filtro ativo, a tradução usa esse idioma como origem automaticamente.
 
 > 🎬 **Incrustar a tradução**: com a caixa **"Incrustar a tradução (remux)"** marcada, é gerado um novo `.mkv`/`.mp4` (`arquivo.<idioma>.mkv`) com o vídeo e o áudio originais e a faixa de legendas traduzidas incorporada (sem re-codificar). É salvo em `Elements Extract/Remuxados`. Antes de incorporar, cada arquivo é validado: sem faixa de vídeo é ignorado e, se o `.mp4` tiver codecs não copiáveis (áudio `pcm_*`, `vorbis`, `flac`, `dts`, `truehd`…), muda para `.mkv` automaticamente. No final mostra um resumo com incorporadas/ignoradas e o motivo de cada falha.

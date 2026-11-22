@@ -5,6 +5,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.4] - 2026-11-22
+
+### Añadido
+- Búsqueda y descarga de subtítulos en internet mediante la API de OpenSubtitles.com (búsqueda por hash del vídeo con fallback por título, descarga de ZIP/GZIP/RAR y detección de SRT/ASS/VTT), con opción de traducirlos y/o incrustarlos con el flujo existente. Las credenciales se configuran en Ajustes → Subtítulos online y nunca se incluyen en el código
+
+---
+
 ## [1.2.3] - 2026-11-22
 
 ### Añadido

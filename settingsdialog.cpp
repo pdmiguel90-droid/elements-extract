@@ -5,6 +5,7 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
 #include <QPushButton>
@@ -223,19 +224,62 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
 
     tabs->addTab(tabModelos, tr("Modelos de Traducción"));
 
+    // ════════════════════════════════════════════════════════════════════════
+    // TAB 3: SUBTÍTULOS ONLINE
+    // ════════════════════════════════════════════════════════════════════════
+    QWidget *tabOnlineSubs = new QWidget();
+    QVBoxLayout *onlineLay = new QVBoxLayout(tabOnlineSubs);
+
+    m_onlineSubsBox = new QGroupBox(tr("Credenciales de OpenSubtitles"));
+    QFormLayout *onlineForm = new QFormLayout(m_onlineSubsBox);
+    m_apiKeyLbl = new QLabel(tr("Clave API:"));
+    m_onlineUserLbl = new QLabel(tr("Usuario:"));
+    m_onlinePasswordLbl = new QLabel(tr("Contraseña:"));
+    m_apiKeyEdit = new QLineEdit();
+    m_onlineUserEdit = new QLineEdit();
+    m_onlinePasswordEdit = new QLineEdit();
+    m_onlinePasswordEdit->setEchoMode(QLineEdit::Password);
+    onlineForm->addRow(m_apiKeyLbl, m_apiKeyEdit);
+    onlineForm->addRow(m_onlineUserLbl, m_onlineUserEdit);
+    onlineForm->addRow(m_onlinePasswordLbl, m_onlinePasswordEdit);
+    onlineLay->addWidget(m_onlineSubsBox);
+
+    m_onlineSubsInfoLbl = new QLabel(tr(
+        "La búsqueda de subtítulos en <a href=\"https://www.opensubtitles.com\">OpenSubtitles.com</a> "
+        "es opcional: necesitas una cuenta y tu propia clave API. "
+        "Estos datos se guardan solo en este equipo."));
+    m_onlineSubsInfoLbl->setOpenExternalLinks(true);
+    m_onlineSubsInfoLbl->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    m_onlineSubsInfoLbl->setWordWrap(true);
+    m_onlineSubsInfoLbl->setProperty("labelColor", "muted");
+    onlineLay->addWidget(m_onlineSubsInfoLbl);
+    onlineLay->addStretch(1);
+
+    tabs->addTab(tabOnlineSubs, tr("Subtítulos online"));
+
     mainLayout->addWidget(tabs, 1);
 
     // Close button
     QHBoxLayout *btnRow = new QHBoxLayout();
     btnRow->addStretch(1);
     m_closeBtn = new QPushButton(QIcon(":/icons/check.svg"), tr("Cerrar"));
-    connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::accept);
+    connect(m_closeBtn, &QPushButton::clicked, this, &SettingsDialog::saveOnlineSubsSettings);
     btnRow->addWidget(m_closeBtn);
     mainLayout->addLayout(btnRow);
 
 
     // Load settings
     QSettings s("LocalApp", "FFmpegExtractor");
+
+    m_apiKeyEdit->setText(s.value("onlineSubs/apiKey").toString());
+    m_onlineUserEdit->setText(s.value("onlineSubs/username").toString());
+    m_onlinePasswordEdit->setText(s.value("onlineSubs/password").toString());
+    connect(m_apiKeyEdit, &QLineEdit::editingFinished,
+            this, &SettingsDialog::saveOnlineSubsSettings);
+    connect(m_onlineUserEdit, &QLineEdit::editingFinished,
+            this, &SettingsDialog::saveOnlineSubsSettings);
+    connect(m_onlinePasswordEdit, &QLineEdit::editingFinished,
+            this, &SettingsDialog::saveOnlineSubsSettings);
 
     // F2/B3: directorio de modelos persistido
     QString modelsDir = s.value("modelsDir").toString();
@@ -311,6 +355,7 @@ void SettingsDialog::retranslateUi()
     if (m_tabs) {
         m_tabs->setTabText(0, tr("General"));
         m_tabs->setTabText(1, tr("Modelos de Traducción"));
+        m_tabs->setTabText(2, tr("Subtítulos online"));
     }
     if (m_dirBox)       m_dirBox->setTitle(tr("Directorio de Modelos"));
     if (m_browseBtn)    m_browseBtn->setText(tr("Examinar..."));
@@ -338,10 +383,30 @@ void SettingsDialog::retranslateUi()
         m_infoLbl->setText(
             tr("<b>tiny</b> ~15-25MB rápido · <b>base</b> ~50MB mejor calidad<br>"
             "Doble clic = activar/desactivar (solo activos se usan para traducir)"));
+    if (m_onlineSubsBox) m_onlineSubsBox->setTitle(tr("Credenciales de OpenSubtitles"));
+    if (m_apiKeyLbl)     m_apiKeyLbl->setText(tr("Clave API:"));
+    if (m_onlineUserLbl) m_onlineUserLbl->setText(tr("Usuario:"));
+    if (m_onlinePasswordLbl) m_onlinePasswordLbl->setText(tr("Contraseña:"));
+    if (m_onlineSubsInfoLbl)
+        m_onlineSubsInfoLbl->setText(tr(
+            "La búsqueda de subtítulos en <a href=\"https://www.opensubtitles.com\">OpenSubtitles.com</a> "
+            "es opcional: necesitas una cuenta y tu propia clave API. "
+            "Estos datos se guardan solo en este equipo."));
     if (m_closeBtn)     m_closeBtn->setText(tr("Cerrar"));
 
     refreshLocalModels();
     refreshOnlineModels();
+}
+
+void SettingsDialog::saveOnlineSubsSettings()
+{
+    QSettings s("LocalApp", "FFmpegExtractor");
+    s.setValue("onlineSubs/apiKey", m_apiKeyEdit->text().trimmed());
+    s.setValue("onlineSubs/username", m_onlineUserEdit->text().trimmed());
+    s.setValue("onlineSubs/password", m_onlinePasswordEdit->text());
+    emit settingsChanged();
+    if (sender() == m_closeBtn)
+        accept();
 }
 
 void SettingsDialog::onBrowseModelsDir()

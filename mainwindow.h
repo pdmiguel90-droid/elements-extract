@@ -31,6 +31,7 @@
 class SubtitleTranslator;
 class ModelDownloader;
 class SettingsDialog;
+class SubtitleDownloader;
 
 // Sub extraído que puede traducirse/incrustarse de vuelta en su vídeo
 struct SubExtractInfo {
@@ -91,6 +92,9 @@ private slots:
     void clearAllSelections();
     void showAbout();
     void showHelp();
+    void showOnlineSubsDialog();
+    void onOnlineSubtitleReady(const QString &filePath, const QString &videoPath,
+                               const QString &language, bool translate);
     void readProbeOutput();
     void readProbeError();
     void probeFinished(int exitCode, QProcess::ExitStatus exitStatus);
@@ -182,6 +186,7 @@ private:
     QMenu        *menuAjustes;
     QMenu        *menuAyuda;
     QAction      *actAnadir;
+    QAction      *actOnlineSubs;
     QAction      *actSalir;
     QAction      *actSettings;
     QAction      *actAyuda;
@@ -227,6 +232,7 @@ private:
     // ── Translation engine ───────────────────────────────────────────────────
     SubtitleTranslator *subtitleTranslator;
     ModelDownloader *modelDownloader;
+    SubtitleDownloader *onlineSubDownloader = nullptr;
 
     // ── Estado ───────────────────────────────────────────────────────────────
     QString  lastSelectedFile;

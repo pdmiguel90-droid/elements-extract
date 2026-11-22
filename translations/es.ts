@@ -10,7 +10,7 @@
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="41"/>
-        <source>Versión 1.2.3  ·  2026</source>
+        <source>Versión 1.2.4  ·  2026</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

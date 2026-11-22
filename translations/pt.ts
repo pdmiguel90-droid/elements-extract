@@ -9,8 +9,8 @@
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="41" />
-        <source>Versión 1.2.3  ·  2026</source>
-        <translation>Versão 1.2.3  ·  2026</translation>
+        <source>Versión 1.2.4  ·  2026</source>
+        <translation>Versão 1.2.4  ·  2026</translation>
     </message>
     <message>
         <source>Extractor gráfico de pistas de audio, vídeo y subtítulos.
@@ -165,9 +165,8 @@ Linguagem</translation>
         <translation>Atalhos e Configurações</translation>
     </message>
     <message>
-        <location filename="../helpdialog.cpp" line="178" />
-        <source>Cerrar</source>
-        <translation>Fechar</translation>
+        <source>&lt;h3&gt;8. Subtítulos online&lt;/h3&gt;&lt;p&gt;Con &lt;b&gt;Archivo → Buscar subtítulos en internet…&lt;/b&gt; (Ctrl+Shift+S) puedes buscar y descargar subtítulos desde OpenSubtitles.com y traducirlos después con el motor offline. Necesitas tu propia clave API, usuario y contraseña en &lt;b&gt;Ajustes → Subtítulos online&lt;/b&gt;.&lt;/p&gt;</source>
+        <translation>&lt;h3&gt;8. Legendas online&lt;/h3&gt;&lt;p&gt;Use &lt;b&gt;Arquivo → Buscar legendas na internet…&lt;/b&gt; (Ctrl+Shift+S) para buscar e baixar legendas do OpenSubtitles.com e traduzi-las depois com o motor offline. Você precisa da sua própria chave API, usuário e senha em &lt;b&gt;Ajustes → Legendas online&lt;/b&gt;.&lt;/p&gt;</translation>
     </message>
 </context>
 <context>
@@ -736,12 +735,6 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <translation>Remux ignorado: não há legendas traduzidas para incorporar.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2178" />
-        <location filename="../mainwindow.cpp" line="2190" />
-        <source>Traducción</source>
-        <translation>Tradução</translation>
-    </message>
-    <message>
         <location filename="../mainwindow.cpp" line="2179" />
         <source>Selecciona idiomas de origen y destino distintos antes de traducir.</source>
         <translation>Selecione idiomas de origem e destino diferentes antes de traduzir.</translation>
@@ -1148,6 +1141,42 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <source>Traducible como texto</source>
         <translation>Traduzível como texto</translation>
     </message>
+    <message>
+        <source>[ONLINE-SUBS] %1</source>
+        <translation>[ONLINE-SUBS] %1</translation>
+    </message>
+    <message>
+        <source>Buscar subtítulos en internet…</source>
+        <translation>Buscar legendas na internet…</translation>
+    </message>
+    <message>
+        <source>Modo traducción: %1 subtítulo(s) abierto(s) desde el sistema.</source>
+        <translation>Modo de tradução: %1 legenda(s) aberta(s) pelo sistema.</translation>
+    </message>
+    <message>
+        <source>Selecciona un vídeo en la lista para buscar subtítulos en internet.</source>
+        <translation>Selecione um vídeo na lista para buscar legendas na internet.</translation>
+    </message>
+    <message>
+        <source>Subtítulo online descargado: %1</source>
+        <translation>Legenda online baixada: %1</translation>
+    </message>
+    <message>
+        <source>Descargados</source>
+        <translation>Baixados</translation>
+    </message>
+    <message>
+        <source>No se pudo guardar el subtítulo descargado en: %1</source>
+        <translation>Não foi possível salvar a legenda baixada em: %1</translation>
+    </message>
+    <message>
+        <source>Subtítulo guardado en: %1</source>
+        <translation>Legenda salva em: %1</translation>
+    </message>
+    <message>
+        <source>El idioma del subtítulo (%1) no es compatible con la traducción.</source>
+        <translation>O idioma da legenda (%1) não é compatível com a tradução.</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -1174,18 +1203,6 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <location filename="../settingsdialog.cpp" line="317" />
         <source>Idiomas por Defecto</source>
         <translation>Idiomas Padrão</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="68" />
-        <location filename="../settingsdialog.cpp" line="318" />
-        <source>Origen:</source>
-        <translation>Origem:</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="75" />
-        <location filename="../settingsdialog.cpp" line="319" />
-        <source>Destino:</source>
-        <translation>Destino:</translation>
     </message>
     <message>
         <location filename="../settingsdialog.cpp" line="87" />
@@ -1305,12 +1322,6 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <translation>Modelos de Tradução</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="231" />
-        <location filename="../settingsdialog.cpp" line="341" />
-        <source>Cerrar</source>
-        <translation>Fechar</translation>
-    </message>
-    <message>
         <location filename="../settingsdialog.cpp" line="349" />
         <source>Directorio de modelos</source>
         <translation>Diretório de modelos</translation>
@@ -1413,6 +1424,30 @@ Baixá-lo novamente? (substitui a cópia local)</translation>
         <source>(ya instalado)</source>
         <translation>(já instalado)</translation>
     </message>
+    <message>
+        <source>Credenciales de OpenSubtitles</source>
+        <translation>Credenciais do OpenSubtitles</translation>
+    </message>
+    <message>
+        <source>Clave API:</source>
+        <translation>Chave API:</translation>
+    </message>
+    <message>
+        <source>Usuario:</source>
+        <translation>Usuário:</translation>
+    </message>
+    <message>
+        <source>Contraseña:</source>
+        <translation>Senha:</translation>
+    </message>
+    <message>
+        <source>La búsqueda de subtítulos en &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; es opcional: necesitas una cuenta y tu propia clave API. Estos datos se guardan solo en este equipo.</source>
+        <translation>A busca de legendas no &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; é opcional: você precisa de uma conta e da sua própria chave API. Esses dados são salvos apenas neste computador.</translation>
+    </message>
+    <message>
+        <source>Subtítulos online</source>
+        <translation>Legendas online</translation>
+    </message>
 </context>
 <context>
     <name>SubtitleTranslator</name>
@@ -1487,6 +1522,280 @@ Diretório procurado: %3</translation>
         <location filename="../subtitletranslator.cpp" line="489" />
         <source>Error desconocido del motor de traducción</source>
         <translation>Erro desconhecido do mecanismo de tradução</translation>
+    </message>
+</context>
+<context>
+    <name>OnlineSubsDialog</name>
+    <message>
+        <source>Subtítulos online — %1</source>
+        <translation>Legendas online — %1</translation>
+    </message>
+    <message>
+        <source>Vídeo:</source>
+        <translation>Vídeo:</translation>
+    </message>
+    <message>
+        <source>Título de la película o serie…</source>
+        <translation>Título do filme ou série…</translation>
+    </message>
+    <message>
+        <source>Consulta:</source>
+        <translation>Consulta:</translation>
+    </message>
+    <message>
+        <source>Todos</source>
+        <translation>Todos</translation>
+    </message>
+    <message>
+        <source>Inglés</source>
+        <translation>Inglês</translation>
+    </message>
+    <message>
+        <source>Español</source>
+        <translation>Espanhol</translation>
+    </message>
+    <message>
+        <source>Francés</source>
+        <translation>Francês</translation>
+    </message>
+    <message>
+        <source>Portugués</source>
+        <translation>Português</translation>
+    </message>
+    <message>
+        <source>Alemán</source>
+        <translation>Alemão</translation>
+    </message>
+    <message>
+        <source>Italiano</source>
+        <translation>Italiano</translation>
+    </message>
+    <message>
+        <source>Idioma:</source>
+        <translation>Idioma:</translation>
+    </message>
+    <message>
+        <source>Buscar</source>
+        <translation>Buscar</translation>
+    </message>
+    <message>
+        <source>Idioma</source>
+        <translation>Idioma</translation>
+    </message>
+    <message>
+        <source>Título</source>
+        <translation>Título</translation>
+    </message>
+    <message>
+        <source>Año</source>
+        <translation>Ano</translation>
+    </message>
+    <message>
+        <source>Descargas</source>
+        <translation>Downloads</translation>
+    </message>
+    <message>
+        <source>Hash</source>
+        <translation>Hash</translation>
+    </message>
+    <message>
+        <source>Descargar y traducir</source>
+        <translation>Baixar e traduzir</translation>
+    </message>
+    <message>
+        <source>Solo descargar</source>
+        <translation>Apenas baixar</translation>
+    </message>
+    <message>
+        <source>Configura la clave API, el usuario y la contraseña en Ajustes → Subtítulos online.</source>
+        <translation>Configure a chave API, o usuário e a senha em Ajustes → Legendas online.</translation>
+    </message>
+    <message>
+        <source>Introduce un título para buscar subtítulos.</source>
+        <translation>Digite um título para buscar legendas.</translation>
+    </message>
+    <message>
+        <source>Buscando subtítulos…</source>
+        <translation>Buscando legendas…</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Erro: %1</translation>
+    </message>
+    <message>
+        <source>%1 subtítulos encontrados.</source>
+        <translation>%1 legendas encontradas.</translation>
+    </message>
+    <message>
+        <source>No se encontraron subtítulos.</source>
+        <translation>Nenhuma legenda encontrada.</translation>
+    </message>
+    <message>
+        <source>Selecciona un resultado.</source>
+        <translation>Selecione um resultado.</translation>
+    </message>
+    <message>
+        <source>Descargando el subtítulo…</source>
+        <translation>Baixando a legenda…</translation>
+    </message>
+    <message>
+        <source>Descarga completada: %1</source>
+        <translation>Download concluído: %1</translation>
+    </message>
+    <message>
+        <source>El archivo contiene varios subtítulos (%1). Elige cuál usar:</source>
+        <translation>O arquivo contém várias legendas (%1). Escolha qual usar:</translation>
+    </message>
+    <message>
+        <source>Elegir subtítulo</source>
+        <translation>Escolher legenda</translation>
+    </message>
+    <message>
+        <source>idioma desconocido</source>
+        <translation>idioma desconhecido</translation>
+    </message>
+</context>
+<context>
+    <name>SubtitleDownloader</name>
+    <message>
+        <source>No se pudo iniciar %1.</source>
+        <translation>Não foi possível iniciar %1.</translation>
+    </message>
+    <message>
+        <source>Tiempo de espera agotado al descomprimir con %1.</source>
+        <translation>Tempo esgotado ao descompactar com %1.</translation>
+    </message>
+    <message>
+        <source>Error al descomprimir con %1: %2</source>
+        <translation>Erro ao descompactar com %1: %2</translation>
+    </message>
+    <message>
+        <source>El archivo comprimido no contiene un subtítulo.</source>
+        <translation>O arquivo compactado não contém uma legenda.</translation>
+    </message>
+    <message>
+        <source>Falta la clave de API de OpenSubtitles. Configúrala en Ajustes → Subtítulos online.</source>
+        <translation>Falta a chave API do OpenSubtitles. Configure-a em Ajustes → Legendas online.</translation>
+    </message>
+    <message>
+        <source>Buscando subtítulos por hash…</source>
+        <translation>Buscando legendas por hash…</translation>
+    </message>
+    <message>
+        <source>Buscando subtítulos por título…</source>
+        <translation>Buscando legendas por título…</translation>
+    </message>
+    <message>
+        <source>El subtítulo seleccionado no tiene identificador de archivo.</source>
+        <translation>A legenda selecionada não tem identificador de arquivo.</translation>
+    </message>
+    <message>
+        <source>Faltan el usuario o la contraseña de OpenSubtitles. Configúralos en Ajustes → Subtítulos online.</source>
+        <translation>Falta o usuário ou a senha do OpenSubtitles. Configure-os em Ajustes → Legendas online.</translation>
+    </message>
+    <message>
+        <source>Iniciando sesión en OpenSubtitles…</source>
+        <translation>Entrando no OpenSubtitles…</translation>
+    </message>
+    <message>
+        <source>Solicitando el subtítulo…</source>
+        <translation>Solicitando a legenda…</translation>
+    </message>
+    <message>
+        <source>Operación cancelada.</source>
+        <translation>Operação cancelada.</translation>
+    </message>
+    <message>
+        <source>Búsqueda cancelada.</source>
+        <translation>Busca cancelada.</translation>
+    </message>
+    <message>
+        <source>Descarga cancelada.</source>
+        <translation>Download cancelado.</translation>
+    </message>
+    <message>
+        <source>Búsqueda por hash no disponible; probando por título…</source>
+        <translation>Busca por hash indisponível; tentando por título…</translation>
+    </message>
+    <message>
+        <source>HTTP %1: %2</source>
+        <translation>HTTP %1: %2</translation>
+    </message>
+    <message>
+        <source>La respuesta de OpenSubtitles no es un JSON válido.</source>
+        <translation>A resposta do OpenSubtitles não é um JSON válido.</translation>
+    </message>
+    <message>
+        <source>Sin coincidencias por hash; buscando por título…</source>
+        <translation>Sem correspondências por hash; buscando por título…</translation>
+    </message>
+    <message>
+        <source>OpenSubtitles no devolvió un token de sesión.</source>
+        <translation>O OpenSubtitles não retornou um token de sessão.</translation>
+    </message>
+    <message>
+        <source>Sesión caducada; iniciando sesión de nuevo…</source>
+        <translation>Sessão expirada; entrando novamente…</translation>
+    </message>
+    <message>
+        <source>La respuesta de descarga no contiene un enlace ni contenido.</source>
+        <translation>A resposta de download não contém link nem conteúdo.</translation>
+    </message>
+    <message>
+        <source>Subtítulo descargado: %1</source>
+        <translation>Legenda baixada: %1</translation>
+    </message>
+    <message>
+        <source>El subtítulo descargado está vacío.</source>
+        <translation>A legenda baixada está vazia.</translation>
+    </message>
+    <message>
+        <source>No se pudo crear un directorio temporal para descomprimir.</source>
+        <translation>Não foi possível criar um diretório temporário para descompactar.</translation>
+    </message>
+    <message>
+        <source>No se pudo guardar el archivo comprimido temporal.</source>
+        <translation>Não foi possível salvar o arquivo compactado temporário.</translation>
+    </message>
+    <message>
+        <source>No se pudo leer el subtítulo descomprimido.</source>
+        <translation>Não foi possível ler a legenda descompactada.</translation>
+    </message>
+    <message>
+        <source>No se pudo escribir el subtítulo en %1.</source>
+        <translation>Não foi possível gravar a legenda em %1.</translation>
+    </message>
+    <message>
+        <source>El ZIP no contiene archivos.</source>
+        <translation>O ZIP não contém arquivos.</translation>
+    </message>
+    <message>
+        <source>El ZIP no contiene subtítulos de texto (.srt/.ass/.ssa/.vtt).</source>
+        <translation>O ZIP não contém legendas de texto (.srt/.ass/.ssa/.vtt).</translation>
+    </message>
+    <message>
+        <source>El subtítulo está comprimido en RAR; instala unrar o 7z, o descarga el subtítulo desde la web de OpenSubtitles.</source>
+        <translation>A legenda está em um arquivo RAR; instale unrar ou 7z, ou baixe a legenda no site do OpenSubtitles.</translation>
+    </message>
+    <message>
+        <source>Extrayendo %1 del ZIP…</source>
+        <translation>Extraindo %1 do ZIP…</translation>
+    </message>
+    <message>
+        <source>Extrayendo subtítulo de un archivo RAR…</source>
+        <translation>Extraindo legenda de um arquivo RAR…</translation>
+    </message>
+    <message>
+        <source>No se pudo listar el ZIP: %1</source>
+        <translation>Não foi possível listar o ZIP: %1</translation>
+    </message>
+    <message>
+        <source>No se pudo listar el ZIP: no se encontró %1.</source>
+        <translation>Não foi possível listar o ZIP: %1 não foi encontrado.</translation>
+    </message>
+    <message>
+        <source>No se pudo listar el ZIP: tiempo de espera agotado.</source>
+        <translation>Não foi possível listar o ZIP: tempo esgotado.</translation>
     </message>
 </context>
 </TS>

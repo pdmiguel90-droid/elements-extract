@@ -54,6 +54,7 @@ private slots:
     void onModelDownloadProgress(const QString &modelId, qint64 received, qint64 total);
     void onModelDownloaded(const QString &modelId);
     void onModelDownloadError(const QString &modelId, const QString &message);
+    void saveOnlineSubsSettings();
 
 protected:
     void changeEvent(QEvent *event) override;
@@ -91,6 +92,15 @@ private:
     QCheckBox *m_cleanupAfterMuxCheck;
     QComboBox *m_themeCombo;
     QComboBox *m_uiLangCombo;
+
+    QGroupBox *m_onlineSubsBox;
+    QLabel *m_apiKeyLbl;
+    QLabel *m_onlineUserLbl;
+    QLabel *m_onlinePasswordLbl;
+    QLabel *m_onlineSubsInfoLbl;
+    QLineEdit *m_apiKeyEdit;
+    QLineEdit *m_onlineUserEdit;
+    QLineEdit *m_onlinePasswordEdit;
 
     QListWidget *m_localListWidget;
     QListWidget *m_onlineListWidget;

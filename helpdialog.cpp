@@ -128,6 +128,11 @@ HelpDialog::HelpDialog(QWidget *parent) : QDialog(parent)
         "<h3>Idiomas soportados</h3>"
         "<p>Inglés, Español, Francés, Portugués, Alemán, Italiano, Japonés, "
         "Chino, Coreano, Ruso, Árabe, Hindi, Holandés, Sueco, Polaco y Turco.</p>"
+        ) + tr(
+        "<h3>8. Subtítulos online</h3>"
+        "<p>Con <b>Archivo → Buscar subtítulos en internet…</b> (Ctrl+Shift+S) puedes buscar y descargar "
+        "subtítulos desde OpenSubtitles.com y traducirlos después con el motor offline. "
+        "Necesitas tu propia clave API, usuario y contraseña en <b>Ajustes → Subtítulos online</b>.</p>"
         ));
     tabs->addTab(translatePage, tr("Traducción"));
 

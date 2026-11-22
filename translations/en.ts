@@ -9,8 +9,8 @@
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="41" />
-        <source>Versión 1.2.3  ·  2026</source>
-        <translation>Version 1.2.3  ·  2026</translation>
+        <source>Versión 1.2.4  ·  2026</source>
+        <translation>Version 1.2.4  ·  2026</translation>
     </message>
     <message>
         <source>Extractor gráfico de pistas de audio, vídeo y subtítulos.
@@ -165,9 +165,8 @@ Language</translation>
         <translation>Shortcuts and Settings</translation>
     </message>
     <message>
-        <location filename="../helpdialog.cpp" line="178" />
-        <source>Cerrar</source>
-        <translation>Close</translation>
+        <source>&lt;h3&gt;8. Subtítulos online&lt;/h3&gt;&lt;p&gt;Con &lt;b&gt;Archivo → Buscar subtítulos en internet…&lt;/b&gt; (Ctrl+Shift+S) puedes buscar y descargar subtítulos desde OpenSubtitles.com y traducirlos después con el motor offline. Necesitas tu propia clave API, usuario y contraseña en &lt;b&gt;Ajustes → Subtítulos online&lt;/b&gt;.&lt;/p&gt;</source>
+        <translation>&lt;h3&gt;8. Online subtitles&lt;/h3&gt;&lt;p&gt;Use &lt;b&gt;File → Search for subtitles online…&lt;/b&gt; (Ctrl+Shift+S) to search for and download subtitles from OpenSubtitles.com and then translate them with the offline engine. You need your own API key, username and password in &lt;b&gt;Settings → Online subtitles&lt;/b&gt;.&lt;/p&gt;</translation>
     </message>
 </context>
 <context>
@@ -547,7 +546,7 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <location filename="../mainwindow.cpp" line="471" />
         <location filename="../mainwindow.cpp" line="2006" />
         <source>Cancelar</source>
-        <translation> Cancel</translation>
+        <translation>Cancel</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="445" />
@@ -734,12 +733,6 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <location filename="../mainwindow.cpp" line="2290" />
         <source>Remux omitido: no hay subtítulos traducidos para incrustar.</source>
         <translation>Remux skipped: no translated subtitles to embed.</translation>
-    </message>
-    <message>
-        <location filename="../mainwindow.cpp" line="2178" />
-        <location filename="../mainwindow.cpp" line="2190" />
-        <source>Traducción</source>
-        <translation>Translation</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2179" />
@@ -1148,6 +1141,42 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <source>Traducible como texto</source>
         <translation>Translatable as text</translation>
     </message>
+    <message>
+        <source>[ONLINE-SUBS] %1</source>
+        <translation>[ONLINE-SUBS] %1</translation>
+    </message>
+    <message>
+        <source>Buscar subtítulos en internet…</source>
+        <translation>Search for subtitles online…</translation>
+    </message>
+    <message>
+        <source>Modo traducción: %1 subtítulo(s) abierto(s) desde el sistema.</source>
+        <translation>Translation mode: %1 subtitle(s) opened from the system.</translation>
+    </message>
+    <message>
+        <source>Selecciona un vídeo en la lista para buscar subtítulos en internet.</source>
+        <translation>Select a video in the list to search for subtitles online.</translation>
+    </message>
+    <message>
+        <source>Subtítulo online descargado: %1</source>
+        <translation>Online subtitle downloaded: %1</translation>
+    </message>
+    <message>
+        <source>Descargados</source>
+        <translation>Downloaded</translation>
+    </message>
+    <message>
+        <source>No se pudo guardar el subtítulo descargado en: %1</source>
+        <translation>Could not save the downloaded subtitle to: %1</translation>
+    </message>
+    <message>
+        <source>Subtítulo guardado en: %1</source>
+        <translation>Subtitle saved to: %1</translation>
+    </message>
+    <message>
+        <source>El idioma del subtítulo (%1) no es compatible con la traducción.</source>
+        <translation>The subtitle language (%1) is not supported for translation.</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -1174,18 +1203,6 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <location filename="../settingsdialog.cpp" line="317" />
         <source>Idiomas por Defecto</source>
         <translation>Default Languages</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="68" />
-        <location filename="../settingsdialog.cpp" line="318" />
-        <source>Origen:</source>
-        <translation>Source:</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="75" />
-        <location filename="../settingsdialog.cpp" line="319" />
-        <source>Destino:</source>
-        <translation>Target:</translation>
     </message>
     <message>
         <location filename="../settingsdialog.cpp" line="87" />
@@ -1305,12 +1322,6 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <translation>Translation Models</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="231" />
-        <location filename="../settingsdialog.cpp" line="341" />
-        <source>Cerrar</source>
-        <translation>Close</translation>
-    </message>
-    <message>
         <location filename="../settingsdialog.cpp" line="349" />
         <source>Directorio de modelos</source>
         <translation>Models directory</translation>
@@ -1413,6 +1424,30 @@ Download it again? (replaces the local copy)</translation>
         <source>(ya instalado)</source>
         <translation>(already installed)</translation>
     </message>
+    <message>
+        <source>Credenciales de OpenSubtitles</source>
+        <translation>OpenSubtitles credentials</translation>
+    </message>
+    <message>
+        <source>Clave API:</source>
+        <translation>API key:</translation>
+    </message>
+    <message>
+        <source>Usuario:</source>
+        <translation>Username:</translation>
+    </message>
+    <message>
+        <source>Contraseña:</source>
+        <translation>Password:</translation>
+    </message>
+    <message>
+        <source>La búsqueda de subtítulos en &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; es opcional: necesitas una cuenta y tu propia clave API. Estos datos se guardan solo en este equipo.</source>
+        <translation>Subtitle search on &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; is optional: you need an account and your own API key. This data is stored only on this computer.</translation>
+    </message>
+    <message>
+        <source>Subtítulos online</source>
+        <translation>Online subtitles</translation>
+    </message>
 </context>
 <context>
     <name>SubtitleTranslator</name>
@@ -1487,6 +1522,280 @@ Directory searched: %3</translation>
         <location filename="../subtitletranslator.cpp" line="489" />
         <source>Error desconocido del motor de traducción</source>
         <translation>Unknown translation engine error</translation>
+    </message>
+</context>
+<context>
+    <name>OnlineSubsDialog</name>
+    <message>
+        <source>Subtítulos online — %1</source>
+        <translation>Online subtitles — %1</translation>
+    </message>
+    <message>
+        <source>Vídeo:</source>
+        <translation>Video:</translation>
+    </message>
+    <message>
+        <source>Título de la película o serie…</source>
+        <translation>Movie or series title…</translation>
+    </message>
+    <message>
+        <source>Consulta:</source>
+        <translation>Query:</translation>
+    </message>
+    <message>
+        <source>Todos</source>
+        <translation>All</translation>
+    </message>
+    <message>
+        <source>Inglés</source>
+        <translation>English</translation>
+    </message>
+    <message>
+        <source>Español</source>
+        <translation>Spanish</translation>
+    </message>
+    <message>
+        <source>Francés</source>
+        <translation>French</translation>
+    </message>
+    <message>
+        <source>Portugués</source>
+        <translation>Portuguese</translation>
+    </message>
+    <message>
+        <source>Alemán</source>
+        <translation>German</translation>
+    </message>
+    <message>
+        <source>Italiano</source>
+        <translation>Italian</translation>
+    </message>
+    <message>
+        <source>Idioma:</source>
+        <translation>Language:</translation>
+    </message>
+    <message>
+        <source>Buscar</source>
+        <translation>Search</translation>
+    </message>
+    <message>
+        <source>Idioma</source>
+        <translation>Language</translation>
+    </message>
+    <message>
+        <source>Título</source>
+        <translation>Title</translation>
+    </message>
+    <message>
+        <source>Año</source>
+        <translation>Year</translation>
+    </message>
+    <message>
+        <source>Descargas</source>
+        <translation>Downloads</translation>
+    </message>
+    <message>
+        <source>Hash</source>
+        <translation>Hash</translation>
+    </message>
+    <message>
+        <source>Descargar y traducir</source>
+        <translation>Download and translate</translation>
+    </message>
+    <message>
+        <source>Solo descargar</source>
+        <translation>Download only</translation>
+    </message>
+    <message>
+        <source>Configura la clave API, el usuario y la contraseña en Ajustes → Subtítulos online.</source>
+        <translation>Set the API key, username and password in Settings → Online subtitles.</translation>
+    </message>
+    <message>
+        <source>Introduce un título para buscar subtítulos.</source>
+        <translation>Enter a title to search for subtitles.</translation>
+    </message>
+    <message>
+        <source>Buscando subtítulos…</source>
+        <translation>Searching for subtitles…</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Error: %1</translation>
+    </message>
+    <message>
+        <source>%1 subtítulos encontrados.</source>
+        <translation>%1 subtitles found.</translation>
+    </message>
+    <message>
+        <source>No se encontraron subtítulos.</source>
+        <translation>No subtitles found.</translation>
+    </message>
+    <message>
+        <source>Selecciona un resultado.</source>
+        <translation>Select a result.</translation>
+    </message>
+    <message>
+        <source>Descargando el subtítulo…</source>
+        <translation>Downloading the subtitle…</translation>
+    </message>
+    <message>
+        <source>Descarga completada: %1</source>
+        <translation>Download complete: %1</translation>
+    </message>
+    <message>
+        <source>El archivo contiene varios subtítulos (%1). Elige cuál usar:</source>
+        <translation>The archive contains several subtitles (%1). Choose which one to use:</translation>
+    </message>
+    <message>
+        <source>Elegir subtítulo</source>
+        <translation>Choose subtitle</translation>
+    </message>
+    <message>
+        <source>idioma desconocido</source>
+        <translation>unknown language</translation>
+    </message>
+</context>
+<context>
+    <name>SubtitleDownloader</name>
+    <message>
+        <source>No se pudo iniciar %1.</source>
+        <translation>Could not start %1.</translation>
+    </message>
+    <message>
+        <source>Tiempo de espera agotado al descomprimir con %1.</source>
+        <translation>Timed out extracting with %1.</translation>
+    </message>
+    <message>
+        <source>Error al descomprimir con %1: %2</source>
+        <translation>Error extracting with %1: %2</translation>
+    </message>
+    <message>
+        <source>El archivo comprimido no contiene un subtítulo.</source>
+        <translation>The archive does not contain a subtitle.</translation>
+    </message>
+    <message>
+        <source>Falta la clave de API de OpenSubtitles. Configúrala en Ajustes → Subtítulos online.</source>
+        <translation>Missing the OpenSubtitles API key. Set it in Settings → Online subtitles.</translation>
+    </message>
+    <message>
+        <source>Buscando subtítulos por hash…</source>
+        <translation>Searching for subtitles by hash…</translation>
+    </message>
+    <message>
+        <source>Buscando subtítulos por título…</source>
+        <translation>Searching for subtitles by title…</translation>
+    </message>
+    <message>
+        <source>El subtítulo seleccionado no tiene identificador de archivo.</source>
+        <translation>The selected subtitle has no file ID.</translation>
+    </message>
+    <message>
+        <source>Faltan el usuario o la contraseña de OpenSubtitles. Configúralos en Ajustes → Subtítulos online.</source>
+        <translation>Missing the OpenSubtitles username or password. Set them in Settings → Online subtitles.</translation>
+    </message>
+    <message>
+        <source>Iniciando sesión en OpenSubtitles…</source>
+        <translation>Signing in to OpenSubtitles…</translation>
+    </message>
+    <message>
+        <source>Solicitando el subtítulo…</source>
+        <translation>Requesting the subtitle…</translation>
+    </message>
+    <message>
+        <source>Operación cancelada.</source>
+        <translation>Operation cancelled.</translation>
+    </message>
+    <message>
+        <source>Búsqueda cancelada.</source>
+        <translation>Search cancelled.</translation>
+    </message>
+    <message>
+        <source>Descarga cancelada.</source>
+        <translation>Download cancelled.</translation>
+    </message>
+    <message>
+        <source>Búsqueda por hash no disponible; probando por título…</source>
+        <translation>Hash search unavailable; trying by title…</translation>
+    </message>
+    <message>
+        <source>HTTP %1: %2</source>
+        <translation>HTTP %1: %2</translation>
+    </message>
+    <message>
+        <source>La respuesta de OpenSubtitles no es un JSON válido.</source>
+        <translation>The OpenSubtitles response is not valid JSON.</translation>
+    </message>
+    <message>
+        <source>Sin coincidencias por hash; buscando por título…</source>
+        <translation>No hash matches; searching by title…</translation>
+    </message>
+    <message>
+        <source>OpenSubtitles no devolvió un token de sesión.</source>
+        <translation>OpenSubtitles did not return a session token.</translation>
+    </message>
+    <message>
+        <source>Sesión caducada; iniciando sesión de nuevo…</source>
+        <translation>Session expired; signing in again…</translation>
+    </message>
+    <message>
+        <source>La respuesta de descarga no contiene un enlace ni contenido.</source>
+        <translation>The download response contains neither a link nor content.</translation>
+    </message>
+    <message>
+        <source>Subtítulo descargado: %1</source>
+        <translation>Subtitle downloaded: %1</translation>
+    </message>
+    <message>
+        <source>El subtítulo descargado está vacío.</source>
+        <translation>The downloaded subtitle is empty.</translation>
+    </message>
+    <message>
+        <source>No se pudo crear un directorio temporal para descomprimir.</source>
+        <translation>Could not create a temporary directory for extraction.</translation>
+    </message>
+    <message>
+        <source>No se pudo guardar el archivo comprimido temporal.</source>
+        <translation>Could not save the temporary archive.</translation>
+    </message>
+    <message>
+        <source>No se pudo leer el subtítulo descomprimido.</source>
+        <translation>Could not read the extracted subtitle.</translation>
+    </message>
+    <message>
+        <source>No se pudo escribir el subtítulo en %1.</source>
+        <translation>Could not write the subtitle to %1.</translation>
+    </message>
+    <message>
+        <source>El ZIP no contiene archivos.</source>
+        <translation>The ZIP contains no files.</translation>
+    </message>
+    <message>
+        <source>El ZIP no contiene subtítulos de texto (.srt/.ass/.ssa/.vtt).</source>
+        <translation>The ZIP contains no text subtitles (.srt/.ass/.ssa/.vtt).</translation>
+    </message>
+    <message>
+        <source>El subtítulo está comprimido en RAR; instala unrar o 7z, o descarga el subtítulo desde la web de OpenSubtitles.</source>
+        <translation>The subtitle is in a RAR archive; install unrar or 7z, or download the subtitle from the OpenSubtitles website.</translation>
+    </message>
+    <message>
+        <source>Extrayendo %1 del ZIP…</source>
+        <translation>Extracting %1 from the ZIP…</translation>
+    </message>
+    <message>
+        <source>Extrayendo subtítulo de un archivo RAR…</source>
+        <translation>Extracting subtitle from a RAR archive…</translation>
+    </message>
+    <message>
+        <source>No se pudo listar el ZIP: %1</source>
+        <translation>Could not list the ZIP: %1</translation>
+    </message>
+    <message>
+        <source>No se pudo listar el ZIP: no se encontró %1.</source>
+        <translation>Could not list the ZIP: %1 was not found.</translation>
+    </message>
+    <message>
+        <source>No se pudo listar el ZIP: tiempo de espera agotado.</source>
+        <translation>Could not list the ZIP: timed out.</translation>
     </message>
 </context>
 </TS>

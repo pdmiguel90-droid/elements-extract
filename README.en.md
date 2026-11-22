@@ -188,6 +188,8 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 3. Extract as usual — the translated subtitles are saved as `file.en.srt`
 4. If no direct model exists (e.g. pt→es), **triangular translation** is used automatically
 
+> 🌐 **Online subtitles**: you can also search, download and translate subtitles from [OpenSubtitles.com](https://www.opensubtitles.com) via **File → Search subtitles online…** (`Ctrl+Shift+S`). It requires your own account, API key, username and password, entered in **Settings → Online subtitles** and stored only on this computer.
+
 > 💡 **Work with a single language**: the **"Only subs"** dropdown selects the subtitles of a given language across all batch files at once (files without that language are skipped). While the filter is active, translation uses that language as source automatically.
 
 > 🎬 **Embed the translation**: with **"Embed the translation (remux)"** ticked, a new `.mkv`/`.mp4` is produced (`file.<lang>.mkv`) with the original video and audio plus the translated subtitle track embedded (no re-encoding). Output goes to `Elements Extract/Remuxados`. Before embedding, each file is validated: files without a video track are skipped, and if the `.mp4` has codecs that can't be stream-copied (audio `pcm_*`, `vorbis`, `flac`, `dts`, `truehd`…), it automatically falls back to `.mkv`. A final summary shows how many were embedded/skipped and the reason for each failure.

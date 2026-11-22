@@ -4,6 +4,8 @@
 #include "settingsdialog.h"
 #include "subtitletranslator.h"
 #include "modeldownloader.h"
+#include "subtitledownloader.h"
+#include "onlinesubsdialog.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -107,6 +109,18 @@ static QString normalizeLangCode(const QString &raw)
     return map.value(c, c);
 }
 
+// Credenciales de OpenSubtitles: nunca se escriben en el código; la clave
+// puede además sobrescribirse con ELEMENTS_EXTRACT_OS_API_KEY.
+static void applyOnlineSubCredentials(SubtitleDownloader *downloader)
+{
+    if (!downloader) return;
+    QSettings s("LocalApp", "FFmpegExtractor");
+    downloader->setCredentials(
+        s.value("onlineSubs/apiKey").toString(),
+        s.value("onlineSubs/username").toString(),
+        s.value("onlineSubs/password").toString());
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), currentBatchIndex(-1), currentFileDuration(0),
       m_muxIndex(0), m_muxActive(false)
@@ -172,6 +186,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(modelDownloader, &ModelDownloader::downloadError,
             this, &MainWindow::onModelDownloadError);
 
+    // Buscador de subtítulos online (OpenSubtitles.com)
+    onlineSubDownloader = new SubtitleDownloader(this);
+    applyOnlineSubCredentials(onlineSubDownloader);
+    connect(onlineSubDownloader, &SubtitleDownloader::statusMessage,
+            this, [this](const QString &message) {
+        logArea->append(QString("<font color='#00BFFF'>" + tr("[ONLINE-SUBS] %1") + "</font>")
+                            .arg(message.toHtmlEscaped()));
+    });
+
     // Icono de la aplicación
     QIcon appIcon(":/ffmpeg-extractor.svg");
     setWindowIcon(appIcon);
@@ -234,6 +257,9 @@ void MainWindow::setupMenuBar()
         QIcon(":/icons/add.svg"), tr("Añadir archivos…"));
     actAnadir->setShortcut(QKeySequence("Ctrl+O"));
     connect(actAnadir, &QAction::triggered, this, &MainWindow::addFiles);
+    actOnlineSubs = menuArchivo->addAction(tr("Buscar subtítulos en internet…"));
+    actOnlineSubs->setShortcut(QKeySequence("Ctrl+Shift+S"));
+    connect(actOnlineSubs, &QAction::triggered, this, &MainWindow::showOnlineSubsDialog);
     menuArchivo->addSeparator();
     actSalir = menuArchivo->addAction(
         QIcon(":/icons/close.svg"), tr("Salir"));
@@ -1655,6 +1681,113 @@ void MainWindow::showHelp()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Subtítulos online (OpenSubtitles.com)
+// ─────────────────────────────────────────────────────────────────────────────
+void MainWindow::showOnlineSubsDialog()
+{
+    QString videoPath;
+    if (fileListWidget && fileListWidget->currentItem())
+        videoPath = fileListWidget->currentItem()->data(Qt::UserRole).toString();
+    if (videoPath.isEmpty()) videoPath = lastSelectedFile;
+
+    if (videoPath.isEmpty() || !QFileInfo(videoPath).exists()) {
+        logArea->append(QString("<font color='#FFCC00'>" + tr("Selecciona un vídeo en la lista para buscar subtítulos en internet.") + "</font>"));
+        showLogArea();
+        return;
+    }
+
+    OnlineSubsDialog dlg(onlineSubDownloader, videoPath, this);
+    connect(&dlg, &OnlineSubsDialog::subtitleReady,
+            this, &MainWindow::onOnlineSubtitleReady);
+    dlg.exec();
+}
+
+void MainWindow::onOnlineSubtitleReady(const QString &filePath, const QString &videoPath,
+                                       const QString &language, bool translate)
+{
+    QFileInfo fi(filePath);
+    logArea->append(QString("<font color='#00BFFF'>" + tr("Subtítulo online descargado: %1")
+                            + "</font>").arg(fi.fileName()));
+
+    if (!translate) {
+        QString destDir = ensureOutputSubdir(tr("Descargados"));
+        if (destDir.isEmpty()) destDir = fi.absolutePath();
+        QDir().mkpath(destDir);
+        const QString dest = QDir(destDir).absoluteFilePath(fi.fileName());
+        if (QFileInfo(dest).absoluteFilePath() != fi.absoluteFilePath()) {
+            QFile::remove(dest);
+            bool moved = QFile::rename(filePath, dest);
+            if (!moved && QFile::copy(filePath, dest)) {
+                QFile::remove(filePath);
+                moved = true;
+            }
+            if (!moved) {
+                logArea->append(QString("<font color='#FF4444'>" + tr("No se pudo guardar el subtítulo descargado en: %1") + "</font>")
+                                    .arg(dest));
+                return;
+            }
+        }
+        logArea->append(QString("<font color='#39FF14'>  ✓ " + tr("Subtítulo guardado en: %1") + "</font>")
+                            .arg(dest));
+        return;
+    }
+
+    if (!fi.exists()) {
+        logArea->append(QString("<font color='#FF4444'>" + tr("No se encontró el archivo: %1") + "</font>")
+                            .arg(fi.fileName()));
+        return;
+    }
+
+    // Lo registramos como si hubiera sido extraído del vídeo: así
+    // onFileTranslated() se encarga del remux sin duplicar esa lógica.
+    SubExtractInfo info;
+    info.videoInput = videoPath;
+    info.subPath = fi.absoluteFilePath();
+    info.subLang = language;
+    info.subTitle = "";
+    bool already = false;
+    for (const SubExtractInfo &existing : m_extractedSubs) {
+        if (existing.subPath == info.subPath) { already = true; break; }
+    }
+    if (!already) m_extractedSubs.append(info);
+
+    QString srcLang = normalizeLangCode(language);
+    if (srcLang.size() > 2 && srcLang.contains('-'))
+        srcLang = normalizeLangCode(srcLang.left(2));
+    const int srcIndex = srcLangCombo->findData(srcLang);
+    if (srcIndex >= 0 && srcLangCombo->currentIndex() != srcIndex)
+        srcLangCombo->setCurrentIndex(srcIndex);
+
+    const QString dstLang = dstLangCombo->currentData().toString();
+    if (srcIndex < 0) {
+        logArea->append(QString("<font color='#FFCC00'>" + tr("El idioma del subtítulo (%1) no es compatible con la traducción.") + "</font>")
+                            .arg(language));
+        return;
+    }
+    if (srcLang == dstLang) {
+        logArea->append(tr("<font color='#FFCC00'>Idioma origen y destino son iguales.</font>"));
+        return;
+    }
+    if (checkInstalledTranslationPath(srcLang, dstLang).isEmpty())
+        return;
+
+    QString outDir = ensureOutputSubdir(tr("Traducidos"));
+    if (outDir.isEmpty()) outDir = fi.absolutePath();
+    QDir().mkpath(outDir);
+    const QString outputPath = outDir + "/" + fi.completeBaseName() + "." + dstLang + ".srt";
+
+    translationProgressBar->setVisible(true);
+    translationProgressBar->setValue(0);
+    translationStatusLabel->setText(tr("Traduciendo..."));
+
+    logArea->append(QString("<br><font color='#00BFFF'><b>" + tr("Traduciendo: %1 → %2") + "</b></font>")
+                        .arg(SubtitleTranslator::languageName(srcLang))
+                        .arg(SubtitleTranslator::languageName(dstLang)));
+
+    subtitleTranslator->translateFile(info.subPath, outputPath, srcLang, dstLang);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 void MainWindow::selectOutputDir()
@@ -2101,6 +2234,7 @@ void MainWindow::retranslateUi()
     if (menuAjustes) menuAjustes->setTitle(tr("Ajustes"));
     if (menuAyuda)   menuAyuda->setTitle(tr("Ayuda"));
     if (actAnadir)   actAnadir->setText(tr("Añadir archivos…"));
+    if (actOnlineSubs) actOnlineSubs->setText(tr("Buscar subtítulos en internet…"));
     if (actSalir)    actSalir->setText(tr("Salir"));
     if (actSettings) actSettings->setText(tr("Configuración y Modelos…"));
     if (actAyuda)    actAyuda->setText(tr("Manual de uso"));
@@ -2606,5 +2740,6 @@ void MainWindow::onSettingsChanged()
 {
     // Reload settings after dialog closes
     loadSettings();
+    applyOnlineSubCredentials(onlineSubDownloader);
     logArea->append(tr("<font color='#888888'>Configuración actualizada</font>"));
 }
