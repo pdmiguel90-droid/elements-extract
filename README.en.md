@@ -23,13 +23,18 @@ So I thought: *what if I could take the file I already have on disk and translat
 
 **Elements Extract** is exactly that: an **offline** tool that extracts the tracks from your file and **translates the subtitles into the language you want using your own computer**, with no need to rely on the internet to find them.
 
-> 🔒 **Privacy:** your files never leave your machine. Translation runs locally using neural translation models (via [bergamot-translator](https://github.com/browsermt/bergamot-translator)). You only need internet **once**, to download the language model; after that you can translate as much as you want, wherever you are.
+> 🔒 **Privacy:** your files never leave your machine. Online search is optional and only sends the file hash and metadata, never the video. Translation runs locally using neural translation models (via [bergamot-translator](https://github.com/browsermt/bergamot-translator)). You only need internet **once**, to download the language model; after that you can translate as much as you want, wherever you are.
 
 ---
 
 ## Screenshots
 
-*(pending)*
+| Main window | Subtitle filter |
+|---|---|
+| ![Main window](screenshots/main-window.png) | ![Subtitle filter](screenshots/subtitle-filter.png) |
+| Online subtitle search | Settings: XML-RPC backend |
+| ![Online subtitles](screenshots/online-subtitles.png) | ![XML-RPC backend](screenshots/settings-online-subtitles.png) |
+
 
 ---
 
@@ -46,6 +51,8 @@ So I thought: *what if I could take the file I already have on disk and translat
 - 🖱️ **Drag & Drop** — drop files straight onto the window
 - ⌨️ **Keyboard shortcuts** — `Ctrl+O`, `Del`, `Ctrl+Enter`, `Escape`, `F1`
 - 🌐 **Offline subtitle translation** — translate extracted subtitles to the language you want (en, es, fr, pt)
+- 🌐 **Online subtitles** — manual and batch search on opensubtitles.org (VLC-style XML-RPC, no API key) or opensubtitles.com (REST), with download and later translation
+- 🅾️ **Optional OCR (experimental)** — converts PGS/VobSub to `.srt` with nOCR; off by default and reports progress in the log
 - ➡️ **Mux the translation (remux)** — the translated subtitle is embedded into a new .mkv/.mp4 with the original video and audio, without re-encoding (MKVToolNix style)
 - 🎯 **Subtitle language filter** — select and translate only the subtitles of a given language across the whole batch
 - 🔄 **Triangular translation** — when no direct model exists (e.g. pt→es), it uses intermediates (pt→en→es)
@@ -82,7 +89,7 @@ So I thought: *what if I could take the file I already have on disk and translat
 | **Video** | MKV, MP4, AVI |
 | **Subtitles** | SRT, ASS, VTT (text); MKS (image, stream copy) |
 
-> ℹ️ **Image-based subtitles** (Blu-ray PGS, DVD/VobSub, DVB, XSUB) are extracted verbatim as `.mks` using stream copy, with no re-encoding. The app cannot translate them because it does no OCR; converting them to text requires an external OCR tool.
+> ℹ️ **Image-based subtitles** (Blu-ray PGS, DVD/VobSub, DVB, XSUB) are extracted verbatim as `.mks` using stream copy, with no re-encoding. The optional **Image subtitle OCR** checkbox (experimental, off by default) uses **nOCR** to write a translatable `.srt`. It can take several minutes per episode and the result should be reviewed; the `.mks` copy is kept if recognition fails.
 
 ### Subtitle translation
 
@@ -165,7 +172,7 @@ cp elements-extract.desktop ~/.local/share/applications/
 ```bash
 cd build
 cpack -G DEB
-sudo dpkg -i elements-extract-1.2.0-Linux.deb
+sudo dpkg -i elements-extract-*.deb
 ```
 
 ---
@@ -192,7 +199,7 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 >
 > In the dialog, tick the files you want to search (**Search selected**) or use **Search all**. **Double-click the "Query" column** to manually change the title searched for a specific file; the chosen language applies to the whole search. Then tick the results and press **Download and translate selected** or **Download selected only**: downloads run sequentially and the outcome of each file is reported.
 >
-> It requires your own account, API key, username and password, entered in **Settings → Online subtitles** and stored in the **system's secure credential store** (Secret Service on Linux, Credential Manager on Windows and Keychain on macOS).
+> The default backend is **opensubtitles.org XML-RPC**, like VLSub in VLC: anonymous search with no account or API key. In **Settings → Online subtitles** you can switch to the **opensubtitles.com REST API**; that mode needs your own API key, username and password, stored in the **system's secure credential store** (Secret Service on Linux, Credential Manager on Windows and Keychain on macOS). The target language from Settings is highlighted and sorted first; if no subtitle exists in that language, the app offers translating another one.
 
 > 💡 **Work with a single language**: the **"Only subs"** dropdown selects the subtitles of a given language across all batch files at once (files without that language are skipped). While the filter is active, translation uses that language as source automatically.
 

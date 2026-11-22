@@ -59,6 +59,16 @@
       <caption xml:lang="es">Filtro de subtítulos por idioma en acción</caption>
       <image>https://raw.githubusercontent.com/pdmiguel90-droid/elements-extract/main/screenshots/subtitle-filter.png</image>
     </screenshot>
+    <screenshot>
+      <caption>Online subtitle search with results in the target language</caption>
+      <caption xml:lang="es">Búsqueda de subtítulos online con resultados en el idioma de destino</caption>
+      <image>https://raw.githubusercontent.com/pdmiguel90-droid/elements-extract/main/screenshots/online-subtitles.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Settings: opensubtitles.org XML-RPC backend</caption>
+      <caption xml:lang="es">Ajustes: backend XML-RPC de opensubtitles.org</caption>
+      <image>https://raw.githubusercontent.com/pdmiguel90-droid/elements-extract/main/screenshots/settings-online-subtitles.png</image>
+    </screenshot>
   </screenshots>
 
   <releases>

@@ -10,11 +10,13 @@
 [![Qt6](https://img.shields.io/badge/Qt-6.x-green.svg)](https://www.qt.io/)
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-orange.svg)
 
-**Elements Extract** es un extractor gráfico de pistas (audio, vídeo, subtítulos) con traducción de subtítulos **totalmente offline**: tus archivos nunca salen de tu máquina (motor local [bergamot-translator](https://github.com/browsermt/bergamot-translator)).
+**Elements Extract** es un extractor gráfico de pistas (audio, vídeo, subtítulos) con traducción de subtítulos **totalmente offline** (motor local [bergamot-translator](https://github.com/browsermt/bergamot-translator)). La búsqueda de subtítulos online es opcional y solo envía el hash y los metadatos del archivo, nunca el vídeo.
 
 | Ventana principal | Filtro de subtítulos por idioma |
 |---|---|
 | ![Ventana principal](screenshots/main-window.png) | ![Filtro Solo subs](screenshots/subtitle-filter.png) |
+| Búsqueda de subtítulos online | Ajustes: backend XML-RPC |
+| ![Subtítulos online](screenshots/online-subtitles.png) | ![Backend XML-RPC](screenshots/settings-online-subtitles.png) |
 
 ## 🌐 Idiomas / Languages / Idiomas
 
@@ -30,6 +32,8 @@ La interfaz también habla inglés y portugués (detección automática del sist
 
 - 📼 **Extracción por lotes** de audio, vídeo y subtítulos (MKV, MP4, AVI…).
 - 🌍 **Traducción offline** en↔es/fr/pt (+ triangular vía inglés) con modelos descargables.
+- 🌐 **Subtítulos online**: búsqueda manual o por lote en opensubtitles.org (XML-RPC estilo VLC, sin clave) o en opensubtitles.com (REST), con descarga, descompresión y traducción posterior.
+- 🅾️ **OCR opcional y experimental** de PGS/VobSub a `.srt` traducible con nOCR (desactivado por defecto; puede tardar varios minutos por episodio).
 - 🎯 **Filtro "Solo subs"** por idioma en todo el lote.
 - 📦 **Remux**: un solo `.mkv`/`.mp4` con todas las pistas traducidas, sin re-codificar (repliegue MP4→MKV, limpieza opcional de intermedios).
 - 🖥️ Qt6, tema oscuro/claro, español/inglés/portugués.

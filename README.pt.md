@@ -23,13 +23,17 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 
 **Elements Extract** é exatamente isso: uma ferramenta **offline** que extrai as faixas do seu arquivo e **traduz as legendas para o idioma que você quiser usando o seu próprio computador**, sem precisar depender da internet para encontrá-las.
 
-> 🔒 **Privacidade:** seus arquivos nunca saem da sua máquina. A tradução é feita localmente com modelos de tradução neural (via [bergamot-translator](https://github.com/browsermt/bergamot-translator)). Você só precisa de internet **uma vez**, para baixar o modelo de idioma; depois pode traduzir o quanto quiser, onde estiver.
+> 🔒 **Privacidade:** seus arquivos nunca saem da sua máquina. A busca online é opcional e envia apenas o hash e os metadados do arquivo, nunca o vídeo. A tradução é feita localmente com modelos de tradução neural (via [bergamot-translator](https://github.com/browsermt/bergamot-translator)). Você só precisa de internet **uma vez**, para baixar o modelo de idioma; depois pode traduzir o quanto quiser, onde estiver.
 
 ---
 
 ## Capturas de tela
 
-*(pendente)*
+| Janela principal | Filtro de legendas |
+|---|---|
+| ![Janela principal](screenshots/main-window.png) | ![Filtro de legendas](screenshots/subtitle-filter.png) |
+| Busca de legendas online | Ajustes: backend XML-RPC |
+| ![Legendas online](screenshots/online-subtitles.png) | ![Backend XML-RPC](screenshots/settings-online-subtitles.png) |
 
 ---
 
@@ -46,6 +50,8 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 - 🖱️ **Drag & Drop** — arraste arquivos direto para a janela
 - ⌨️ **Atalhos de teclado** — `Ctrl+O`, `Del`, `Ctrl+Enter`, `Esc`, `F1`
 - 🌐 **Tradução de legendas offline** — traduza legendas extraídas para o idioma que quiser (en, es, fr, pt)
+- 🌐 **Legendas online** — busca manual e em lote no opensubtitles.org (XML-RPC estilo VLC, sem chave API) ou no opensubtitles.com (REST), com download e tradução posterior
+- 🅾️ **OCR de imagem (experimental)** — converte PGS/VobSub em `.srt` com nOCR; desativado por padrão e com progresso no registro
 - ➡️ **Incrustar a tradução (remux)** — a legenda traduzida é incorporada num novo .mkv/.mp4 com o vídeo e o áudio originais, sem re-codificar (estilo MKVToolNix)
 - 🎯 **Filtro de legendas por idioma** — seleciona e traduz apenas as legendas de um idioma específico em todos os arquivos do lote
 - 🔄 **Tradução triangular** — quando não há modelo direto (ex.: pt→es), usa intermediários (pt→en→es)
@@ -82,7 +88,7 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 | **Vídeo** | MKV, MP4, AVI |
 | **Legendas** | SRT, ASS, VTT (texto); MKS (imagem, cópia de fluxo) |
 
-> ℹ️ **Legendas de imagem** (PGS de Blu-ray, VobSub/DVD, DVB, XSUB) são extraídas tal como estão em `.mks` por cópia de fluxo, sem recodificação. O app não pode traduzi-las porque não faz OCR; para converter em texto é necessária uma ferramenta externa de OCR.
+> ℹ️ **Legendas de imagem** (PGS de Blu-ray, VobSub/DVD, DVB, XSUB) são extraídas tal como estão em `.mks` por cópia de fluxo, sem recodificação. A caixa **«OCR de legendas de imagem»** (experimental, desativada por padrão) usa **nOCR** para gerar um `.srt` traduzível. Pode levar vários minutos por episódio e o resultado deve ser revisado; a cópia `.mks` é mantida se o OCR falhar.
 
 ### Tradução de legendas
 
@@ -165,7 +171,7 @@ cp elements-extract.desktop ~/.local/share/applications/
 ```bash
 cd build
 cpack -G DEB
-sudo dpkg -i elements-extract-1.2.0-Linux.deb
+sudo dpkg -i elements-extract-*.deb
 ```
 
 ---
@@ -192,7 +198,7 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 >
 > Na janela, marque os arquivos a pesquisar (**Buscar nos selecionados**) ou use **Buscar em todos**. Dê **duplo clique na coluna «Consulta»** para alterar manualmente o título pesquisado de um arquivo específico; o idioma escolhido aplica-se a toda a busca. Depois marque os resultados e pressione **Baixar e traduzir selecionados** ou **Apenas baixar selecionados**: os downloads são sequenciais e o resultado de cada arquivo é informado.
 >
-> É preciso ter conta própria, chave API, usuário e senha, informados em **Ajustes → Legendas online** e salvos no **armazenamento seguro do sistema** (Secret Service no Linux, Credential Manager no Windows e Keychain no macOS).
+> O backend padrão é o **XML-RPC do opensubtitles.org**, como o VLSub no VLC: busca anônima, sem conta nem chave API. Em **Ajustes → Legendas online** é possível mudar para a **API REST do opensubtitles.com**; nesse modo são necessários chave API, usuário e senha próprios, salvos no **armazenamento seguro do sistema** (Secret Service no Linux, Credential Manager no Windows e Keychain no macOS). O idioma de destino dos Ajustes aparece primeiro e destacado nos resultados; se não houver legenda nesse idioma, o app oferece traduzir outra.
 
 > 💡 **Trabalhar com um único idioma**: a lista **"Apenas legendas"** seleciona de uma vez as legendas de um idioma específico em todos os arquivos do lote (arquivos sem esse idioma são ignorados). Com o filtro ativo, a tradução usa esse idioma como origem automaticamente.
 

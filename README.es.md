@@ -23,13 +23,17 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 
 **Elements Extract** es exactamente eso: una herramienta **offline** que extrae las pistas de tu archivo y **traduce los subtítulos al idioma que quieras con tu propio equipo**, sin depender de internet para encontrarlos.
 
-> 🔒 **Privacidad:** tus archivos nunca salen de tu máquina. La traducción se realiza localmente con modelos de traducción neuronal (vía [bergamot-translator](https://github.com/browsermt/bergamot-translator)). Solo necesitas internet **una vez**, para descargar el modelo de idioma; después puedes traducir todo lo que quieras, estés donde estés.
+> 🔒 **Privacidad:** tus archivos nunca salen de tu máquina. La búsqueda online es opcional y solo envía el hash y los metadatos del archivo, nunca el vídeo. La traducción se realiza localmente con modelos de traducción neuronal (vía [bergamot-translator](https://github.com/browsermt/bergamot-translator)). Solo necesitas internet **una vez**, para descargar el modelo de idioma; después puedes traducir todo lo que quieras, estés donde estés.
 
 ---
 
 ## Capturas
 
-*(pendiente de agregar)*
+| Ventana principal | Filtro Solo subs |
+|---|---|
+| ![Ventana principal](screenshots/main-window.png) | ![Filtro Solo subs](screenshots/subtitle-filter.png) |
+| Búsqueda de subtítulos online | Ajustes: backend XML-RPC |
+| ![Subtítulos online](screenshots/online-subtitles.png) | ![Backend XML-RPC](screenshots/settings-online-subtitles.png) |
 
 ---
 
@@ -46,6 +50,8 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 - 🖱️ **Drag & Drop** — arrastra archivos directamente a la ventana
 - ⌨️ **Atajos de teclado** — `Ctrl+O`, `Del`, `Ctrl+Enter`, `Escape`, `F1`
 - 🌐 **Traducción de subtítulos offline** — traduce subtítulos extraídos al idioma que quieras (en, es, fr, pt)
+- 🌐 **Subtítulos online** — búsqueda manual y por lote en opensubtitles.org (XML-RPC estilo VLC, sin clave API) o en opensubtitles.com (REST), con descarga y traducción posterior
+- 🅾️ **OCR de imagen (experimental)** — convierte PGS/VobSub a `.srt` con nOCR; desactivado por defecto y con progreso en el registro
 - ➡️ **Incrustar la traducción (remux)** — el subtítulo traducido se incrusta en un nuevo .mkv/.mp4 con el vídeo y el audio originales, sin re-codificar (estilo MKVToolNix)
 - 🎯 **Filtro de subtítulos por idioma** — selecciona y traduce solo los subtítulos de un idioma concreto en todos los archivos del lote
 - 🔄 **Traducción triangular** — si no hay modelo directo (ej. pt→es), usa intermediarios (pt→en→es)
@@ -82,7 +88,7 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 | **Video** | MKV, MP4, AVI |
 | **Subtítulos** | SRT, ASS, VTT (texto); MKS (imagen, copia de flujo) |
 
-> ℹ️ **Subtítulos de imagen** (PGS de Blu-ray, VobSub/DVD, DVB, XSUB) se extraen tal cual como `.mks` mediante copia de flujo, sin recodificar. La app no puede traducirlos porque no hace OCR; para convertirlos a texto necesitarás una herramienta externa de OCR.
+> ℹ️ **Subtítulos de imagen** (PGS de Blu-ray, VobSub/DVD, DVB, XSUB) se extraen tal cual como `.mks` mediante copia de flujo, sin recodificar. Opcionalmente, la casilla **«OCR de subtítulos de imagen»** (experimental, desactivada por defecto) usa **nOCR** para generar un `.srt` traducible. Puede tardar varios minutos por episodio y conviene revisar el resultado; la copia `.mks` se conserva si el OCR falla.
 
 ### Traducción de subtítulos
 
@@ -165,7 +171,7 @@ cp elements-extract.desktop ~/.local/share/applications/
 ```bash
 cd build
 cpack -G DEB
-sudo dpkg -i elements-extract-1.2.0-Linux.deb
+sudo dpkg -i elements-extract-*.deb
 ```
 
 ---
@@ -192,7 +198,7 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 >
 > En el diálogo, marca los archivos que quieres buscar (**Buscar en seleccionados**) o usa **Buscar en todos**. Haz **doble clic en la columna «Consulta»** para cambiar manualmente el título buscado de un archivo concreto; el idioma elegido se aplica a toda la búsqueda. Después marca los resultados y pulsa **Descargar y traducir seleccionados** o **Solo descargar seleccionados**: las descargas se procesan en secuencia y se indica el resultado de cada archivo.
 >
-> Necesitas tu propia cuenta, clave API, usuario y contraseña, que se introducen en **Ajustes → Subtítulos online** y se guardan en el **almacén seguro del sistema** (Secret Service en Linux, Credential Manager en Windows y Keychain en macOS).
+> El backend por defecto es el **XML-RPC de opensubtitles.org**, igual que VLSub en VLC: busca de forma anónima y no necesita cuenta ni clave. En **Ajustes → Subtítulos online** puedes cambiar a la **API REST de opensubtitles.com**; en ese caso necesitas tu propia clave API, usuario y contraseña, que se guardan en el **almacén seguro del sistema** (Secret Service en Linux, Credential Manager en Windows y Keychain en macOS). El idioma de destino de Ajustes aparece primero y se resalta en los resultados; si no hay subtítulos en ese idioma, la app ofrece traducir otro.
 
 > 💡 **Trabajar solo con un idioma**: el desplegable **«Solo subs»** selecciona a la vez los subtítulos de un idioma concreto en todos los archivos del lote (si un archivo no tiene ese idioma, se omite). Con el filtro activo, la traducción usa ese idioma como origen automáticamente.
 
