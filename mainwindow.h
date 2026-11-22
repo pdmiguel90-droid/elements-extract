@@ -92,6 +92,7 @@ private slots:
     void showAbout();
     void showHelp();
     void readProbeOutput();
+    void readProbeError();
     void probeFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void processNextInBatch();
     void openOutputFolder();
@@ -136,7 +137,8 @@ private:
     void saveCurrentSelections();
     void updateCheckboxesFromGlobal();
     void updateMetadataPanel(double durSecs, qint64 sizeBytes,
-                             const QString &videoInfo, int nAudio, int nSubs);
+                             const QString &videoInfo, int nAudio, int nSubs,
+                             const QString &subDetail = QString());
     void loadSettings();
     void saveSettings();
     QString getUniqueFilePath(const QString &fullPath);
@@ -220,6 +222,7 @@ private:
     QProcess   *process;
     QProcess   *probeProcess;
     QByteArray  probeData;
+    QByteArray  probeError;
 
     // ── Translation engine ───────────────────────────────────────────────────
     SubtitleTranslator *subtitleTranslator;
@@ -248,6 +251,7 @@ private:
     int            m_muxFailed = 0;       // omitidos o con error
     QStringList    m_muxReasons;          // "archivo → motivo" (omitidos y errores)
     QStringList    m_muxTail;             // últimas líneas de ffmpeg durante el remux
+    QStringList    m_extractTail;         // últimas líneas de ffmpeg durante la extracción
     QStringList    m_detectedSubLangs;       // idiomas de subs detectados en el lote
     QString        m_subLangFilter;          // "" = todos; si no, código a filtrar
     QMap<QString, QSet<int>> m_filterDeselected; // desmarcados a mano que el filtro no repone

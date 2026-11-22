@@ -47,6 +47,10 @@ HelpDialog::HelpDialog(QWidget *parent) : QDialog(parent)
         "<p>Con <b>Copiar pista original sin re-codificar</b> (recomendado) la "
         "extracción es rápida y sin pérdida de calidad: el contenedor se mantiene "
         "o se remuxea al seleccionado.</p>"
+        "<p>Los subtítulos de imagen (PGS, VobSub, DVB, XSUB) se extraen tal cual "
+        "como <b>.mks</b> mediante copia de flujo, sin recodificar. La app no puede "
+        "traducirlos (no hace OCR); los subtítulos de texto mantienen el flujo "
+        "srt/ass/vtt y sí pueden traducirse.</p>"
 
         "<h3>4. Elegir destino y extraer</h3>"
         "<p>Indica la carpeta de salida en <b>Destino</b>. Los archivos se guardan "

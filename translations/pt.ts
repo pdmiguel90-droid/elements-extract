@@ -9,8 +9,8 @@
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="41" />
-        <source>Versión 1.2.0  ·  2026</source>
-        <translation>Versão 1.2.0  ·  2026</translation>
+        <source>Versión 1.2.3  ·  2026</source>
+        <translation>Versão 1.2.3  ·  2026</translation>
     </message>
     <message>
         <source>Extractor gráfico de pistas de audio, vídeo y subtítulos.
@@ -1097,6 +1097,56 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <location filename="../mainwindow.cpp" line="2410" />
         <source>&lt;font color='#888888'&gt;Configuración actualizada&lt;/font&gt;</source>
         <translation>&lt;font color='#888888'&gt;Configurações atualizadas&lt;/font&gt;</translation>
+    </message>
+    <message>
+        <source>+%1 más</source>
+        <translation>+%1 mais</translation>
+    </message>
+    <message>
+        <source>&lt;font color='#FFCC00'&gt;     Los subtítulos de imagen (PGS/VobSub/DVB/XSUB) solo admiten copia de flujo a .mks: no se pueden convertir a texto sin OCR.&lt;/font&gt;</source>
+        <translation>&lt;font color='#FFCC00'&gt;     Legendas de imagem (PGS/VobSub/DVB/XSUB) só podem ser copiadas como fluxo para .mks: não é possível convertê-las em texto sem OCR.&lt;/font&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;font color='#FFCC00'&gt;     Prueba a activar Copiar pista original sin re-codificar.&lt;/font&gt;</source>
+        <translation>&lt;font color='#FFCC00'&gt;     Tente ativar Copiar faixa original sem recodificar.&lt;/font&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;font color='#FFCC00'&gt;  › %1 pista(s) de subtítulo de imagen detectadas: se extraen como .mks sin recodificar y no se pueden traducir (sin OCR).&lt;/font&gt;</source>
+        <translation>&lt;font color='#FFCC00'&gt;  › %1 faixa(s) de legenda de imagem detectada(s): extraídas como .mks sem recodificar e não podem ser traduzidas (sem OCR).&lt;/font&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;font color='#FFCC00'&gt;  › Pista %1: %2%3 → .mks sin recodificar; no traducible (sin OCR).&lt;/font&gt;</source>
+        <translation>&lt;font color='#FFCC00'&gt;  › Faixa %1: %2%3 → .mks sem recodificar; não traduzível (sem OCR).&lt;/font&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;font color='#FFCC00'&gt;  › Salida .mks no traducible (sin OCR): %1&lt;/font&gt;</source>
+        <translation>&lt;font color='#FFCC00'&gt;  › Saída .mks não traduzível (sem OCR): %1&lt;/font&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;font color='#FFCC00'&gt;  › Subtítulo omitido para traducción (varias pistas de texto): %1&lt;/font&gt;</source>
+        <translation>&lt;font color='#FFCC00'&gt;  › Legenda ignorada para tradução (várias faixas de texto): %1&lt;/font&gt;</translation>
+    </message>
+    <message>
+        <source>No se pudo analizar el archivo: %1</source>
+        <translation>Não foi possível analisar o arquivo: %1</translation>
+    </message>
+    <message>
+        <source>No traducible: se extrae como .mks</source>
+        <translation>Não traduzível: extraída como .mks</translation>
+    </message>
+    <message>
+        <source>sin idioma</source>
+        <translation>sem idioma</translation>
+    </message>
+    <message>
+        <source>Subtítulo %1 [%2]
+%3</source>
+        <translation>Legenda %1 [%2]
+%3</translation>
+    </message>
+    <message>
+        <source>Traducible como texto</source>
+        <translation>Traduzível como texto</translation>
     </message>
 </context>
 <context>

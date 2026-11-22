@@ -80,7 +80,9 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 |------|----------|
 | **Audio** | MKA, M4A, AAC, MP3, FLAC, OPUS, WAV |
 | **Video** | MKV, MP4, AVI |
-| **Subtítulos** | SRT, ASS, VTT |
+| **Subtítulos** | SRT, ASS, VTT (texto); MKS (imagen, copia de flujo) |
+
+> ℹ️ **Subtítulos de imagen** (PGS de Blu-ray, VobSub/DVD, DVB, XSUB) se extraen tal cual como `.mks` mediante copia de flujo, sin recodificar. La app no puede traducirlos porque no hace OCR; para convertirlos a texto necesitarás una herramienta externa de OCR.
 
 ### Traducción de subtítulos
 

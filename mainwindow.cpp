@@ -37,6 +37,49 @@
 #include <QGuiApplication>
 #include <algorithm>
 
+namespace {
+
+bool subtitleCodecIsText(const QString &codec)
+{
+    const QString c = codec.trimmed().toLower();
+    return c == "subrip" || c == "ass" || c == "ssa" || c == "webvtt"
+        || c == "mov_text" || c == "text";
+}
+
+bool subtitleCodecIsImage(const QString &codec)
+{
+    const QString c = codec.trimmed().toLower();
+    return c == "hdmv_pgs_subtitle" || c == "dvd_subtitle"
+        || c == "dvb_subtitle" || c == "xsub";
+}
+
+QString subtitleCodecDescription(const QString &codec)
+{
+    const QString c = codec.trimmed().toLower();
+    if (c == "hdmv_pgs_subtitle") return "PGS (imagen)";
+    if (c == "dvd_subtitle")      return "DVD/VobSub (imagen)";
+    if (c == "dvb_subtitle")      return "DVB (imagen)";
+    if (c == "xsub")              return "XSUB (imagen)";
+    if (c == "subrip")            return "SRT (texto)";
+    if (c == "ass" || c == "ssa") return "ASS/SSA (texto)";
+    if (c == "webvtt")            return "WebVTT (texto)";
+    if (c == "mov_text")          return "Mov Text (texto)";
+    if (c == "text")              return "Texto";
+    return QString("%1 (desconocido)").arg(codec.isEmpty() ? "?" : codec);
+}
+
+QString subtitleExtForCodec(const QString &codec)
+{
+    if (!subtitleCodecIsImage(codec)) {
+        const QString c = codec.trimmed().toLower();
+        if (c == "subrip" || c == "webvtt") return "srt";
+        if (c == "ass" || c == "ssa" || c == "mov_text") return "ass";
+    }
+    return "mks";  // imagen u otros contenedores
+}
+
+} // namespace
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Constructor / Destructor
 // ─────────────────────────────────────────────────────────────────────────────
@@ -174,6 +217,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     probeProcess = new QProcess(this);
     connect(probeProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readProbeOutput);
+    connect(probeProcess, &QProcess::readyReadStandardError,  this, &MainWindow::readProbeError);
     connect(probeProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, &MainWindow::probeFinished);
 }
@@ -655,6 +699,7 @@ void MainWindow::onFileSelectionChanged()
          << "-show_entries"
          << "stream=index,codec_type,codec_name,width,height:stream_tags=language:format=duration,size"
          << "-of" << "json" << currentFile;
+    probeError.clear();
     probeProcess->start(ffprobeExecutable(), args);
 }
 
@@ -906,6 +951,7 @@ void MainWindow::updateCheckboxesFromGlobal()
 // ffprobe
 // ─────────────────────────────────────────────────────────────────────────────
 void MainWindow::readProbeOutput() { probeData.append(probeProcess->readAllStandardOutput()); }
+void MainWindow::readProbeError() { probeError.append(probeProcess->readAllStandardError()); }
 
 void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
@@ -916,8 +962,20 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
         return;
     }
     if (exitStatus != QProcess::NormalExit || exitCode != 0) {
-        metaInfoLabel->setText(tr("No se pudo analizar el archivo."));
-        logArea->append(tr("<font color='#FF4444'>[ERROR] No se pudo analizar el archivo.</font>")); return;
+        const QStringList errLines = QString::fromLocal8Bit(probeError)
+                                         .split('\n', Qt::SkipEmptyParts);
+        QString detail;
+        for (int i = errLines.size() - 1; i >= 0 && detail.isEmpty(); --i) {
+            const QString l = errLines.at(i).trimmed();
+            if (!l.isEmpty()) detail = l;
+        }
+        if (detail.size() > 200) detail = detail.left(197) + "...";
+        const QString msg = detail.isEmpty()
+            ? tr("No se pudo analizar el archivo.")
+            : tr("No se pudo analizar el archivo: %1").arg(detail.toHtmlEscaped());
+        metaInfoLabel->setText(msg);
+        logArea->append(QString("<font color='#FF4444'>[ERROR] %1</font>").arg(msg));
+        return;
     }
     QJsonDocument doc = QJsonDocument::fromJson(probeData);
     QJsonObject   rootObj = doc.object();
@@ -931,7 +989,8 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
 
     // Recopilar info para el panel de metadatos
     QString videoInfo, audioCount, subCount;
-    int nAudio = 0, nSubs = 0;
+    QStringList subParts;
+    int nAudio = 0, nSubs = 0, nImageSubs = 0;
 
     QMap<int, QString> saved = fileSelections.value(lastSelectedFile);
     QMap<int, QString> langMap;
@@ -957,8 +1016,13 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
             videoInfo = QString("%1x%2 %3").arg(w).arg(h).arg(codec.toUpper());
         else if (type == "video" && videoInfo.isEmpty())
             videoInfo = codec.toUpper();
-        if (type == "audio")    ++nAudio;
-        if (type == "subtitle") ++nSubs;
+        if (type == "audio") ++nAudio;
+        if (type == "subtitle") {
+            ++nSubs;
+            const QString langKey = lang.isEmpty() ? "?" : normalizeLangCode(lang);
+            subParts << QString("%1=%2").arg(langKey, subtitleCodecDescription(codec));
+            if (subtitleCodecIsImage(codec)) ++nImageSubs;
+        }
 
         QString label = QString("[%1] %2  ·  %3%4")
                             .arg(index)
@@ -978,6 +1042,14 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
         // clicked solo lo emite la interacción del usuario (setChecked no):
         // sirve para recordar desmarcados manuales frente al filtro.
         connect(cb, &QCheckBox::clicked, this, &MainWindow::onStreamClicked);
+        if (type == "subtitle") {
+            const QString langText = lang.isEmpty() ? tr("sin idioma") : lang;
+            const QString canTranslate = subtitleCodecIsImage(codec)
+                ? tr("No traducible: se extrae como .mks")
+                : tr("Traducible como texto");
+            cb->setToolTip(tr("Subtítulo %1 [%2]\n%3")
+                               .arg(subtitleCodecDescription(codec), langText, canTranslate));
+        }
         streamsLayout->addWidget(cb);
         streamCheckBoxes.append(cb);
     }
@@ -997,8 +1069,17 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
     }
     refreshSubLangFilter();
 
+    QString subDetail;
+    if (!subParts.isEmpty()) {
+        QStringList shown = subParts.mid(0, 4);
+        if (subParts.size() > 4) shown << tr("+%1 más").arg(subParts.size() - 4);
+        subDetail = shown.join(", ");
+    }
+    if (nImageSubs > 0)
+        logArea->append(tr("<font color='#FFCC00'>  › %1 pista(s) de subtítulo de imagen detectadas: se extraen como .mks sin recodificar y no se pueden traducir (sin OCR).</font>").arg(nImageSubs));
+
     // Actualizar panel de metadatos
-    updateMetadataPanel(dur, size, videoInfo, nAudio, nSubs);
+    updateMetadataPanel(dur, size, videoInfo, nAudio, nSubs, subDetail);
 
     autoDetectSourceLanguage();
 }
@@ -1018,6 +1099,7 @@ QString MainWindow::extensionForCodec(const QString &codec, const QString &type)
 {
     if (codec == "aac") return "m4a";
     if (codec == "ac3" || codec == "mp3" || codec == "flac" || codec == "wav" || codec == "opus") return codec;
+    if (subtitleCodecIsImage(codec)) return "mks";  // PGS/VobSub/DVB/XSUB: solo copia de flujo
     if (codec == "subrip") return "srt";
     if (codec == "ass" || codec == "ssa") return "ass";
     if (codec == "webvtt") return "vtt";
@@ -1183,6 +1265,7 @@ void MainWindow::processNextInBatch()
     QString inputPath = batchFiles.at(currentBatchIndex);
     QFileInfo info(inputPath);
     currentFileDuration = fileDurations.value(inputPath, 0);
+    m_extractTail.clear();
     progressBar->setValue(0);
 
     statusBar()->showMessage(tr("Procesando %1/%2: %3")
@@ -1222,14 +1305,11 @@ void MainWindow::processNextInBatch()
         return p;
     };
 
-    auto subtitleExtForCodec = [](const QString &codec) -> QString {
-        if (codec == "subrip" || codec == "webvtt") return "srt";
-        if (codec == "ass" || codec == "ssa" || codec == "mov_text") return "ass";
-        return "mks";  // imagen u otros contenedores
-    };
-    auto subtitleCodecIsText = [](const QString &codec) -> bool {
-        return codec == "subrip" || codec == "ass" || codec == "ssa"
-            || codec == "webvtt" || codec == "mov_text";
+    auto logImageSub = [this](int index, const QString &codec, const QString &lang) {
+        const QString langText = lang.isEmpty() ? QString()
+                                                : QString(" [%1]").arg(lang.toHtmlEscaped());
+        logArea->append(tr("<font color='#FFCC00'>  › Pista %1: %2%3 → .mks sin recodificar; no traducible (sin OCR).</font>")
+                            .arg(index).arg(subtitleCodecDescription(codec)).arg(langText));
     };
 
     QMap<int, QString> selectedTypes = fileSelections.value(inputPath);
@@ -1249,23 +1329,28 @@ void MainWindow::processNextInBatch()
             // Para subtítulos globales: si hay más de una pista, se necesita un
             // contenedor multi-stream (.mks); si solo hay una, usar su formato.
             QString ext;
+            bool forceCopy = false;
             if (type == "subtitle") {
                 QStringList subCodecs;
-                for (auto it = strTypes.constBegin(); it != strTypes.constEnd(); ++it)
-                    if (it.value() == "subtitle")
-                        subCodecs << selectedCodecs.value(it.key());
-                if (subCodecs.size() == 1 && copyMode)
-                    ext = subtitleExtForCodec(subCodecs.first());
-                else if (subCodecs.size() == 1)
-                    ext = extensionForType("subtitle");
-                else
-                    ext = "mks";
+                for (auto it = strTypes.constBegin(); it != strTypes.constEnd(); ++it) {
+                    if (it.value() != "subtitle") continue;
+                    const QString codec = selectedCodecs.value(it.key());
+                    subCodecs << codec;
+                    if (subtitleCodecIsImage(codec)) {
+                        forceCopy = true;  // -map 0:s puede mezclar texto e imagen
+                        logImageSub(it.key(), codec, strLangs.value(it.key()));
+                    }
+                }
+                if (forceCopy)                              ext = "mks";
+                else if (subCodecs.size() == 1 && copyMode) ext = subtitleExtForCodec(subCodecs.first());
+                else if (subCodecs.size() == 1)             ext = extensionForType("subtitle");
+                else                                        ext = "mks";
             } else {
                 ext = copyMode ? (type == "audio" ? "mka" : "mkv") : extensionForType(type);
             }
 
             finalArgs << "-map" << QString("0:%1").arg(mapCode);
-            if (copyMode) {
+            if (copyMode || forceCopy) {
                 finalArgs << "-c" << "copy";
             } else if (type == "video" && videoResCombo->currentText() != "Original") {
                 QString res = videoResCombo->currentText();
@@ -1293,6 +1378,7 @@ void MainWindow::processNextInBatch()
                 outName = baseName + "." + ext;
             }
             QString outPath = claimUnique(outName);
+            if (ext == "mks") finalArgs << "-f" << "matroska";
             finalArgs << "-y" << outPath;
             if (type == "subtitle") {
                 // Solo se puede traducir/incrustar un sub de texto único
@@ -1305,10 +1391,13 @@ void MainWindow::processNextInBatch()
                         recTitle = strTitles.value(it.key());
                     }
                 }
-                if (textSubCount == 1 && !normalizeLangCode(recLang).isEmpty())
+                if (textSubCount == 1 && !forceCopy && ext != "mks"
+                    && !normalizeLangCode(recLang).isEmpty())
                     m_extractedSubs.append({inputPath, outPath, normalizeLangCode(recLang), recTitle});
+                else if (forceCopy)
+                    logArea->append(tr("<font color='#FFCC00'>  › Salida .mks no traducible (sin OCR): %1</font>").arg(outPath));
                 else
-                    logArea->append(tr("<font color='#FFCC00'>  › Subtítulo omitido para traducción (varias pistas de texto o formato de imagen): %1</font>").arg(outPath));
+                    logArea->append(tr("<font color='#FFCC00'>  › Subtítulo omitido para traducción (varias pistas de texto): %1</font>").arg(outPath));
             }
             anyAction = true;
         }
@@ -1318,11 +1407,17 @@ void MainWindow::processNextInBatch()
             int index = it.key();
             QString type = it.value();
             QString codec = selectedCodecs.value(index);
-            QString ext = copyMode ? extensionForCodec(codec, type) : extensionForType(type);
-            bool translatableSub = (type == "subtitle") && subtitleCodecIsText(codec);
+            const bool forceCopy = (type == "subtitle") && subtitleCodecIsImage(codec);
+            QString ext = (copyMode || forceCopy)
+                ? extensionForCodec(codec, type) : extensionForType(type);
+            // Solo se puede traducir un archivo de texto real: un mov_text
+            // copiado a .mks, por ejemplo, no es legible como subtítulo.
+            const bool translatableSub = (type == "subtitle") && subtitleCodecIsText(codec)
+                && (ext == "srt" || ext == "ass" || ext == "vtt");
+            if (forceCopy) logImageSub(index, codec, strLangs.value(index));
 
             finalArgs << "-map" << QString("0:%1").arg(index);
-            if (copyMode) {
+            if (copyMode || forceCopy) {
                 finalArgs << "-c" << "copy";
             } else if (type == "video" && videoResCombo->currentText() != "Original") {
                 QString res = videoResCombo->currentText();
@@ -1342,6 +1437,7 @@ void MainWindow::processNextInBatch()
                 outName = baseName + "." + ext;
             }
             QString outPath = claimUnique(outName);
+            if (ext == "mks") finalArgs << "-f" << "matroska";
             finalArgs << "-y" << outPath;
             if (translatableSub) {
                 QString normLang = normalizeLangCode(strLangs.value(index));
@@ -1367,9 +1463,18 @@ void MainWindow::processNextInBatch()
 
 void MainWindow::readProcessOutput()
 {
-    QString out = QString::fromLocal8Bit(process->readAllStandardError());
+    const QByteArray errBytes = process->readAllStandardError();
+    QString out = QString::fromLocal8Bit(errBytes);
     if (out.isEmpty()) out = QString::fromLocal8Bit(process->readAllStandardOutput());
     updateProgressFromLine(out);
+    if (!m_muxActive && !errBytes.isEmpty()) {
+        for (const QString &line : out.split('\n', Qt::SkipEmptyParts)) {
+            const QString t = line.trimmed();
+            if (t.isEmpty() || t.contains("time=") || t.startsWith("frame=")) continue;  // progreso puro
+            m_extractTail.append(t);
+            while (m_extractTail.size() > 8) m_extractTail.removeFirst();
+        }
+    }
     if (m_muxActive && !out.trimmed().isEmpty()) {
         m_muxTail.append(out.trimmed());
         while (m_muxTail.size() > 30) m_muxTail.removeFirst();
@@ -1421,8 +1526,41 @@ void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     if (exitStatus == QProcess::NormalExit && exitCode == 0) {
         logArea->append(tr("<font color='#39FF14'>  › OK</font>"));
         progressBar->setValue(100);
-    } else if (currentBatchIndex >= 0) {
+    } else if (currentBatchIndex >= 0 && currentBatchIndex < batchFiles.size()) {
         logArea->append(tr("<font color='#FF4444'>  › Error en este archivo.</font>"));
+        const QString curFile = batchFiles.at(currentBatchIndex);
+        const QMap<int, QString> codecs = fileStreamCodecs.value(curFile);
+        bool imageSubRequested = false;
+        const QMap<int, QString> selected = fileSelections.value(curFile);
+        if (!selected.isEmpty()) {
+            for (auto it = selected.constBegin(); it != selected.constEnd(); ++it) {
+                if (it.value() == "subtitle" && subtitleCodecIsImage(codecs.value(it.key()))) {
+                    imageSubRequested = true; break;
+                }
+            }
+        } else if (globalSelectionTypes.contains("subtitle")) {
+            const QMap<int, QString> types = fileStreamTypes.value(curFile);
+            for (auto it = types.constBegin(); it != types.constEnd(); ++it) {
+                if (it.value() == "subtitle" && subtitleCodecIsImage(codecs.value(it.key()))) {
+                    imageSubRequested = true; break;
+                }
+            }
+        }
+        QStringList hits;
+        for (int i = m_extractTail.size() - 1; i >= 0 && hits.size() < 3; --i) {
+            const QString l = m_extractTail.at(i);
+            if (l.contains("error", Qt::CaseInsensitive) || l.contains("invalid", Qt::CaseInsensitive)
+                || l.contains("unsupported", Qt::CaseInsensitive) || l.contains("subtitle", Qt::CaseInsensitive)
+                || l.contains("codec", Qt::CaseInsensitive) || l.contains("not found", Qt::CaseInsensitive))
+                hits.prepend(l);
+        }
+        if (hits.isEmpty() && !m_extractTail.isEmpty()) hits << m_extractTail.last();
+        for (const QString &h : hits)
+            logArea->append("<font color='#FF8844'>     " + h.toHtmlEscaped() + "</font>");
+        if (imageSubRequested)
+            logArea->append(tr("<font color='#FFCC00'>     Los subtítulos de imagen (PGS/VobSub/DVB/XSUB) solo admiten copia de flujo a .mks: no se pueden convertir a texto sin OCR.</font>"));
+        else if (!copyModeCheckBox->isChecked())
+            logArea->append(tr("<font color='#FFCC00'>     Prueba a activar Copiar pista original sin re-codificar.</font>"));
     }
     if (currentBatchIndex >= 0 && currentBatchIndex < batchFiles.size()) {
         // Podar salidas vacías o inexistentes de este archivo: ffmpeg crea el
@@ -1890,7 +2028,8 @@ void MainWindow::dropEvent(QDropEvent *event)
 // ─────────────────────────────────────────────────────────────────────────────
 void MainWindow::updateMetadataPanel(double durSecs, qint64 sizeBytes,
                                       const QString &videoInfo,
-                                      int nAudio, int nSubs)
+                                      int nAudio, int nSubs,
+                                      const QString &subDetail)
 {
     // Duración formateada
     int h  = (int)(durSecs / 3600);
@@ -1912,7 +2051,11 @@ void MainWindow::updateMetadataPanel(double durSecs, qint64 sizeBytes,
     if (sizeBytes > 0)       parts << "💾 " + sizeStr;
     if (!videoInfo.isEmpty()) parts << "🎬 " + videoInfo;
     if (nAudio > 0)          parts << tr("🎵 %1 audio").arg(nAudio);
-    if (nSubs  > 0)          parts << tr("CC %1 subs").arg(nSubs);
+    if (nSubs  > 0) {
+        QString subsText = tr("CC %1 subs").arg(nSubs);
+        if (!subDetail.isEmpty()) subsText += " · " + subDetail;
+        parts << subsText;
+    }
 
     metaInfoLabel->setText(parts.join("   "));
 }

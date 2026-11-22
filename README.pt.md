@@ -80,7 +80,9 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 |------|----------|
 | **Áudio** | MKA, M4A, AAC, MP3, FLAC, OPUS, WAV |
 | **Vídeo** | MKV, MP4, AVI |
-| **Legendas** | SRT, ASS, VTT |
+| **Legendas** | SRT, ASS, VTT (texto); MKS (imagem, cópia de fluxo) |
+
+> ℹ️ **Legendas de imagem** (PGS de Blu-ray, VobSub/DVD, DVB, XSUB) são extraídas tal como estão em `.mks` por cópia de fluxo, sem recodificação. O app não pode traduzi-las porque não faz OCR; para converter em texto é necessária uma ferramenta externa de OCR.
 
 ### Tradução de legendas
 

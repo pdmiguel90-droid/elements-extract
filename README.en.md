@@ -80,7 +80,9 @@ So I thought: *what if I could take the file I already have on disk and translat
 |------|----------|
 | **Audio** | MKA, M4A, AAC, MP3, FLAC, OPUS, WAV |
 | **Video** | MKV, MP4, AVI |
-| **Subtitles** | SRT, ASS, VTT |
+| **Subtitles** | SRT, ASS, VTT (text); MKS (image, stream copy) |
+
+> ℹ️ **Image-based subtitles** (Blu-ray PGS, DVD/VobSub, DVB, XSUB) are extracted verbatim as `.mks` using stream copy, with no re-encoding. The app cannot translate them because it does no OCR; converting them to text requires an external OCR tool.
 
 ### Subtitle translation
 

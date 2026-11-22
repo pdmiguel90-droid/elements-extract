@@ -5,6 +5,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.3] - 2026-11-22
+
+### Añadido
+- Extracción de subtítulos de imagen (PGS de Blu-ray, VobSub/DVD, DVB, XSUB) como `.mks` mediante copia de flujo, sin recodificar
+- Aviso en el panel de metadatos y en el registro de los tipos de subtítulos presentes en cada archivo (texto/imagen, idioma y si se pueden traducir)
+- Mensajes de error más útiles: detalle del stderr de ffprobe al analizar y últimas líneas de ffmpeg al fallar una extracción
+
+### Corregido
+- Los subtítulos de imagen ya no se intentan convertir a SRT/ASS/VTT (ffmpeg no puede hacerlo sin OCR) ni se envían a la traducción
+
+---
+
 ## [1.2.2] - 2026-11-02
 
 ### Añadido
