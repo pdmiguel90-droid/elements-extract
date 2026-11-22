@@ -9,6 +9,7 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QAbstractItemView>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
@@ -109,16 +110,44 @@ static QString normalizeLangCode(const QString &raw)
     return map.value(c, c);
 }
 
-// Credenciales de OpenSubtitles: nunca se escriben en el código; la clave
-// puede además sobrescribirse con ELEMENTS_EXTRACT_OS_API_KEY.
-static void applyOnlineSubCredentials(SubtitleDownloader *downloader)
+// Credenciales de OpenSubtitles: se leen siempre del almacén seguro del
+// sistema. Si falla la lectura (por ejemplo, porque no hay almacén), se dejan
+// vacías y no se escribe ningún error en el registro.
+static void applyOnlineSubCredentials(SubtitleDownloader *downloader,
+                                      const CredentialStore &store)
 {
     if (!downloader) return;
+    QString apiKey, username, password;
+    const QString service = QString::fromUtf8(ElementsExtractCredentials::Service);
+    store.load(service, QString::fromUtf8(ElementsExtractCredentials::ApiKey), &apiKey);
+    store.load(service, QString::fromUtf8(ElementsExtractCredentials::Username), &username);
+    store.load(service, QString::fromUtf8(ElementsExtractCredentials::Password), &password);
+
     QSettings s("LocalApp", "FFmpegExtractor");
-    downloader->setCredentials(
-        s.value("onlineSubs/apiKey").toString(),
-        s.value("onlineSubs/username").toString(),
-        s.value("onlineSubs/password").toString());
+    if (apiKey.isEmpty() && username.isEmpty() && password.isEmpty()) {
+        // Migración única desde la versión que guardaba credenciales en claro.
+        const QString oldKey = s.value("onlineSubs/apiKey").toString();
+        const QString oldUser = s.value("onlineSubs/username").toString();
+        const QString oldPass = s.value("onlineSubs/password").toString();
+        if (!oldKey.isEmpty() || !oldUser.isEmpty() || !oldPass.isEmpty()) {
+            QString error;
+            const bool migrated =
+                store.save(service, QString::fromUtf8(ElementsExtractCredentials::ApiKey), oldKey, &error) &&
+                store.save(service, QString::fromUtf8(ElementsExtractCredentials::Username), oldUser, &error) &&
+                store.save(service, QString::fromUtf8(ElementsExtractCredentials::Password), oldPass, &error);
+            if (migrated) {
+                apiKey = oldKey;
+                username = oldUser;
+                password = oldPass;
+            }
+        }
+    }
+    downloader->setCredentials(apiKey, username, password);
+
+    // Las credenciales en texto plano nunca deben permanecer en QSettings.
+    s.remove("onlineSubs/apiKey");
+    s.remove("onlineSubs/username");
+    s.remove("onlineSubs/password");
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -188,7 +217,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Buscador de subtítulos online (OpenSubtitles.com)
     onlineSubDownloader = new SubtitleDownloader(this);
-    applyOnlineSubCredentials(onlineSubDownloader);
+    applyOnlineSubCredentials(onlineSubDownloader, m_credentialStore);
     connect(onlineSubDownloader, &SubtitleDownloader::statusMessage,
             this, [this](const QString &message) {
         logArea->append(QString("<font color='#00BFFF'>" + tr("[ONLINE-SUBS] %1") + "</font>")
@@ -260,6 +289,11 @@ void MainWindow::setupMenuBar()
     actOnlineSubs = menuArchivo->addAction(tr("Buscar subtítulos en internet…"));
     actOnlineSubs->setShortcut(QKeySequence("Ctrl+Shift+S"));
     connect(actOnlineSubs, &QAction::triggered, this, &MainWindow::showOnlineSubsDialog);
+    // Misma acción en el menú contextual de la lista (una sola conexión).
+    if (fileListWidget) {
+        fileListWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
+        fileListWidget->addAction(actOnlineSubs);
+    }
     menuArchivo->addSeparator();
     actSalir = menuArchivo->addAction(
         QIcon(":/icons/close.svg"), tr("Salir"));
@@ -316,6 +350,7 @@ void MainWindow::setupUi()
 
     fileListWidget = new QListWidget();
     fileListWidget->setDragDropMode(QAbstractItemView::InternalMove);
+    fileListWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
     connect(fileListWidget, &QListWidget::itemSelectionChanged,
             this, &MainWindow::onFileSelectionChanged);
     leftPanel->addWidget(fileListWidget, 3);
@@ -324,12 +359,17 @@ void MainWindow::setupUi()
     fileBtns->setSpacing(6);
     addButton = new QPushButton(QIcon(":/icons/add.svg"), tr("Añadir"));
     removeButton = new QPushButton(QIcon(":/icons/remove.svg"), tr("Quitar"));
+    onlineSubsButton = new QPushButton(QIcon(":/icons/download.svg"), tr("Buscar subs online"));
     addButton->setToolTip(tr("Añadir archivos de video (Ctrl+O)"));
     removeButton->setToolTip(tr("Quitar archivos seleccionados (Del)"));
+    onlineSubsButton->setToolTip(tr("Buscar y descargar subtítulos para los archivos seleccionados"));
     connect(addButton, &QPushButton::clicked, this, &MainWindow::addFiles);
     connect(removeButton, &QPushButton::clicked, this, &MainWindow::removeFiles);
+    connect(onlineSubsButton, &QPushButton::clicked,
+            this, &MainWindow::showOnlineSubsDialog);
     fileBtns->addWidget(addButton);
     fileBtns->addWidget(removeButton);
+    fileBtns->addWidget(onlineSubsButton);
     fileBtns->addStretch();
     leftPanel->addLayout(fileBtns);
 
@@ -1685,18 +1725,31 @@ void MainWindow::showHelp()
 // ─────────────────────────────────────────────────────────────────────────────
 void MainWindow::showOnlineSubsDialog()
 {
-    QString videoPath;
-    if (fileListWidget && fileListWidget->currentItem())
-        videoPath = fileListWidget->currentItem()->data(Qt::UserRole).toString();
-    if (videoPath.isEmpty()) videoPath = lastSelectedFile;
+    QStringList paths;
+    if (fileListWidget) {
+        for (QListWidgetItem *item : fileListWidget->selectedItems()) {
+            const QString path = item->data(Qt::UserRole).toString();
+            if (path.isEmpty() || !QFileInfo(path).exists()) continue;
+            if (!paths.contains(path)) paths.append(path);
+        }
+    }
 
-    if (videoPath.isEmpty() || !QFileInfo(videoPath).exists()) {
+    if (paths.isEmpty()) {
+        QString fallback;
+        if (fileListWidget && fileListWidget->currentItem())
+            fallback = fileListWidget->currentItem()->data(Qt::UserRole).toString();
+        if (fallback.isEmpty()) fallback = lastSelectedFile;
+        if (!fallback.isEmpty() && QFileInfo(fallback).exists())
+            paths.append(fallback);
+    }
+
+    if (paths.isEmpty()) {
         logArea->append(QString("<font color='#FFCC00'>" + tr("Selecciona un vídeo en la lista para buscar subtítulos en internet.") + "</font>"));
         showLogArea();
         return;
     }
 
-    OnlineSubsDialog dlg(onlineSubDownloader, videoPath, this);
+    OnlineSubsDialog dlg(onlineSubDownloader, paths, this);
     connect(&dlg, &OnlineSubsDialog::subtitleReady,
             this, &MainWindow::onOnlineSubtitleReady);
     dlg.exec();
@@ -2251,6 +2304,10 @@ void MainWindow::retranslateUi()
         removeButton->setText(tr("Quitar"));
         removeButton->setToolTip(tr("Quitar archivos seleccionados (Del)"));
     }
+    if (onlineSubsButton) {
+        onlineSubsButton->setText(tr("Buscar subs online"));
+        onlineSubsButton->setToolTip(tr("Buscar y descargar subtítulos para los archivos seleccionados"));
+    }
     if (selectedFileLabel && fileListWidget && fileListWidget->count() == 0)
         selectedFileLabel->setText(tr("Selecciona un archivo para ver sus pistas"));
     if (videoAllButton) videoAllButton->setText(tr("VIDEO"));
@@ -2740,6 +2797,6 @@ void MainWindow::onSettingsChanged()
 {
     // Reload settings after dialog closes
     loadSettings();
-    applyOnlineSubCredentials(onlineSubDownloader);
+    applyOnlineSubCredentials(onlineSubDownloader, m_credentialStore);
     logArea->append(tr("<font color='#888888'>Configuración actualizada</font>"));
 }

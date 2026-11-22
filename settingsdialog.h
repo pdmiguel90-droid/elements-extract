@@ -17,6 +17,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QEvent>
+#include "credentialstore.h"
 
 class SubtitleTranslator;
 class ModelDownloader;
@@ -63,8 +64,11 @@ private:
     void refreshLocalModels();
     void refreshOnlineModels();
     void retranslateUi();
+    void updateOnlineSubsInfoLabel(const QString &saveError = QString());
     QString formatSize(qint64 bytes);
 
+    CredentialStore m_credentialStore;
+    QString m_credentialError;
     SubtitleTranslator *m_translator;
     ModelDownloader *m_downloader;
 

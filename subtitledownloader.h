@@ -34,7 +34,10 @@ public:
 
     void search(const QString &videoPath, const QString &query,
                 const QString &language);
-    void download(const OnlineSubtitle &item, const QString &targetPath);
+    // videoPath se usa para atribuir la señal downloadFinished al vídeo correcto
+    // en búsquedas por lote. Si se omite, se conserva el último vídeo buscado.
+    void download(const OnlineSubtitle &item, const QString &targetPath,
+                  const QString &videoPath = QString());
     void cancel();
 
     // Respuesta de OnlineSubsDialog cuando un ZIP contiene varias candidateas
@@ -42,8 +45,10 @@ public:
     void setChosenArchiveEntry(const QString &entry);
 
 signals:
-    void searchFinished(const QList<OnlineSubtitle> &results, const QString &error);
-    void downloadFinished(const QString &filePath, const QString &error);
+    void searchFinished(const QString &videoPath, const QList<OnlineSubtitle> &results,
+                        const QString &error);
+    void downloadFinished(const QString &videoPath, const QString &filePath,
+                          const QString &error);
     void statusMessage(const QString &message);
     void needFileChoice(const QStringList &files, const QString &language);
 
@@ -79,6 +84,7 @@ private:
     bool m_cancelled = false;
 
     QString m_videoPath;
+    QString m_currentVideoPath;  // vídeo al que pertenece la operación en curso
     QString m_query;
     QString m_language;
     DownloadState m_download;

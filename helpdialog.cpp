@@ -130,9 +130,17 @@ HelpDialog::HelpDialog(QWidget *parent) : QDialog(parent)
         "Chino, Coreano, Ruso, Árabe, Hindi, Holandés, Sueco, Polaco y Turco.</p>"
         ) + tr(
         "<h3>8. Subtítulos online</h3>"
-        "<p>Con <b>Archivo → Buscar subtítulos en internet…</b> (Ctrl+Shift+S) puedes buscar y descargar "
-        "subtítulos desde OpenSubtitles.com y traducirlos después con el motor offline. "
-        "Necesitas tu propia clave API, usuario y contraseña en <b>Ajustes → Subtítulos online</b>.</p>"
+        "<p>Pulsa <b>Buscar subs online</b>, usa <b>Archivo → Buscar subtítulos en internet…</b> "
+        "(Ctrl+Shift+S) o el <b>clic derecho</b> sobre un archivo de la lista. Puedes seleccionar "
+        "varios vídeos a la vez para procesarlos en lote.</p>"
+        "<p>En el diálogo, marca los archivos y pulsa <b>Buscar en seleccionados</b> o "
+        "<b>Buscar en todos</b>. Haz doble clic en la columna <b>Consulta</b> para cambiar el "
+        "título buscado de uno solo; el idioma del desplegable se aplica a toda la búsqueda.</p>"
+        "<p>Marca los resultados y elige <b>Descargar y traducir seleccionados</b> o "
+        "<b>Solo descargar seleccionados</b>. Las descargas se hacen en secuencia y se informa "
+        "del resultado de cada archivo.</p>"
+        "<p>Necesitas tu propia clave API, usuario y contraseña en <b>Ajustes → Subtítulos online</b>. "
+        "Las credenciales se guardan en el almacén seguro del sistema.</p>"
         ));
     tabs->addTab(translatePage, tr("Traducción"));
 

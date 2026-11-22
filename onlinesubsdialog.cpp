@@ -1,47 +1,59 @@
 #include "onlinesubsdialog.h"
 
+#include <QAbstractItemView>
 #include <QComboBox>
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
-#include <QFormLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QInputDialog>
 #include <QLabel>
-#include <QLineEdit>
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QSettings>
+#include <QSignalBlocker>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QTimer>
 #include <QVBoxLayout>
 
 OnlineSubsDialog::OnlineSubsDialog(SubtitleDownloader *downloader,
-                                   const QString &videoPath,
+                                   const QStringList &videoPaths,
                                    QWidget *parent)
     : QDialog(parent)
     , m_downloader(downloader)
-    , m_videoPath(videoPath)
 {
-    setWindowTitle(tr("Subtítulos online — %1").arg(QFileInfo(videoPath).fileName()));
-    setMinimumSize(680, 460);
-    resize(760, 540);
+    for (const QString &path : videoPaths) {
+        const QString trimmed = path.trimmed();
+        if (trimmed.isEmpty()) continue;
+        FileState state;
+        state.path = trimmed;
+        state.query = cleanQuery(trimmed);
+        state.status = tr("Pendiente");
+        m_files.append(state);
+    }
+
+    if (m_files.size() == 1)
+        setWindowTitle(tr("Subtítulos online — %1").arg(QFileInfo(m_files.first().path).fileName()));
+    else
+        setWindowTitle(tr("Subtítulos online — %1 archivos").arg(m_files.size()));
+    setMinimumSize(860, 540);
+    resize(960, 640);
     setModal(true);
 
     QVBoxLayout *root = new QVBoxLayout(this);
     root->setSpacing(8);
 
-    QFormLayout *form = new QFormLayout();
-    QLabel *videoLabel = new QLabel(QFileInfo(videoPath).fileName());
-    videoLabel->setProperty("labelColor", "muted");
-    form->addRow(tr("Vídeo:"), videoLabel);
-
-    m_queryEdit = new QLineEdit(cleanQuery(videoPath));
-    m_queryEdit->setPlaceholderText(tr("Título de la película o serie…"));
-    form->addRow(tr("Consulta:"), m_queryEdit);
-
+    QHBoxLayout *topRow = new QHBoxLayout();
+    m_filesLabel = new QLabel();
+    if (m_files.size() == 1)
+        m_filesLabel->setText(QFileInfo(m_files.first().path).fileName());
+    else
+        m_filesLabel->setText(tr("%1 archivos seleccionados").arg(m_files.size()));
+    m_filesLabel->setProperty("labelColor", "accent");
+    topRow->addWidget(m_filesLabel, 1);
+    topRow->addWidget(new QLabel(tr("Idioma:")));
     m_languageCombo = new QComboBox();
     m_languageCombo->addItem(tr("Todos"), "all");
     m_languageCombo->addItem(tr("Inglés"), "en");
@@ -50,30 +62,98 @@ OnlineSubsDialog::OnlineSubsDialog(SubtitleDownloader *downloader,
     m_languageCombo->addItem(tr("Portugués"), "pt");
     m_languageCombo->addItem(tr("Alemán"), "de");
     m_languageCombo->addItem(tr("Italiano"), "it");
-    form->addRow(tr("Idioma:"), m_languageCombo);
+    topRow->addWidget(m_languageCombo);
+    root->addLayout(topRow);
+
+    // ── Archivos del lote: casilla para marcar, consulta editable por archivo ──
+    m_filesTable = new QTableWidget(0, 5, this);
+    m_filesTable->setHorizontalHeaderLabels({
+        QString(), tr("Archivo"), tr("Consulta"), tr("Estado"), tr("Resultados")
+    });
+    m_filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_filesTable->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_filesTable->setEditTriggers(QAbstractItemView::DoubleClicked |
+                                  QAbstractItemView::EditKeyPressed);
+    m_filesTable->verticalHeader()->setVisible(false);
+    m_filesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    m_filesTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    m_filesTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+    m_filesTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    m_filesTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+    {
+        QSignalBlocker blocker(m_filesTable);
+        for (int row = 0; row < m_files.size(); ++row) {
+            const FileState &state = m_files.at(row);
+            m_filesTable->insertRow(row);
+
+            QTableWidgetItem *check = new QTableWidgetItem();
+            check->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+            check->setCheckState(Qt::Checked);   // marcados por defecto
+            m_filesTable->setItem(row, 0, check);
+
+            QTableWidgetItem *file = new QTableWidgetItem(QFileInfo(state.path).fileName());
+            file->setFlags(file->flags() & ~Qt::ItemIsEditable);
+            file->setData(Qt::UserRole, state.path);
+            m_filesTable->setItem(row, 1, file);
+
+            m_filesTable->setItem(row, 2, new QTableWidgetItem(state.query));
+
+            QTableWidgetItem *status = new QTableWidgetItem(state.status);
+            status->setFlags(status->flags() & ~Qt::ItemIsEditable);
+            m_filesTable->setItem(row, 3, status);
+
+            QTableWidgetItem *count = new QTableWidgetItem(QString::number(state.resultCount));
+            count->setFlags(count->flags() & ~Qt::ItemIsEditable);
+            m_filesTable->setItem(row, 4, count);
+        }
+    }
+    connect(m_filesTable, &QTableWidget::itemChanged, this,
+            [this](QTableWidgetItem *item) {
+        if (!item || item->column() != 2) return;
+        const int row = item->row();
+        if (row >= 0 && row < m_files.size())
+            m_files[row].query = item->text();
+    });
+    root->addWidget(m_filesTable, 1);
 
     QHBoxLayout *searchRow = new QHBoxLayout();
     searchRow->addStretch(1);
-    m_searchButton = new QPushButton(tr("Buscar"));
-    connect(m_searchButton, &QPushButton::clicked, this, &OnlineSubsDialog::doSearch);
-    searchRow->addWidget(m_searchButton);
-    form->addRow(searchRow);
-    root->addLayout(form);
+    m_searchSelectedButton = new QPushButton(tr("Buscar en seleccionados"));
+    m_searchAllButton = new QPushButton(tr("Buscar en todos"));
+    connect(m_searchSelectedButton, &QPushButton::clicked,
+            this, &OnlineSubsDialog::searchSelected);
+    connect(m_searchAllButton, &QPushButton::clicked,
+            this, &OnlineSubsDialog::searchAll);
+    searchRow->addWidget(m_searchSelectedButton);
+    searchRow->addWidget(m_searchAllButton);
+    root->addLayout(searchRow);
 
-    m_resultsTable = new QTableWidget(0, 5, this);
+    // ── Resultados de todos los vídeos, con casilla por fila ──
+    m_resultsTable = new QTableWidget(0, 8, this);
     m_resultsTable->setHorizontalHeaderLabels({
-        tr("Idioma"), tr("Título"), tr("Año"), tr("Descargas"), tr("Hash")
+        QString(), tr("Archivo"), tr("Idioma"), tr("Título"), tr("Año"),
+        tr("Descargas"), tr("Hash"), tr("Estado")
     });
     m_resultsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_resultsTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_resultsTable->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_resultsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_resultsTable->verticalHeader()->setVisible(false);
-    m_resultsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
     m_resultsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    m_resultsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     m_resultsTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-    m_resultsTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
-    m_resultsTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
-    root->addWidget(m_resultsTable, 1);
+    m_resultsTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
+    for (int col = 4; col < 8; ++col)
+        m_resultsTable->horizontalHeader()->setSectionResizeMode(col, QHeaderView::ResizeToContents);
+    connect(m_resultsTable, &QTableWidget::itemChanged, this,
+            [this](QTableWidgetItem *item) {
+        if (!item || item->column() != 0) return;
+        const int row = item->row();
+        if (row >= 0 && row < m_results.size()) {
+            m_results[row].selected = (item->checkState() == Qt::Checked);
+            updateDownloadButtons();
+        }
+    });
+    root->addWidget(m_resultsTable, 2);
 
     m_statusLabel = new QLabel();
     m_statusLabel->setWordWrap(true);
@@ -82,24 +162,19 @@ OnlineSubsDialog::OnlineSubsDialog(SubtitleDownloader *downloader,
 
     QHBoxLayout *buttons = new QHBoxLayout();
     buttons->addStretch(1);
-    m_translateButton = new QPushButton(tr("Descargar y traducir"));
-    m_downloadButton = new QPushButton(tr("Solo descargar"));
-    m_cancelButton = new QPushButton(tr("Cancelar"));
-    m_translateButton->setEnabled(false);
-    m_downloadButton->setEnabled(false);
+    m_translateButton = new QPushButton(tr("Descargar y traducir seleccionados"));
+    m_downloadButton = new QPushButton(tr("Solo descargar seleccionados"));
+    m_closeButton = new QPushButton(tr("Cerrar"));
     buttons->addWidget(m_translateButton);
     buttons->addWidget(m_downloadButton);
-    buttons->addWidget(m_cancelButton);
+    buttons->addWidget(m_closeButton);
     root->addLayout(buttons);
 
     connect(m_translateButton, &QPushButton::clicked,
             this, &OnlineSubsDialog::downloadAndTranslate);
     connect(m_downloadButton, &QPushButton::clicked,
             this, &OnlineSubsDialog::downloadOnly);
-    connect(m_cancelButton, &QPushButton::clicked, this, [this]() {
-        if (m_downloader) m_downloader->cancel();
-        reject();
-    });
+    connect(m_closeButton, &QPushButton::clicked, this, [this]() { reject(); });
 
     if (m_downloader) {
         connect(m_downloader, &SubtitleDownloader::searchFinished,
@@ -121,13 +196,15 @@ OnlineSubsDialog::OnlineSubsDialog(SubtitleDownloader *downloader,
         });
     }
 
-    if (!m_downloader || !m_downloader->hasCredentials()) {
+    if (!m_downloader || !m_downloader->hasCredentials())
         m_statusLabel->setText(tr("Configura la clave API, el usuario y la contraseña en Ajustes → Subtítulos online."));
-        m_searchButton->setEnabled(false);
-    } else {
-        // Búsqueda automática por hash del vídeo al abrir el diálogo.
-        QTimer::singleShot(0, this, &OnlineSubsDialog::doSearch);
-    }
+    setBusy(false);   // la búsqueda siempre es manual; sin credenciales queda deshabilitada
+}
+
+void OnlineSubsDialog::reject()
+{
+    if (m_busy && m_downloader) m_downloader->cancel();
+    QDialog::reject();
 }
 
 QString OnlineSubsDialog::cleanQuery(const QString &fileName) const
@@ -146,89 +223,210 @@ QString OnlineSubsDialog::cleanQuery(const QString &fileName) const
     return name.trimmed();
 }
 
-QString OnlineSubsDialog::downloadDirectory() const
+QString OnlineSubsDialog::downloadDirectory(const QString &videoPath) const
 {
     QSettings settings("LocalApp", "FFmpegExtractor");
     QString dir = settings.value("outputDir").toString().trimmed();
     if (dir.isEmpty())
-        dir = QFileInfo(m_videoPath).absolutePath();
+        dir = QFileInfo(videoPath).absolutePath();
     return QDir(dir).absoluteFilePath(QStringLiteral("Descargados"));
 }
 
-void OnlineSubsDialog::doSearch()
+int OnlineSubsDialog::fileRowFor(const QString &videoPath) const
 {
-    if (!m_downloader) return;
-    if (m_queryEdit->text().trimmed().isEmpty()) {
-        m_statusLabel->setText(tr("Introduce un título para buscar subtítulos."));
+    for (int i = 0; i < m_files.size(); ++i) {
+        if (m_files.at(i).path == videoPath) return i;
+    }
+    return -1;
+}
+
+QString OnlineSubsDialog::languageFor(const ResultState &result) const
+{
+    return result.sub.language.isEmpty() ? QStringLiteral("en") : result.sub.language;
+}
+
+void OnlineSubsDialog::setFileStatus(const QString &videoPath, const QString &status,
+                                     int resultCount)
+{
+    const int row = fileRowFor(videoPath);
+    if (row < 0) return;
+    m_files[row].status = status;
+    if (resultCount >= 0) m_files[row].resultCount = resultCount;
+
+    QSignalBlocker blocker(m_filesTable);
+    if (QTableWidgetItem *item = m_filesTable->item(row, 3))
+        item->setText(status);
+    if (resultCount >= 0) {
+        if (QTableWidgetItem *item = m_filesTable->item(row, 4))
+            item->setText(QString::number(resultCount));
+    }
+}
+
+void OnlineSubsDialog::setResultStatus(int row, const QString &status)
+{
+    if (row < 0 || row >= m_results.size()) return;
+    m_results[row].status = status;
+    QSignalBlocker blocker(m_resultsTable);
+    if (QTableWidgetItem *item = m_resultsTable->item(row, 7))
+        item->setText(status);
+}
+
+void OnlineSubsDialog::updateDownloadButtons() const
+{
+    bool anySelected = false;
+    for (const ResultState &result : m_results) {
+        if (result.selected) { anySelected = true; break; }
+    }
+    const bool enabled = !m_busy && anySelected;
+    m_translateButton->setEnabled(enabled);
+    m_downloadButton->setEnabled(enabled);
+}
+
+void OnlineSubsDialog::setBusy(bool busy)
+{
+    m_busy = busy;
+    const bool ready = m_downloader && m_downloader->hasCredentials() && !m_files.isEmpty();
+    m_searchSelectedButton->setEnabled(!busy && ready);
+    m_searchAllButton->setEnabled(!busy && ready);
+    updateDownloadButtons();
+}
+
+void OnlineSubsDialog::searchSelected()
+{
+    startSearch(true);
+}
+
+void OnlineSubsDialog::searchAll()
+{
+    startSearch(false);
+}
+
+void OnlineSubsDialog::startSearch(bool selectedOnly)
+{
+    if (!m_downloader || m_busy) return;
+
+    m_searchQueue.clear();
+    for (int row = 0; row < m_files.size(); ++row) {
+        if (selectedOnly) {
+            QTableWidgetItem *check = m_filesTable->item(row, 0);
+            if (!check || check->checkState() != Qt::Checked) continue;
+        }
+        const FileState &state = m_files.at(row);
+        if (state.query.trimmed().isEmpty()) {
+            setFileStatus(state.path, tr("Introduce un título para buscar subtítulos."), 0);
+            continue;
+        }
+        removeResultsFor(state.path);
+        setFileStatus(state.path, tr("Buscando subtítulos…"), 0);
+        m_searchQueue.append(state.path);
+    }
+
+    if (m_searchQueue.isEmpty()) {
+        m_statusLabel->setText(tr("No hay archivos marcados."));
         return;
     }
-    m_results.clear();
-    m_resultsTable->setRowCount(0);
-    m_translateButton->setEnabled(false);
-    m_downloadButton->setEnabled(false);
-    m_searchButton->setEnabled(false);
+
+    m_nextSearch = 0;
     m_statusLabel->setText(tr("Buscando subtítulos…"));
-    m_downloader->search(m_videoPath, m_queryEdit->text(),
+    setBusy(true);
+    startNextSearch();
+}
+
+void OnlineSubsDialog::startNextSearch()
+{
+    if (m_nextSearch >= m_searchQueue.size()) {
+        finishSearch();
+        return;
+    }
+
+    m_currentSearchPath = m_searchQueue.at(m_nextSearch);
+    const int row = fileRowFor(m_currentSearchPath);
+    const QString query = (row >= 0) ? m_files.at(row).query : QString();
+    m_downloader->search(m_currentSearchPath, query,
                          m_languageCombo->currentData().toString());
 }
 
-void OnlineSubsDialog::onSearchFinished(const QList<OnlineSubtitle> &results,
+void OnlineSubsDialog::onSearchFinished(const QString &videoPath,
+                                        const QList<OnlineSubtitle> &results,
                                         const QString &error)
 {
-    m_searchButton->setEnabled(true);
-    m_results = results;
-    m_resultsTable->setRowCount(results.size());
+    if (videoPath != m_currentSearchPath || m_searchQueue.isEmpty()) return;
 
-    for (int row = 0; row < results.size(); ++row) {
-        const OnlineSubtitle &item = results.at(row);
-        m_resultsTable->setItem(row, 0, new QTableWidgetItem(item.language.toUpper()));
-        const QString title = item.release.isEmpty() ? item.uploader : item.release;
-        m_resultsTable->setItem(row, 1, new QTableWidgetItem(title));
-        m_resultsTable->setItem(row, 2, new QTableWidgetItem(item.year));
-        m_resultsTable->setItem(row, 3, new QTableWidgetItem(QString::number(item.downloads)));
-        m_resultsTable->setItem(row, 4, new QTableWidgetItem(item.hashMatch ? QStringLiteral("✓")
-                                                                           : QStringLiteral("—")));
-        m_resultsTable->item(row, 0)->setData(Qt::UserRole, row);
-    }
-
-    const bool haveResults = !results.isEmpty();
-    m_translateButton->setEnabled(haveResults);
-    m_downloadButton->setEnabled(haveResults);
     if (!error.isEmpty()) {
-        m_statusLabel->setText(tr("Error: %1").arg(error));
-    } else if (haveResults) {
-        m_statusLabel->setText(tr("%1 subtítulos encontrados.").arg(results.size()));
-        if (m_resultsTable->rowCount() > 0) m_resultsTable->selectRow(0);
+        setFileStatus(videoPath, tr("Error: %1").arg(error), 0);
+    } else if (results.isEmpty()) {
+        setFileStatus(videoPath, tr("No se encontraron subtítulos."), 0);
     } else {
-        m_statusLabel->setText(tr("No se encontraron subtítulos."));
+        addResultsFor(videoPath, results);
     }
+
+    ++m_nextSearch;
+    // El downloader solo admite una petición activa: encadenamos la siguiente.
+    QTimer::singleShot(0, this, &OnlineSubsDialog::startNextSearch);
 }
 
-void OnlineSubsDialog::startDownload(bool translate)
+void OnlineSubsDialog::finishSearch()
 {
-    const int row = m_resultsTable->currentRow();
-    if (row < 0 || row >= m_results.size()) {
-        m_statusLabel->setText(tr("Selecciona un resultado."));
-        return;
+    m_searchQueue.clear();
+    m_currentSearchPath.clear();
+    setBusy(false);
+    m_statusLabel->setText(tr("Búsqueda finalizada: %1 resultados.").arg(m_results.size()));
+}
+
+void OnlineSubsDialog::removeResultsFor(const QString &videoPath)
+{
+    QSignalBlocker blocker(m_resultsTable);
+    for (int i = m_results.size() - 1; i >= 0; --i) {
+        if (m_results.at(i).videoPath == videoPath) {
+            m_results.removeAt(i);
+            m_resultsTable->removeRow(i);
+        }
+    }
+    updateDownloadButtons();
+}
+
+void OnlineSubsDialog::addResultsFor(const QString &videoPath,
+                                     const QList<OnlineSubtitle> &results)
+{
+    removeResultsFor(videoPath);
+    const QString fileName = QFileInfo(videoPath).fileName();
+
+    QSignalBlocker blocker(m_resultsTable);
+    bool firstForThisVideo = true;
+    for (const OnlineSubtitle &sub : results) {
+        ResultState state;
+        state.videoPath = videoPath;
+        state.sub = sub;
+        // Solo el primer resultado de cada vídeo viene marcado: descargar 50
+        // subtítulos por archivo por defecto llenaría la cola y agotaría el
+        // límite de peticiones de OpenSubtitles.
+        state.selected = firstForThisVideo;
+        firstForThisVideo = false;
+        state.status = tr("Pendiente");
+        m_results.append(state);
+
+        const int row = m_resultsTable->rowCount();
+        m_resultsTable->insertRow(row);
+
+        QTableWidgetItem *check = new QTableWidgetItem();
+        check->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        check->setCheckState(state.selected ? Qt::Checked : Qt::Unchecked);
+        m_resultsTable->setItem(row, 0, check);
+
+        const QString title = sub.release.isEmpty() ? sub.uploader : sub.release;
+        m_resultsTable->setItem(row, 1, new QTableWidgetItem(fileName));
+        m_resultsTable->setItem(row, 2, new QTableWidgetItem(sub.language.toUpper()));
+        m_resultsTable->setItem(row, 3, new QTableWidgetItem(title));
+        m_resultsTable->setItem(row, 4, new QTableWidgetItem(sub.year));
+        m_resultsTable->setItem(row, 5, new QTableWidgetItem(QString::number(sub.downloads)));
+        m_resultsTable->setItem(row, 6, new QTableWidgetItem(sub.hashMatch
+                                                                 ? QStringLiteral("✓")
+                                                                 : QStringLiteral("—")));
+        m_resultsTable->setItem(row, 7, new QTableWidgetItem(state.status));
     }
 
-    const OnlineSubtitle &item = m_results.at(row);
-    m_pendingLanguage = item.language.isEmpty() ? QStringLiteral("en") : item.language;
-    m_pendingTranslate = translate;
-
-    const QString dir = downloadDirectory();
-    QDir().mkpath(dir);
-    const QString base = cleanQuery(m_videoPath);
-    const QString fileName = QStringLiteral("%1.%2.srt")
-                                 .arg(base.isEmpty() ? QStringLiteral("subtitle") : base,
-                                      m_pendingLanguage);
-    const QString target = QDir(dir).absoluteFilePath(fileName);
-
-    m_translateButton->setEnabled(false);
-    m_downloadButton->setEnabled(false);
-    m_statusLabel->setText(tr("Descargando el subtítulo…"));
-    qInfo() << "[ONLINE-SUBS] download requested" << item.fileId << "->" << target;
-    m_downloader->download(item, target);
+    setFileStatus(videoPath, tr("%1 resultados").arg(results.size()), results.size());
+    updateDownloadButtons();
 }
 
 void OnlineSubsDialog::downloadAndTranslate()
@@ -241,15 +439,85 @@ void OnlineSubsDialog::downloadOnly()
     startDownload(false);
 }
 
-void OnlineSubsDialog::onDownloadFinished(const QString &filePath, const QString &error)
+void OnlineSubsDialog::startDownload(bool translate)
 {
-    m_translateButton->setEnabled(!m_results.isEmpty());
-    m_downloadButton->setEnabled(!m_results.isEmpty());
-    if (!error.isEmpty()) {
-        m_statusLabel->setText(tr("Error: %1").arg(error));
+    if (!m_downloader || m_busy) return;
+
+    m_downloadQueue.clear();
+    for (int row = 0; row < m_results.size(); ++row) {
+        if (m_results.at(row).selected) m_downloadQueue.append(row);
+    }
+    if (m_downloadQueue.isEmpty()) {
+        m_statusLabel->setText(tr("Marca al menos un resultado."));
         return;
     }
-    m_statusLabel->setText(tr("Descarga completada: %1").arg(QFileInfo(filePath).fileName()));
-    emit subtitleReady(filePath, m_videoPath, m_pendingLanguage, m_pendingTranslate);
-    accept();
+
+    m_pendingTranslate = translate;
+    m_downloadedCount = 0;
+    m_failedCount = 0;
+    m_nextDownload = 0;
+    m_statusLabel->setText(tr("Descargando el subtítulo…"));
+    setBusy(true);
+    startNextDownload();
+}
+
+void OnlineSubsDialog::startNextDownload()
+{
+    if (m_nextDownload >= m_downloadQueue.size()) {
+        finishDownload();
+        return;
+    }
+
+    const int row = m_downloadQueue.at(m_nextDownload);
+    if (row < 0 || row >= m_results.size()) {
+        ++m_nextDownload;
+        QTimer::singleShot(0, this, &OnlineSubsDialog::startNextDownload);
+        return;
+    }
+
+    const ResultState result = m_results.at(row);
+    const QString lang = languageFor(result);
+    const QString dir = downloadDirectory(result.videoPath);
+    QDir().mkpath(dir);
+    const QString base = cleanQuery(result.videoPath);
+    const QString fileName = QStringLiteral("%1.%2.srt")
+                                 .arg(base.isEmpty() ? QStringLiteral("subtitle") : base,
+                                      lang);
+    const QString target = QDir(dir).absoluteFilePath(fileName);
+
+    setResultStatus(row, tr("Descargando el subtítulo…"));
+    qInfo() << "[ONLINE-SUBS] download requested" << result.sub.fileId << "->" << target;
+    m_downloader->download(result.sub, target, result.videoPath);
+}
+
+void OnlineSubsDialog::onDownloadFinished(const QString &videoPath,
+                                          const QString &filePath,
+                                          const QString &error)
+{
+    if (m_downloadQueue.isEmpty() || m_nextDownload >= m_downloadQueue.size()) return;
+    const int row = m_downloadQueue.at(m_nextDownload);
+    if (row < 0 || row >= m_results.size()) return;
+
+    const ResultState result = m_results.at(row);
+    const QString downloadedFor = videoPath.isEmpty() ? result.videoPath : videoPath;
+    if (!error.isEmpty()) {
+        ++m_failedCount;
+        setResultStatus(row, tr("Error: %1").arg(error));
+        setFileStatus(downloadedFor, tr("Error: %1").arg(error));
+    } else {
+        ++m_downloadedCount;
+        setResultStatus(row, tr("Descarga completada: %1").arg(QFileInfo(filePath).fileName()));
+        emit subtitleReady(filePath, downloadedFor, languageFor(result), m_pendingTranslate);
+    }
+
+    ++m_nextDownload;
+    QTimer::singleShot(0, this, &OnlineSubsDialog::startNextDownload);
+}
+
+void OnlineSubsDialog::finishDownload()
+{
+    m_downloadQueue.clear();
+    setBusy(false);
+    m_statusLabel->setText(tr("%1 descargados, %2 fallidos")
+                               .arg(m_downloadedCount).arg(m_failedCount));
 }

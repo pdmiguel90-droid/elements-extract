@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(ElementsExtract VERSION 1.2.4 LANGUAGES CXX)
+project(ElementsExtract VERSION 1.2.5 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,11 +13,27 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
-# Qt6 (requerido)
-find_package(Qt6 6.2 COMPONENTS Core Widgets Network REQUIRED)
+# Qt6 (requerido: Core, Widgets, Network). DBus se busca por separado porque
+# en Linux es obligatorio para el almacén de credenciales, pero en Windows y
+# macOS se usan las APIs nativas y no hace falta.
+find_package(Qt6 6.2 COMPONENTS Core Widgets Network QUIET)
+if(NOT Qt6_FOUND)
+    find_package(Qt6 6.2 COMPONENTS Core Widgets Network REQUIRED)
+endif()
 set(QT_VERSION_MAJOR 6)
 
+set(ELEMENTS_EXTRACT_HAVE_SECRET_SERVICE OFF)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(Qt6 6.2 COMPONENTS DBus QUIET)
+    if(Qt6DBus_FOUND)
+        set(ELEMENTS_EXTRACT_HAVE_SECRET_SERVICE ON)
+    else()
+        message(STATUS "Qt6 DBus no encontrado: almacén de credenciales desactivado (isAvailable() = false)")
+    endif()
+endif()
+
 message(STATUS "Building with Qt ${Qt6_VERSION}")
+message(STATUS "Secret Service credential store: ${ELEMENTS_EXTRACT_HAVE_SECRET_SERVICE}")
 
 add_executable(elements-extract
     main.cpp
@@ -40,6 +56,8 @@ add_executable(elements-extract
     onlinesubsdialog.cpp
     theme.h
     theme.cpp
+    credentialstore.h
+    credentialstore.cpp
     resources.qrc
 )
 
@@ -47,6 +65,15 @@ target_link_libraries(elements-extract PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Network
 )
+
+if(ELEMENTS_EXTRACT_HAVE_SECRET_SERVICE)
+    target_compile_definitions(elements-extract PRIVATE ELEMENTS_EXTRACT_HAVE_SECRET_SERVICE=1)
+    target_link_libraries(elements-extract PRIVATE Qt${QT_VERSION_MAJOR}::DBus)
+elseif(WIN32)
+    target_link_libraries(elements-extract PRIVATE advapi32)
+elseif(APPLE)
+    target_link_libraries(elements-extract PRIVATE "-framework Security" "-framework CoreFoundation")
+endif()
 
 # --- Instalación ---
 install(TARGETS elements-extract DESTINATION bin)
@@ -106,6 +133,9 @@ set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_CONTACT "pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>")
 # libgfortran5: runtime del motor bergamot (OpenBLAS, estático o dinámico)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "ffmpeg (>= 4.0), libqt6widgets6 (>= 6.2), libqt6network6 (>= 6.2), libc6 (>= 2.31), libgfortran5")
+if(ELEMENTS_EXTRACT_HAVE_SECRET_SERVICE)
+    string(APPEND CPACK_DEBIAN_PACKAGE_DEPENDS ", libqt6dbus6 (>= 6.2)")
+endif()
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/pdmiguel90-droid/elements-extract")

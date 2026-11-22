@@ -9,8 +9,8 @@
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="41" />
-        <source>Versión 1.2.4  ·  2026</source>
-        <translation>Version 1.2.4  ·  2026</translation>
+        <source>Versión 1.2.5  ·  2026</source>
+        <translation>Version 1.2.5  ·  2026</translation>
     </message>
     <message>
         <source>Extractor gráfico de pistas de audio, vídeo y subtítulos.
@@ -165,8 +165,8 @@ Language</translation>
         <translation>Shortcuts and Settings</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;8. Subtítulos online&lt;/h3&gt;&lt;p&gt;Con &lt;b&gt;Archivo → Buscar subtítulos en internet…&lt;/b&gt; (Ctrl+Shift+S) puedes buscar y descargar subtítulos desde OpenSubtitles.com y traducirlos después con el motor offline. Necesitas tu propia clave API, usuario y contraseña en &lt;b&gt;Ajustes → Subtítulos online&lt;/b&gt;.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt;8. Online subtitles&lt;/h3&gt;&lt;p&gt;Use &lt;b&gt;File → Search for subtitles online…&lt;/b&gt; (Ctrl+Shift+S) to search for and download subtitles from OpenSubtitles.com and then translate them with the offline engine. You need your own API key, username and password in &lt;b&gt;Settings → Online subtitles&lt;/b&gt;.&lt;/p&gt;</translation>
+        <source>&lt;h3&gt;8. Subtítulos online&lt;/h3&gt;&lt;p&gt;Pulsa &lt;b&gt;Buscar subs online&lt;/b&gt;, usa &lt;b&gt;Archivo → Buscar subtítulos en internet…&lt;/b&gt; (Ctrl+Shift+S) o el &lt;b&gt;clic derecho&lt;/b&gt; sobre un archivo de la lista. Puedes seleccionar varios vídeos a la vez para procesarlos en lote.&lt;/p&gt;&lt;p&gt;En el diálogo, marca los archivos y pulsa &lt;b&gt;Buscar en seleccionados&lt;/b&gt; o &lt;b&gt;Buscar en todos&lt;/b&gt;. Haz doble clic en la columna &lt;b&gt;Consulta&lt;/b&gt; para cambiar el título buscado de uno solo; el idioma del desplegable se aplica a toda la búsqueda.&lt;/p&gt;&lt;p&gt;Marca los resultados y elige &lt;b&gt;Descargar y traducir seleccionados&lt;/b&gt; o &lt;b&gt;Solo descargar seleccionados&lt;/b&gt;. Las descargas se hacen en secuencia y se informa del resultado de cada archivo.&lt;/p&gt;&lt;p&gt;Necesitas tu propia clave API, usuario y contraseña en &lt;b&gt;Ajustes → Subtítulos online&lt;/b&gt;. Las credenciales se guardan en el almacén seguro del sistema.&lt;/p&gt;</source>
+        <translation>&lt;h3&gt;8. Online subtitles&lt;/h3&gt;&lt;p&gt;Click &lt;b&gt;Search online subs&lt;/b&gt;, use &lt;b&gt;File → Search subtitles online…&lt;/b&gt; (Ctrl+Shift+S) or &lt;b&gt;right-click&lt;/b&gt; a file in the list. You can select several videos at once to process them as a batch.&lt;/p&gt;&lt;p&gt;In the dialog, tick the files and press &lt;b&gt;Search selected&lt;/b&gt; or &lt;b&gt;Search all&lt;/b&gt;. Double-click the &lt;b&gt;Query&lt;/b&gt; column to change the title searched for one file; the language chosen applies to the whole search.&lt;/p&gt;&lt;p&gt;Tick the results and choose &lt;b&gt;Download and translate selected&lt;/b&gt; or &lt;b&gt;Download selected only&lt;/b&gt;. Downloads run sequentially and the result of each file is reported.&lt;/p&gt;&lt;p&gt;You need your own API key, username and password in &lt;b&gt;Settings → Online subtitles&lt;/b&gt;. Credentials are stored in the system secure credential store.&lt;/p&gt;</translation>
     </message>
 </context>
 <context>
@@ -1177,6 +1177,14 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <source>El idioma del subtítulo (%1) no es compatible con la traducción.</source>
         <translation>The subtitle language (%1) is not supported for translation.</translation>
     </message>
+    <message>
+        <source>Buscar subs online</source>
+        <translation>Search online subs</translation>
+    </message>
+    <message>
+        <source>Buscar y descargar subtítulos para los archivos seleccionados</source>
+        <translation>Search for and download subtitles for the selected files</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -1441,8 +1449,20 @@ Download it again? (replaces the local copy)</translation>
         <translation>Password:</translation>
     </message>
     <message>
-        <source>La búsqueda de subtítulos en &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; es opcional: necesitas una cuenta y tu propia clave API. Estos datos se guardan solo en este equipo.</source>
-        <translation>Subtitle search on &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; is optional: you need an account and your own API key. This data is stored only on this computer.</translation>
+        <source>La búsqueda de subtítulos en &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; es opcional: necesitas una cuenta y tu propia clave API.</source>
+        <translation>Subtitle search on &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; is optional: you need an account and your own API key.</translation>
+    </message>
+    <message>
+        <source>Las credenciales se guardan en el almacén seguro del sistema.</source>
+        <translation>Credentials are stored in the system's secure credential store.</translation>
+    </message>
+    <message>
+        <source>El almacén seguro del sistema no está disponible. Las credenciales no se guardarán: tendrás que introducirlas cada vez.</source>
+        <translation>The system credential store is unavailable. Credentials will not be saved: you will need to enter them every time.</translation>
+    </message>
+    <message>
+        <source>No se pudieron guardar las credenciales en el almacén seguro: %1</source>
+        <translation>Could not save the credentials to the secure store: %1</translation>
     </message>
     <message>
         <source>Subtítulos online</source>
@@ -1653,6 +1673,66 @@ Directory searched: %3</translation>
     <message>
         <source>idioma desconocido</source>
         <translation>unknown language</translation>
+    </message>
+    <message>
+        <source>Pendiente</source>
+        <translation>Pending</translation>
+    </message>
+    <message>
+        <source>Subtítulos online — %1 archivos</source>
+        <translation>Online subtitles — %1 files</translation>
+    </message>
+    <message>
+        <source>%1 archivos seleccionados</source>
+        <translation>%1 files selected</translation>
+    </message>
+    <message>
+        <source>Consulta</source>
+        <translation>Query</translation>
+    </message>
+    <message>
+        <source>Estado</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Resultados</source>
+        <translation>Results</translation>
+    </message>
+    <message>
+        <source>Buscar en seleccionados</source>
+        <translation>Search selected</translation>
+    </message>
+    <message>
+        <source>Buscar en todos</source>
+        <translation>Search all</translation>
+    </message>
+    <message>
+        <source>Descargar y traducir seleccionados</source>
+        <translation>Download and translate selected</translation>
+    </message>
+    <message>
+        <source>Solo descargar seleccionados</source>
+        <translation>Download selected only</translation>
+    </message>
+    <message>
+        <source>No hay archivos marcados.</source>
+        <translation>No files are checked.</translation>
+    </message>
+    <message>
+        <source>Búsqueda finalizada: %1 resultados.</source>
+        <translation>Search finished: %1 results.</translation>
+    </message>
+    <message>
+        <source>%1 resultados</source>
+        <translation>%1 results</translation>
+    </message>
+    <message>
+        <source>Marca al menos un resultado.</source>
+        <translation>Check at least one result.</translation>
+    </message>
+    <message>
+        <source>%1 descargados, %2 fallidos</source>
+        <translation>%1 downloaded, %2 failed</translation>
     </message>
 </context>
 <context>

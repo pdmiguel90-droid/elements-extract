@@ -5,6 +5,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.5] - 2026-11-22
+
+### Añadido
+- Búsqueda manual y por lote de subtítulos online: selecciona varios vídeos desde el botón «Buscar subs online», el menú **Archivo → Buscar subtítulos en internet…** o el clic derecho sobre la lista; edita la consulta de cada archivo, marca los archivos/resultados que quieres procesar y descarga o traduce los subtítulos de todos ellos en secuencia
+
+### Seguridad
+- Las credenciales de OpenSubtitles (clave API, usuario y contraseña) se guardan ahora en el almacén seguro del sistema: Secret Service en Linux, Credential Manager en Windows y Keychain en macOS
+- Se migran automáticamente las credenciales anteriores al almacén seguro y se eliminan los antiguos valores en texto plano de `QSettings` (`onlineSubs/apiKey`, `onlineSubs/username` y `onlineSubs/password`) al iniciar la aplicación o al abrir Ajustes
+
+---
+
 ## [1.2.4] - 2026-11-22
 
 ### Añadido

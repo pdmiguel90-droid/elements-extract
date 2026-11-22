@@ -244,14 +244,12 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
     onlineForm->addRow(m_onlinePasswordLbl, m_onlinePasswordEdit);
     onlineLay->addWidget(m_onlineSubsBox);
 
-    m_onlineSubsInfoLbl = new QLabel(tr(
-        "La búsqueda de subtítulos en <a href=\"https://www.opensubtitles.com\">OpenSubtitles.com</a> "
-        "es opcional: necesitas una cuenta y tu propia clave API. "
-        "Estos datos se guardan solo en este equipo."));
+    m_onlineSubsInfoLbl = new QLabel();
     m_onlineSubsInfoLbl->setOpenExternalLinks(true);
     m_onlineSubsInfoLbl->setTextInteractionFlags(Qt::TextBrowserInteraction);
     m_onlineSubsInfoLbl->setWordWrap(true);
     m_onlineSubsInfoLbl->setProperty("labelColor", "muted");
+    updateOnlineSubsInfoLabel();
     onlineLay->addWidget(m_onlineSubsInfoLbl);
     onlineLay->addStretch(1);
 
@@ -268,12 +266,24 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
     mainLayout->addLayout(btnRow);
 
 
-    // Load settings
+    // Load settings: credenciales solo desde el almacén seguro del sistema.
     QSettings s("LocalApp", "FFmpegExtractor");
 
-    m_apiKeyEdit->setText(s.value("onlineSubs/apiKey").toString());
-    m_onlineUserEdit->setText(s.value("onlineSubs/username").toString());
-    m_onlinePasswordEdit->setText(s.value("onlineSubs/password").toString());
+    QString apiKey, onlineUser, onlinePassword;
+    m_credentialStore.load(ElementsExtractCredentials::Service,
+                           ElementsExtractCredentials::ApiKey, &apiKey);
+    m_credentialStore.load(ElementsExtractCredentials::Service,
+                           ElementsExtractCredentials::Username, &onlineUser);
+    m_credentialStore.load(ElementsExtractCredentials::Service,
+                           ElementsExtractCredentials::Password, &onlinePassword);
+    m_apiKeyEdit->setText(apiKey);
+    m_onlineUserEdit->setText(onlineUser);
+    m_onlinePasswordEdit->setText(onlinePassword);
+
+    // Migración: purge de los antiguos valores en texto plano.
+    s.remove("onlineSubs/apiKey");
+    s.remove("onlineSubs/username");
+    s.remove("onlineSubs/password");
     connect(m_apiKeyEdit, &QLineEdit::editingFinished,
             this, &SettingsDialog::saveOnlineSubsSettings);
     connect(m_onlineUserEdit, &QLineEdit::editingFinished,
@@ -387,23 +397,57 @@ void SettingsDialog::retranslateUi()
     if (m_apiKeyLbl)     m_apiKeyLbl->setText(tr("Clave API:"));
     if (m_onlineUserLbl) m_onlineUserLbl->setText(tr("Usuario:"));
     if (m_onlinePasswordLbl) m_onlinePasswordLbl->setText(tr("Contraseña:"));
-    if (m_onlineSubsInfoLbl)
-        m_onlineSubsInfoLbl->setText(tr(
-            "La búsqueda de subtítulos en <a href=\"https://www.opensubtitles.com\">OpenSubtitles.com</a> "
-            "es opcional: necesitas una cuenta y tu propia clave API. "
-            "Estos datos se guardan solo en este equipo."));
+    updateOnlineSubsInfoLabel();
     if (m_closeBtn)     m_closeBtn->setText(tr("Cerrar"));
 
     refreshLocalModels();
     refreshOnlineModels();
 }
 
+void SettingsDialog::updateOnlineSubsInfoLabel(const QString &saveError)
+{
+    if (!m_onlineSubsInfoLbl)
+        return;
+
+    const QString base = tr(
+        "La búsqueda de subtítulos en <a href=\"https://www.opensubtitles.com\">OpenSubtitles.com</a> "
+        "es opcional: necesitas una cuenta y tu propia clave API.");
+    const QString status = !saveError.isEmpty()
+        ? tr("No se pudieron guardar las credenciales en el almacén seguro: %1")
+              .arg(saveError.toHtmlEscaped())
+        : (CredentialStore::isAvailable()
+               ? tr("Las credenciales se guardan en el almacén seguro del sistema.")
+               : tr("El almacén seguro del sistema no está disponible. Las credenciales no se guardarán: "
+                    "tendrás que introducirlas cada vez."));
+    m_onlineSubsInfoLbl->setText(base + QStringLiteral("<br><br>") + status);
+}
+
 void SettingsDialog::saveOnlineSubsSettings()
 {
+    m_credentialError.clear();
+    if (CredentialStore::isAvailable()) {
+        const QString apiKey = m_apiKeyEdit->text().trimmed();
+        const QString username = m_onlineUserEdit->text().trimmed();
+        const QString password = m_onlinePasswordEdit->text();
+        QString error;
+        bool ok = m_credentialStore.save(ElementsExtractCredentials::Service,
+                                         ElementsExtractCredentials::ApiKey, apiKey, &error);
+        ok = m_credentialStore.save(ElementsExtractCredentials::Service,
+                                    ElementsExtractCredentials::Username, username, &error) && ok;
+        ok = m_credentialStore.save(ElementsExtractCredentials::Service,
+                                    ElementsExtractCredentials::Password, password, &error) && ok;
+        if (!ok)
+            m_credentialError = error;
+    }
+
+    // Nunca se escriben credenciales en QSettings; se eliminan las claves
+    // heredadas de versiones anteriores aunque el almacén no esté disponible.
     QSettings s("LocalApp", "FFmpegExtractor");
-    s.setValue("onlineSubs/apiKey", m_apiKeyEdit->text().trimmed());
-    s.setValue("onlineSubs/username", m_onlineUserEdit->text().trimmed());
-    s.setValue("onlineSubs/password", m_onlinePasswordEdit->text());
+    s.remove("onlineSubs/apiKey");
+    s.remove("onlineSubs/username");
+    s.remove("onlineSubs/password");
+
+    updateOnlineSubsInfoLabel(m_credentialError);
     emit settingsChanged();
     if (sender() == m_closeBtn)
         accept();

@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <QCoreApplication>
 #include <QGroupBox>
+#include "credentialstore.h"
 
 // Forward declarations for translation classes
 class SubtitleTranslator;
@@ -195,6 +196,7 @@ private:
     QLabel       *pistasLabel;
     QPushButton  *addButton;
     QPushButton  *removeButton;
+    QPushButton  *onlineSubsButton;
     QPushButton  *videoAllButton;
     QPushButton  *audioAllButton;
     QPushButton  *subsAllButton;
@@ -233,6 +235,7 @@ private:
     SubtitleTranslator *subtitleTranslator;
     ModelDownloader *modelDownloader;
     SubtitleDownloader *onlineSubDownloader = nullptr;
+    CredentialStore m_credentialStore;
 
     // ── Estado ───────────────────────────────────────────────────────────────
     QString  lastSelectedFile;

@@ -188,7 +188,11 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 3. Extraia normalmente — as legendas traduzidas são salvas como `arquivo.es.srt`
 4. Se não houver modelo direto (ex.: pt→es), a **tradução triangular** é usada automaticamente
 
-> 🌐 **Legendas online**: também é possível buscar, baixar e traduzir legendas do [OpenSubtitles.com](https://www.opensubtitles.com) em **Arquivo → Buscar legendas na internet…** (`Ctrl+Shift+S`). É preciso ter conta própria, chave API, usuário e senha, informados em **Ajustes → Legendas online** e salvos apenas neste computador.
+> 🌐 **Legendas online (manual e em lote)**: é possível buscar, baixar e traduzir legendas do [OpenSubtitles.com](https://www.opensubtitles.com) com o botão **«Buscar subs online»**, em **Arquivo → Buscar legendas na internet…** (`Ctrl+Shift+S`) ou com o **clique direito** sobre um arquivo da lista. A lista aceita seleção múltipla, permitindo processar vários vídeos de uma vez.
+>
+> Na janela, marque os arquivos a pesquisar (**Buscar nos selecionados**) ou use **Buscar em todos**. Dê **duplo clique na coluna «Consulta»** para alterar manualmente o título pesquisado de um arquivo específico; o idioma escolhido aplica-se a toda a busca. Depois marque os resultados e pressione **Baixar e traduzir selecionados** ou **Apenas baixar selecionados**: os downloads são sequenciais e o resultado de cada arquivo é informado.
+>
+> É preciso ter conta própria, chave API, usuário e senha, informados em **Ajustes → Legendas online** e salvos no **armazenamento seguro do sistema** (Secret Service no Linux, Credential Manager no Windows e Keychain no macOS).
 
 > 💡 **Trabalhar com um único idioma**: a lista **"Apenas legendas"** seleciona de uma vez as legendas de um idioma específico em todos os arquivos do lote (arquivos sem esse idioma são ignorados). Com o filtro ativo, a tradução usa esse idioma como origem automaticamente.
 

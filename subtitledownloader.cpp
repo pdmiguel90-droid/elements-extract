@@ -262,6 +262,7 @@ void SubtitleDownloader::search(const QString &videoPath, const QString &query,
 {
     m_cancelled = false;
     m_videoPath = videoPath;
+    m_currentVideoPath = videoPath;
     m_query = query.trimmed();
     m_language = language.trimmed();
     m_download = DownloadState();
@@ -269,7 +270,7 @@ void SubtitleDownloader::search(const QString &videoPath, const QString &query,
     if (!hasCredentials()) {
         const QString error = tr("Falta la clave de API de OpenSubtitles. Configúrala en Ajustes → Subtítulos online.");
         emit statusMessage(error);
-        emit searchFinished({}, error);
+        emit searchFinished(m_currentVideoPath, {}, error);
         return;
     }
     startSearchByHash();
@@ -302,7 +303,7 @@ void SubtitleDownloader::startSearchByQuery()
     if (m_query.isEmpty()) {
         const QString error = tr("Introduce un título para buscar subtítulos.");
         emit statusMessage(error);
-        emit searchFinished({}, error);
+        emit searchFinished(m_currentVideoPath, {}, error);
         m_step = Step::None;
         return;
     }
@@ -335,9 +336,12 @@ void SubtitleDownloader::startSearchByQuery()
     m_activeReply = m_manager->get(makeRequest(url, false));
 }
 
-void SubtitleDownloader::download(const OnlineSubtitle &item, const QString &targetPath)
+void SubtitleDownloader::download(const OnlineSubtitle &item, const QString &targetPath,
+                                  const QString &videoPath)
 {
     m_cancelled = false;
+    if (!videoPath.isEmpty())
+        m_currentVideoPath = videoPath;
     m_download.item = item;
     m_download.targetPath = targetPath;
     m_download.authRetried = false;
@@ -345,11 +349,11 @@ void SubtitleDownloader::download(const OnlineSubtitle &item, const QString &tar
     if (!hasCredentials()) {
         const QString error = tr("Falta la clave de API de OpenSubtitles. Configúrala en Ajustes → Subtítulos online.");
         emit statusMessage(error);
-        emit downloadFinished(QString(), error);
+        emit downloadFinished(m_currentVideoPath, QString(), error);
         return;
     }
     if (item.fileId.trimmed().isEmpty()) {
-        emit downloadFinished(QString(), tr("El subtítulo seleccionado no tiene identificador de archivo."));
+        emit downloadFinished(m_currentVideoPath, QString(), tr("El subtítulo seleccionado no tiene identificador de archivo."));
         return;
     }
     if (m_token.isEmpty()) {
@@ -364,7 +368,7 @@ void SubtitleDownloader::startLogin()
     if (m_user.isEmpty() || m_password.isEmpty()) {
         const QString error = tr("Faltan el usuario o la contraseña de OpenSubtitles. Configúralos en Ajustes → Subtítulos online.");
         emit statusMessage(error);
-        emit downloadFinished(QString(), error);
+        emit downloadFinished(m_currentVideoPath, QString(), error);
         m_step = Step::None;
         return;
     }
@@ -417,9 +421,9 @@ void SubtitleDownloader::cancel()
     m_step = Step::None;
     emit statusMessage(tr("Operación cancelada."));
     if (previous == Step::SearchByHash || previous == Step::SearchByQuery)
-        emit searchFinished({}, tr("Búsqueda cancelada."));
+        emit searchFinished(m_currentVideoPath, {}, tr("Búsqueda cancelada."));
     else
-        emit downloadFinished(QString(), tr("Descarga cancelada."));
+        emit downloadFinished(m_currentVideoPath, QString(), tr("Descarga cancelada."));
 }
 
 void SubtitleDownloader::onReplyFinished(QNetworkReply *reply)
@@ -455,9 +459,9 @@ void SubtitleDownloader::onReplyFinished(QNetworkReply *reply)
             emit statusMessage(tr("Búsqueda por hash no disponible; probando por título…"));
             startSearchByQuery();
         } else if (step == Step::SearchByQuery) {
-            emit searchFinished({}, error);
+            emit searchFinished(m_currentVideoPath, {}, error);
         } else {
-            emit downloadFinished(QString(), error);
+            emit downloadFinished(m_currentVideoPath, QString(), error);
         }
         return;
     }
@@ -508,7 +512,7 @@ void SubtitleDownloader::handleSearchReply(QNetworkReply *reply, bool wasHashSea
     QJsonParseError parseError;
     const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &parseError);
     if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
-        emit searchFinished({}, tr("La respuesta de OpenSubtitles no es un JSON válido."));
+        emit searchFinished(m_currentVideoPath, {}, tr("La respuesta de OpenSubtitles no es un JSON válido."));
         return;
     }
 
@@ -550,10 +554,10 @@ void SubtitleDownloader::handleSearchReply(QNetworkReply *reply, bool wasHashSea
         return;
     }
     if (results.isEmpty()) {
-        emit searchFinished({}, tr("No se encontraron subtítulos."));
+        emit searchFinished(m_currentVideoPath, {}, tr("No se encontraron subtítulos."));
         return;
     }
-    emit searchFinished(results, QString());
+    emit searchFinished(m_currentVideoPath, results, QString());
 }
 
 void SubtitleDownloader::handleLoginReply(QNetworkReply *reply)
@@ -566,7 +570,7 @@ void SubtitleDownloader::handleLoginReply(QNetworkReply *reply)
     if (token.isEmpty()) {
         const QString error = tr("OpenSubtitles no devolvió un token de sesión.");
         emit statusMessage(error);
-        emit downloadFinished(QString(), error);
+        emit downloadFinished(m_currentVideoPath, QString(), error);
         return;
     }
     m_token = token;   // solo en memoria
@@ -588,7 +592,7 @@ void SubtitleDownloader::handleDownloadRequestReply(QNetworkReply *reply)
     QJsonParseError parseError;
     const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &parseError);
     if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
-        emit downloadFinished(QString(), tr("La respuesta de OpenSubtitles no es un JSON válido."));
+        emit downloadFinished(m_currentVideoPath, QString(), tr("La respuesta de OpenSubtitles no es un JSON válido."));
         return;
     }
     const QJsonObject obj = doc.object();
@@ -606,13 +610,13 @@ void SubtitleDownloader::handleDownloadRequestReply(QNetworkReply *reply)
         QString outPath;
         QString error;
         if (!writeSubtitleBytes(bytes, m_download.targetPath, &outPath, &error)) {
-            emit downloadFinished(QString(), error);
+            emit downloadFinished(m_currentVideoPath, QString(), error);
             return;
         }
-        emit downloadFinished(outPath, QString());
+        emit downloadFinished(m_currentVideoPath, outPath, QString());
         return;
     }
-    emit downloadFinished(QString(), tr("La respuesta de descarga no contiene un enlace ni contenido."));
+    emit downloadFinished(m_currentVideoPath, QString(), tr("La respuesta de descarga no contiene un enlace ni contenido."));
 }
 
 void SubtitleDownloader::handleLinkReply(QNetworkReply *reply)
@@ -620,12 +624,12 @@ void SubtitleDownloader::handleLinkReply(QNetworkReply *reply)
     QString outPath;
     QString error;
     if (!writeSubtitleBytes(reply->readAll(), m_download.targetPath, &outPath, &error)) {
-        emit downloadFinished(QString(), error);
+        emit downloadFinished(m_currentVideoPath, QString(), error);
         return;
     }
     qInfo() << "[ONLINE-SUBS] subtitle saved:" << outPath;
     emit statusMessage(tr("Subtítulo descargado: %1").arg(QFileInfo(outPath).fileName()));
-    emit downloadFinished(outPath, QString());
+    emit downloadFinished(m_currentVideoPath, outPath, QString());
 }
 
 QString SubtitleDownloader::detectSubtitleExtension(const QByteArray &data)

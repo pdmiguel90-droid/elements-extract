@@ -188,7 +188,11 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 3. Extract as usual — the translated subtitles are saved as `file.en.srt`
 4. If no direct model exists (e.g. pt→es), **triangular translation** is used automatically
 
-> 🌐 **Online subtitles**: you can also search, download and translate subtitles from [OpenSubtitles.com](https://www.opensubtitles.com) via **File → Search subtitles online…** (`Ctrl+Shift+S`). It requires your own account, API key, username and password, entered in **Settings → Online subtitles** and stored only on this computer.
+> 🌐 **Online subtitles (manual and batch)**: you can search, download and translate subtitles from [OpenSubtitles.com](https://www.opensubtitles.com) with the **"Search online subs"** button, via **File → Search subtitles online…** (`Ctrl+Shift+S`) or by **right-clicking** a file in the list. The list supports multiple selection, so you can process several videos at once.
+>
+> In the dialog, tick the files you want to search (**Search selected**) or use **Search all**. **Double-click the "Query" column** to manually change the title searched for a specific file; the chosen language applies to the whole search. Then tick the results and press **Download and translate selected** or **Download selected only**: downloads run sequentially and the outcome of each file is reported.
+>
+> It requires your own account, API key, username and password, entered in **Settings → Online subtitles** and stored in the **system's secure credential store** (Secret Service on Linux, Credential Manager on Windows and Keychain on macOS).
 
 > 💡 **Work with a single language**: the **"Only subs"** dropdown selects the subtitles of a given language across all batch files at once (files without that language are skipped). While the filter is active, translation uses that language as source automatically.
 

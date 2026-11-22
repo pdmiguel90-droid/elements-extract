@@ -9,8 +9,8 @@
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="41" />
-        <source>Versión 1.2.4  ·  2026</source>
-        <translation>Versão 1.2.4  ·  2026</translation>
+        <source>Versión 1.2.5  ·  2026</source>
+        <translation>Versão 1.2.5  ·  2026</translation>
     </message>
     <message>
         <source>Extractor gráfico de pistas de audio, vídeo y subtítulos.
@@ -165,8 +165,8 @@ Linguagem</translation>
         <translation>Atalhos e Configurações</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;8. Subtítulos online&lt;/h3&gt;&lt;p&gt;Con &lt;b&gt;Archivo → Buscar subtítulos en internet…&lt;/b&gt; (Ctrl+Shift+S) puedes buscar y descargar subtítulos desde OpenSubtitles.com y traducirlos después con el motor offline. Necesitas tu propia clave API, usuario y contraseña en &lt;b&gt;Ajustes → Subtítulos online&lt;/b&gt;.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt;8. Legendas online&lt;/h3&gt;&lt;p&gt;Use &lt;b&gt;Arquivo → Buscar legendas na internet…&lt;/b&gt; (Ctrl+Shift+S) para buscar e baixar legendas do OpenSubtitles.com e traduzi-las depois com o motor offline. Você precisa da sua própria chave API, usuário e senha em &lt;b&gt;Ajustes → Legendas online&lt;/b&gt;.&lt;/p&gt;</translation>
+        <source>&lt;h3&gt;8. Subtítulos online&lt;/h3&gt;&lt;p&gt;Pulsa &lt;b&gt;Buscar subs online&lt;/b&gt;, usa &lt;b&gt;Archivo → Buscar subtítulos en internet…&lt;/b&gt; (Ctrl+Shift+S) o el &lt;b&gt;clic derecho&lt;/b&gt; sobre un archivo de la lista. Puedes seleccionar varios vídeos a la vez para procesarlos en lote.&lt;/p&gt;&lt;p&gt;En el diálogo, marca los archivos y pulsa &lt;b&gt;Buscar en seleccionados&lt;/b&gt; o &lt;b&gt;Buscar en todos&lt;/b&gt;. Haz doble clic en la columna &lt;b&gt;Consulta&lt;/b&gt; para cambiar el título buscado de uno solo; el idioma del desplegable se aplica a toda la búsqueda.&lt;/p&gt;&lt;p&gt;Marca los resultados y elige &lt;b&gt;Descargar y traducir seleccionados&lt;/b&gt; o &lt;b&gt;Solo descargar seleccionados&lt;/b&gt;. Las descargas se hacen en secuencia y se informa del resultado de cada archivo.&lt;/p&gt;&lt;p&gt;Necesitas tu propia clave API, usuario y contraseña en &lt;b&gt;Ajustes → Subtítulos online&lt;/b&gt;. Las credenciales se guardan en el almacén seguro del sistema.&lt;/p&gt;</source>
+        <translation>&lt;h3&gt;8. Legendas online&lt;/h3&gt;&lt;p&gt;Clique em &lt;b&gt;Buscar legendas online&lt;/b&gt;, use &lt;b&gt;Arquivo → Buscar legendas na internet…&lt;/b&gt; (Ctrl+Shift+S) ou o &lt;b&gt;clique direito&lt;/b&gt; sobre um arquivo da lista. Você pode selecionar vários vídeos de uma vez para processá-los em lote.&lt;/p&gt;&lt;p&gt;Na janela, marque os arquivos e pressione &lt;b&gt;Buscar nos selecionados&lt;/b&gt; ou &lt;b&gt;Buscar em todos&lt;/b&gt;. Dê duplo clique na coluna &lt;b&gt;Consulta&lt;/b&gt; para alterar o título pesquisado de um arquivo; o idioma escolhido aplica-se a toda a busca.&lt;/p&gt;&lt;p&gt;Marque os resultados e escolha &lt;b&gt;Baixar e traduzir selecionados&lt;/b&gt; ou &lt;b&gt;Apenas baixar selecionados&lt;/b&gt;. Os downloads são sequenciais e o resultado de cada arquivo é informado.&lt;/p&gt;&lt;p&gt;Você precisa da sua própria chave API, usuário e senha em &lt;b&gt;Ajustes → Legendas online&lt;/b&gt;. As credenciais são salvas no armazenamento seguro do sistema.&lt;/p&gt;</translation>
     </message>
 </context>
 <context>
@@ -1177,6 +1177,14 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
         <source>El idioma del subtítulo (%1) no es compatible con la traducción.</source>
         <translation>O idioma da legenda (%1) não é compatível com a tradução.</translation>
     </message>
+    <message>
+        <source>Buscar subs online</source>
+        <translation>Buscar legendas online</translation>
+    </message>
+    <message>
+        <source>Buscar y descargar subtítulos para los archivos seleccionados</source>
+        <translation>Buscar e baixar legendas para os arquivos selecionados</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -1441,8 +1449,20 @@ Baixá-lo novamente? (substitui a cópia local)</translation>
         <translation>Senha:</translation>
     </message>
     <message>
-        <source>La búsqueda de subtítulos en &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; es opcional: necesitas una cuenta y tu propia clave API. Estos datos se guardan solo en este equipo.</source>
-        <translation>A busca de legendas no &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; é opcional: você precisa de uma conta e da sua própria chave API. Esses dados são salvos apenas neste computador.</translation>
+        <source>La búsqueda de subtítulos en &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; es opcional: necesitas una cuenta y tu propia clave API.</source>
+        <translation>A busca de legendas no &lt;a href="https://www.opensubtitles.com"&gt;OpenSubtitles.com&lt;/a&gt; é opcional: você precisa de uma conta e da sua própria chave API.</translation>
+    </message>
+    <message>
+        <source>Las credenciales se guardan en el almacén seguro del sistema.</source>
+        <translation>As credenciais são salvas no armazenamento seguro do sistema.</translation>
+    </message>
+    <message>
+        <source>El almacén seguro del sistema no está disponible. Las credenciales no se guardarán: tendrás que introducirlas cada vez.</source>
+        <translation>O armazenamento seguro do sistema não está disponível. As credenciais não serão salvas: você precisará inseri-las cada vez.</translation>
+    </message>
+    <message>
+        <source>No se pudieron guardar las credenciales en el almacén seguro: %1</source>
+        <translation>Não foi possível salvar as credenciais no armazenamento seguro: %1</translation>
     </message>
     <message>
         <source>Subtítulos online</source>
@@ -1653,6 +1673,66 @@ Diretório procurado: %3</translation>
     <message>
         <source>idioma desconocido</source>
         <translation>idioma desconhecido</translation>
+    </message>
+    <message>
+        <source>Pendiente</source>
+        <translation>Pendente</translation>
+    </message>
+    <message>
+        <source>Subtítulos online — %1 archivos</source>
+        <translation>Legendas online — %1 arquivos</translation>
+    </message>
+    <message>
+        <source>%1 archivos seleccionados</source>
+        <translation>%1 arquivos selecionados</translation>
+    </message>
+    <message>
+        <source>Consulta</source>
+        <translation>Consulta</translation>
+    </message>
+    <message>
+        <source>Estado</source>
+        <translation>Estado</translation>
+    </message>
+    <message>
+        <source>Resultados</source>
+        <translation>Resultados</translation>
+    </message>
+    <message>
+        <source>Buscar en seleccionados</source>
+        <translation>Buscar nos selecionados</translation>
+    </message>
+    <message>
+        <source>Buscar en todos</source>
+        <translation>Buscar em todos</translation>
+    </message>
+    <message>
+        <source>Descargar y traducir seleccionados</source>
+        <translation>Baixar e traduzir selecionados</translation>
+    </message>
+    <message>
+        <source>Solo descargar seleccionados</source>
+        <translation>Apenas baixar selecionados</translation>
+    </message>
+    <message>
+        <source>No hay archivos marcados.</source>
+        <translation>Nenhum arquivo marcado.</translation>
+    </message>
+    <message>
+        <source>Búsqueda finalizada: %1 resultados.</source>
+        <translation>Busca concluída: %1 resultados.</translation>
+    </message>
+    <message>
+        <source>%1 resultados</source>
+        <translation>%1 resultados</translation>
+    </message>
+    <message>
+        <source>Marca al menos un resultado.</source>
+        <translation>Marque pelo menos um resultado.</translation>
+    </message>
+    <message>
+        <source>%1 descargados, %2 fallidos</source>
+        <translation>%1 baixados, %2 falhos</translation>
     </message>
 </context>
 <context>

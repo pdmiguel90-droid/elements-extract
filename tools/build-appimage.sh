@@ -28,7 +28,8 @@ cmake --install build-appimage --prefix "$APPDIR/usr"
 QTPLUGINS="$("$QMAKE" -query QT_INSTALL_PLUGINS)"
 
 mkdir -p "$APPDIR/usr/lib/elements-extract"
-for sub in platforms imageformats iconengines platforminputcontexts xcbglintegrations; do
+# "tls" es necesario para QNetworkAccessManager sobre HTTPS (búsqueda online).
+for sub in platforms imageformats iconengines platforminputcontexts xcbglintegrations tls; do
     [ -d "$QTPLUGINS/$sub" ] && cp -r "$QTPLUGINS/$sub" "$APPDIR/usr/lib/elements-extract/"
 done
 [ -f "$APPDIR/usr/share/elements-extract/bin/libopenblas.so.0" ] && cp "$APPDIR/usr/share/elements-extract/bin/libopenblas.so.0" "$APPDIR/usr/lib/"

@@ -188,7 +188,11 @@ sudo dpkg -i elements-extract-1.2.0-Linux.deb
 3. Extrae normalmente — los subtítulos traducidos se guardan como `archivo.es.srt`
 4. Si no hay modelo directo (ej. pt→es), se usa **traducción triangular** automáticamente
 
-> 🌐 **Subtítulos online**: también puedes buscar, descargar y traducir subtítulos desde [OpenSubtitles.com](https://www.opensubtitles.com) con **Archivo → Buscar subtítulos en internet…** (`Ctrl+Shift+S`). Necesitas tu propia cuenta, clave API, usuario y contraseña, que se introducen en **Ajustes → Subtítulos online** y se guardan solo en este equipo.
+> 🌐 **Subtítulos online (manuales y por lote)**: puedes buscar, descargar y traducir subtítulos desde [OpenSubtitles.com](https://www.opensubtitles.com) con el botón **«Buscar subs online»**, con **Archivo → Buscar subtítulos en internet…** (`Ctrl+Shift+S`) o con el **clic derecho** sobre un archivo de la lista. La lista admite selección múltiple, así que puedes procesar varios vídeos a la vez.
+>
+> En el diálogo, marca los archivos que quieres buscar (**Buscar en seleccionados**) o usa **Buscar en todos**. Haz **doble clic en la columna «Consulta»** para cambiar manualmente el título buscado de un archivo concreto; el idioma elegido se aplica a toda la búsqueda. Después marca los resultados y pulsa **Descargar y traducir seleccionados** o **Solo descargar seleccionados**: las descargas se procesan en secuencia y se indica el resultado de cada archivo.
+>
+> Necesitas tu propia cuenta, clave API, usuario y contraseña, que se introducen en **Ajustes → Subtítulos online** y se guardan en el **almacén seguro del sistema** (Secret Service en Linux, Credential Manager en Windows y Keychain en macOS).
 
 > 💡 **Trabajar solo con un idioma**: el desplegable **«Solo subs»** selecciona a la vez los subtítulos de un idioma concreto en todos los archivos del lote (si un archivo no tiene ese idioma, se omite). Con el filtro activo, la traducción usa ese idioma como origen automáticamente.
 
