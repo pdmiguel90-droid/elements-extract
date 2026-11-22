@@ -1,0 +1,9 @@
+Latin.nocr — nOCR template database from Subtitle Edit
+https://github.com/SubtitleEdit/subtitleedit
+
+Copyright (c) 2008-2026 Nikse Nikolidakis and Subtitle Edit contributors.
+Licensed under the MIT License. Used here as an embedded recognition template
+database for bitmap subtitle OCR. No neural network models are included.
+
+The nOCR file format and matching approach are reimplemented in nocrengine.cpp
+from the Subtitle Edit sources (Ocr/NOcrDb.cs, NOcrChar.cs, NOcrLine.cs).

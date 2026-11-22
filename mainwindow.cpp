@@ -34,11 +34,16 @@
 #include <QPainter>
 #include <QStyle>
 #include <QStandardPaths>
+#include <QTemporaryDir>
+#include <QTextStream>
+#include <QStringConverter>
 #include <QTranslator>
 #include <QLocale>
 #include <QScreen>
 #include <QGuiApplication>
+#include <QElapsedTimer>
 #include <algorithm>
+#include <cmath>
 
 namespace {
 
@@ -79,6 +84,31 @@ QString subtitleExtForCodec(const QString &codec)
         if (c == "ass" || c == "ssa" || c == "mov_text") return "ass";
     }
     return "mks";  // imagen u otros contenedores
+}
+
+// ffprobe/ffmpeg numeran las pistas de subtítulo desde 0; la UI usa el índice
+// absoluto del stream dentro del contenedor.
+int subtitleOrdinal(const QMap<int, QString> &streamTypes, int absoluteIndex)
+{
+    int ordinal = 0;
+    for (auto it = streamTypes.constBegin(); it != streamTypes.constEnd(); ++it) {
+        if (it.value() == QLatin1String("subtitle") && it.key() <= absoluteIndex)
+            ++ordinal;
+    }
+    return ordinal > 0 ? ordinal - 1 : 0;
+}
+
+QString srtTimestamp(qint64 ms)
+{
+    if (ms < 0) ms = 0;
+    const int hours = static_cast<int>(ms / 3600000);
+    const int minutes = static_cast<int>(ms / 60000) % 60;
+    const int seconds = static_cast<int>(ms / 1000) % 60;
+    return QStringLiteral("%1:%2:%3,%4")
+        .arg(hours, 2, 10, QLatin1Char('0'))
+        .arg(minutes, 2, 10, QLatin1Char('0'))
+        .arg(seconds, 2, 10, QLatin1Char('0'))
+        .arg(ms % 1000, 3, 10, QLatin1Char('0'));
 }
 
 } // namespace
@@ -523,6 +553,16 @@ void MainWindow::setupUi()
         s.setValue("autoTranslate", checked);
     });
     transMainLayout->addWidget(translateOnExtractCheck);
+
+    imageOcrCheck = new QCheckBox(tr("OCR de subtítulos de imagen (PGS/VobSub)"));
+    imageOcrCheck->setToolTip(
+        tr("Experimental: convierte PGS/VobSub/DVB/XSUB a .srt con nOCR (sin modelos pesados).\n"
+        "Puede tardar varios minutos por episodio. Revisa siempre el resultado."));
+    connect(imageOcrCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        QSettings s("LocalApp", "FFmpegExtractor");
+        s.setValue("subtitles/imageOcr", checked);
+    });
+    transMainLayout->addWidget(imageOcrCheck);
 
     muxOnExtractCheck = new QCheckBox(tr("Incrustar la traducción (remux)"));
     muxOnExtractCheck->setToolTip(
@@ -1142,7 +1182,9 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
         subDetail = shown.join(", ");
     }
     if (nImageSubs > 0)
-        logArea->append(tr("<font color='#FFCC00'>  › %1 pista(s) de subtítulo de imagen detectadas: se extraen como .mks sin recodificar y no se pueden traducir (sin OCR).</font>").arg(nImageSubs));
+        logArea->append(imageOcrCheck->isChecked()
+            ? tr("<font color='#FFCC00'>  › %1 pista(s) de subtítulo de imagen detectadas: OCR de imagen activado (se generará un .srt por pista).</font>").arg(nImageSubs)
+            : tr("<font color='#FFCC00'>  › %1 pista(s) de subtítulo de imagen detectadas: se extraen como .mks sin recodificar. Marca «OCR de subtítulos de imagen» para convertirlas a texto.</font>").arg(nImageSubs));
 
     // Actualizar panel de metadatos
     updateMetadataPanel(dur, size, videoInfo, nAudio, nSubs, subDetail);
@@ -1243,6 +1285,226 @@ void MainWindow::cancelExtraction()
     cancelButton->setEnabled(false);
     progressBar->setValue(0);
     currentBatchIndex = -1;
+}
+
+bool MainWindow::ocrImageSubtitle(const QString &videoPath, int subtitleOrdinal,
+                                  const QString &srtPath, int *framesWithText,
+                                  int *recognizedChars, int *unknownGlyphs,
+                                  QString *error)
+{
+    auto fail = [error](const QString &message) {
+        if (error) *error = message;
+        return false;
+    };
+    if (framesWithText) *framesWithText = 0;
+    if (recognizedChars) *recognizedChars = 0;
+    if (unknownGlyphs) *unknownGlyphs = 0;
+    logArea->append(tr("<font color='#FFCC00'>  › OCR: extrayendo fotogramas de la pista %1…</font>")
+                        .arg(subtitleOrdinal));
+    QGuiApplication::processEvents();
+
+    if (!m_imageOcrEngineReady) {
+        QFile db(QStringLiteral(":/ocr/Latin.nocr.gz"));
+        if (!db.open(QIODevice::ReadOnly))
+            return fail(tr("la base nOCR no está incluida en los recursos"));
+        QString dbError;
+        if (!m_imageOcrEngine.loadDatabase(db.readAll(), &dbError))
+            return fail(tr("no se pudo cargar la base nOCR: %1").arg(dbError));
+        m_imageOcrEngineReady = true;
+    }
+
+    QProcess probe;
+    QStringList probeArgs;
+    probeArgs << QStringLiteral("-hide_banner") << QStringLiteral("-v") << QStringLiteral("error")
+              << QStringLiteral("-select_streams") << QString("s:%1").arg(subtitleOrdinal)
+              << QStringLiteral("-show_entries") << QStringLiteral("stream=time_base,index,codec_name")
+              << QStringLiteral("-of") << QStringLiteral("json") << videoPath;
+    probe.start(ffprobeExecutable(), probeArgs);
+    if (!probe.waitForFinished(20000))
+        return fail(tr("ffprobe no respondió al consultar la pista de subtítulo"));
+    if (probe.exitStatus() != QProcess::NormalExit || probe.exitCode() != 0)
+        return fail(tr("ffprobe no pudo leer la pista de subtítulo %1").arg(subtitleOrdinal));
+
+    QJsonParseError jsonError;
+    const QJsonDocument doc = QJsonDocument::fromJson(probe.readAllStandardOutput(), &jsonError);
+    const QJsonArray streams = doc.object().value(QStringLiteral("streams")).toArray();
+    if (jsonError.error != QJsonParseError::NoError || streams.isEmpty())
+        return fail(tr("ffprobe no devolvió información de la pista de subtítulo"));
+    const QString timeBase = streams.first().toObject().value(QStringLiteral("time_base")).toString();
+
+    qint64 tbNum = 1, tbDen = 90000;
+    const int slash = timeBase.indexOf(QLatin1Char('/'));
+    if (slash > 0) {
+        bool okNum = false, okDen = false;
+        const qint64 n = timeBase.left(slash).toLongLong(&okNum);
+        const qint64 d = timeBase.mid(slash + 1).toLongLong(&okDen);
+        if (okNum && okDen && n > 0 && d > 0) { tbNum = n; tbDen = d; }
+    }
+
+    auto runExtract = [&](const QString &dir, bool framePts, QStringList *stderrLines) {
+        QProcess ffmpeg;
+        QStringList args;
+        args << QStringLiteral("-hide_banner") << QStringLiteral("-v") << QStringLiteral("info")
+             << QStringLiteral("-i") << videoPath;
+        QString filter = QStringLiteral("[0:s:%1]format=rgba").arg(subtitleOrdinal);
+        filter += QStringLiteral(",showinfo[v]");
+        args << QStringLiteral("-filter_complex") << filter
+             << QStringLiteral("-map") << QStringLiteral("[v]")
+             << QStringLiteral("-fps_mode") << QStringLiteral("passthrough");
+        if (framePts) args << QStringLiteral("-frame_pts") << QStringLiteral("1");
+        args << dir + (framePts ? QStringLiteral("/frame_%d.png")
+                                : QStringLiteral("/frame_%08d.png"));
+        ffmpeg.start(ffmpegExecutable(), args);
+        QElapsedTimer waitTimer;
+        waitTimer.start();
+        while (!ffmpeg.waitForFinished(200)) {
+            if (waitTimer.elapsed() > 180000) return false;
+            QGuiApplication::processEvents();
+        }
+        if (stderrLines)
+            *stderrLines = QString::fromLocal8Bit(ffmpeg.readAllStandardError())
+                               .split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+        return ffmpeg.exitStatus() == QProcess::NormalExit && ffmpeg.exitCode() == 0;
+    };
+
+    auto showInfoTimes = [](const QStringList &lines) {
+        QList<double> times;
+        const QRegularExpression re(QStringLiteral("pts_time:([-+0-9.eE]+)"));
+        for (const QString &line : lines) {
+            auto it = re.globalMatch(line);
+            while (it.hasNext()) {
+                const QString value = it.next().captured(1);
+                bool ok = false;
+                const double seconds = value.toDouble(&ok);
+                if (ok && seconds >= 0 && seconds < 1e9)
+                    times.append(seconds);
+            }
+        }
+        return times;
+    };
+
+    QTemporaryDir primaryDir;
+    QTemporaryDir fallbackDir;
+    if (!primaryDir.isValid()) return fail(tr("no se pudo crear el directorio temporal para OCR"));
+    QStringList primaryStderr;
+    if (!runExtract(primaryDir.path(), true, &primaryStderr))
+        return fail(tr("ffmpeg no pudo extraer los frames del subtítulo de imagen"));
+
+    const QList<double> primaryTimes = showInfoTimes(primaryStderr);
+    QDir primaryFolder(primaryDir.path());
+    const QStringList primaryNames = primaryFolder.entryList({QStringLiteral("frame_*.png")},
+                                                            QDir::Files, QDir::Name);
+    QList<QPair<qint64, QString>> byPts;
+    for (const QString &name : primaryNames) {
+        const QString stem = QFileInfo(name).completeBaseName();
+        const int sep = stem.lastIndexOf(QLatin1Char('_'));
+        bool ok = false;
+        const qint64 pts = sep >= 0 ? stem.mid(sep + 1).toLongLong(&ok) : 0;
+        if (ok) byPts.append(qMakePair(pts, primaryFolder.filePath(name)));
+    }
+    std::sort(byPts.begin(), byPts.end(), [](const auto &a, const auto &b) { return a.first < b.first; });
+
+    QList<qint64> fileMs;
+    for (const auto &entry : byPts)
+        fileMs.append(entry.first * tbNum * 1000 / tbDen);
+    QList<qint64> infoMs;
+    for (double seconds : primaryTimes)
+        infoMs.append(static_cast<qint64>(std::llround(seconds * 1000.0)));
+    std::sort(infoMs.begin(), infoMs.end());
+
+    bool framePtsUsable = byPts.size() == primaryNames.size()
+                       && fileMs.size() == infoMs.size() && !fileMs.isEmpty();
+    if (framePtsUsable) {
+        for (int i = 0; i < fileMs.size(); ++i) {
+            if (fileMs.at(i) < 0 || qAbs(fileMs.at(i) - infoMs.at(i)) > 50) {
+                framePtsUsable = false;
+                break;
+            }
+        }
+    }
+
+    QStringList pngFiles;
+    QList<qint64> frameMs;
+    if (framePtsUsable) {
+        for (const auto &entry : byPts) pngFiles.append(entry.second);
+        frameMs = fileMs;
+    } else {
+        if (!fallbackDir.isValid()) return fail(tr("no se pudo crear el directorio temporal para OCR"));
+        QStringList fallbackStderr;
+        if (!runExtract(fallbackDir.path(), false, &fallbackStderr))
+            return fail(tr("ffmpeg no pudo extraer los frames del subtítulo de imagen"));
+        const QList<double> fallbackTimes = showInfoTimes(fallbackStderr);
+        QDir fallbackFolder(fallbackDir.path());
+        const QStringList names = fallbackFolder.entryList({QStringLiteral("frame_*.png")},
+                                                          QDir::Files, QDir::Name);
+        if (names.isEmpty() || fallbackTimes.size() != names.size())
+            return fail(tr("no se pudieron obtener los tiempos de los frames del subtítulo"));
+        for (const QString &name : names) pngFiles.append(fallbackFolder.filePath(name));
+        for (double seconds : fallbackTimes)
+            frameMs.append(static_cast<qint64>(std::llround(seconds * 1000.0)));
+    }
+
+    logArea->append(tr("<font color='#FFCC00'>  › OCR: %1 fotogramas extraídos; reconociendo texto…</font>")
+                        .arg(pngFiles.size()));
+    QGuiApplication::processEvents();
+
+    QList<qint64> pts90k;
+    for (qint64 ms : frameMs) pts90k.append(ms * 90);
+    const QList<NOcrEngine::OcrLineResult> results = m_imageOcrEngine.recognizeFrames(
+        pngFiles, pts90k, [this](int done, int total) {
+            if (done > 0 && done % 100 == 0) {
+                logArea->append(tr("  › OCR: %1/%2 fotogramas…").arg(done).arg(total));
+                QGuiApplication::processEvents();
+            }
+        });
+
+    struct OcrCue { qint64 start; qint64 end; QString text; };
+    QList<OcrCue> cues;
+    int unknowns = 0, chars = 0;
+    for (int i = 0; i < results.size(); ++i) {
+        const NOcrEngine::OcrLineResult &result = results.at(i);
+        unknowns += result.unknownCount;
+        if (result.text.trimmed().isEmpty()) continue;
+        qint64 start = i < frameMs.size() ? frameMs.at(i) : 0;
+        qint64 end = (i + 1 < frameMs.size()) ? frameMs.at(i + 1) : start + 5000;
+        if (end <= start) end = start + 1000;
+        if (end > start + 300000) end = start + 5000;
+        cues.append(OcrCue{start, end, result.text.trimmed()});
+        chars += result.text.size();
+    }
+    if (cues.isEmpty()) return fail(tr("el OCR no reconoció texto en ningún frame"));
+
+    QList<OcrCue> merged;
+    for (const OcrCue &cue : cues) {
+        if (!merged.isEmpty() && merged.last().text == cue.text
+            && cue.start - merged.last().end <= 250) {
+            merged.last().end = qMax(merged.last().end, cue.end);
+        } else {
+            merged.append(cue);
+        }
+    }
+    cues = merged;
+    chars = 0;
+    for (const OcrCue &cue : cues) chars += cue.text.size();
+
+    QFile out(srtPath);
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Text))
+        return fail(tr("no se pudo escribir el archivo OCR: %1").arg(srtPath));
+    QTextStream stream(&out);
+    stream.setEncoding(QStringConverter::Utf8);
+    for (int i = 0; i < cues.size(); ++i) {
+        const OcrCue &cue = cues.at(i);
+        stream << i + 1 << Qt::endl
+               << srtTimestamp(cue.start) << QStringLiteral(" --> ") << srtTimestamp(cue.end)
+               << Qt::endl << cue.text << QStringLiteral("\n\n");
+    }
+    stream.flush();
+    out.close();
+
+    if (framesWithText) *framesWithText = cues.size();
+    if (recognizedChars) *recognizedChars = chars;
+    if (unknownGlyphs) *unknownGlyphs = unknowns;
+    return true;
 }
 
 void MainWindow::processNextInBatch()
@@ -1374,8 +1636,11 @@ void MainWindow::processNextInBatch()
     auto logImageSub = [this](int index, const QString &codec, const QString &lang) {
         const QString langText = lang.isEmpty() ? QString()
                                                 : QString(" [%1]").arg(lang.toHtmlEscaped());
-        logArea->append(tr("<font color='#FFCC00'>  › Pista %1: %2%3 → .mks sin recodificar; no traducible (sin OCR).</font>")
-                            .arg(index).arg(subtitleCodecDescription(codec)).arg(langText));
+        logArea->append(imageOcrCheck->isChecked()
+            ? tr("<font color='#FFCC00'>  › Pista %1: %2%3 → OCR de imagen (fallback a .mks si falla).</font>")
+                .arg(index).arg(subtitleCodecDescription(codec)).arg(langText)
+            : tr("<font color='#FFCC00'>  › Pista %1: %2%3 → .mks sin recodificar; no traducible (sin OCR).</font>")
+                .arg(index).arg(subtitleCodecDescription(codec)).arg(langText));
     };
 
     QMap<int, QString> selectedTypes = fileSelections.value(inputPath);
@@ -1396,16 +1661,52 @@ void MainWindow::processNextInBatch()
             // contenedor multi-stream (.mks); si solo hay una, usar su formato.
             QString ext;
             bool forceCopy = false;
+            bool skipFfmpegOutput = false;
             if (type == "subtitle") {
                 QStringList subCodecs;
+                QList<int> imageIndices;
                 for (auto it = strTypes.constBegin(); it != strTypes.constEnd(); ++it) {
                     if (it.value() != "subtitle") continue;
                     const QString codec = selectedCodecs.value(it.key());
                     subCodecs << codec;
                     if (subtitleCodecIsImage(codec)) {
                         forceCopy = true;  // -map 0:s puede mezclar texto e imagen
-                        logImageSub(it.key(), codec, strLangs.value(it.key()));
+                        imageIndices << it.key();
                     }
+                }
+
+                if (imageOcrCheck->isChecked() && !imageIndices.isEmpty()) {
+                    const bool allImage = imageIndices.size() == subCodecs.size();
+                    bool allOk = true;
+                    for (int index : imageIndices) {
+                        const int ordinal = subtitleOrdinal(strTypes, index);
+                        QString lang = normalizeLangCode(strLangs.value(index));
+                        if (lang.isEmpty() || lang == "und")
+                            lang = QStringLiteral("track%1").arg(ordinal);
+                        const QString ocrPath = claimUnique(baseName + "." + lang + ".ocr.srt");
+                        QString ocrError;
+                        int frames = 0, chars = 0, unknowns = 0;
+                        if (ocrImageSubtitle(inputPath, ordinal, ocrPath,
+                                             &frames, &chars, &unknowns, &ocrError)) {
+                            const QString normLang = normalizeLangCode(strLangs.value(index));
+                            m_extractedSubs.append({inputPath, ocrPath,
+                                                    (normLang.isEmpty() || normLang == "und") ? QString() : normLang,
+                                                    strTitles.value(index)});
+                            logArea->append(tr("<font color='#39FF14'>  › Pista %1: OCR → %2 (%3 fotogramas, %4 caracteres, %5 glifos desconocidos).</font>")
+                                .arg(index).arg(QFileInfo(ocrPath).fileName().toHtmlEscaped())
+                                .arg(frames).arg(chars).arg(unknowns));
+                        } else {
+                            allOk = false;
+                            logArea->append(tr("<font color='#FFCC00'>  › OCR falló en la pista %1: %2. Se conserva la copia .mks original.</font>")
+                                .arg(index).arg(ocrError.toHtmlEscaped()));
+                        }
+                    }
+                    if (allImage && allOk) skipFfmpegOutput = true;
+                }
+
+                if (!skipFfmpegOutput) {
+                    for (int index : imageIndices)
+                        logImageSub(index, selectedCodecs.value(index), strLangs.value(index));
                 }
                 if (forceCopy)                              ext = "mks";
                 else if (subCodecs.size() == 1 && copyMode) ext = subtitleExtForCodec(subCodecs.first());
@@ -1415,6 +1716,7 @@ void MainWindow::processNextInBatch()
                 ext = copyMode ? (type == "audio" ? "mka" : "mkv") : extensionForType(type);
             }
 
+            if (skipFfmpegOutput) { anyAction = true; continue; }
             finalArgs << "-map" << QString("0:%1").arg(mapCode);
             if (copyMode || forceCopy) {
                 finalArgs << "-c" << "copy";
@@ -1461,7 +1763,9 @@ void MainWindow::processNextInBatch()
                     && !normalizeLangCode(recLang).isEmpty())
                     m_extractedSubs.append({inputPath, outPath, normalizeLangCode(recLang), recTitle});
                 else if (forceCopy)
-                    logArea->append(tr("<font color='#FFCC00'>  › Salida .mks no traducible (sin OCR): %1</font>").arg(outPath));
+                    logArea->append(imageOcrCheck->isChecked()
+                        ? tr("<font color='#FFCC00'>  › Salida .mks conservada (OCR no disponible para todas las pistas): %1</font>").arg(outPath)
+                        : tr("<font color='#FFCC00'>  › Salida .mks no traducible (sin OCR): %1</font>").arg(outPath));
                 else
                     logArea->append(tr("<font color='#FFCC00'>  › Subtítulo omitido para traducción (varias pistas de texto): %1</font>").arg(outPath));
             }
@@ -1480,7 +1784,32 @@ void MainWindow::processNextInBatch()
             // copiado a .mks, por ejemplo, no es legible como subtítulo.
             const bool translatableSub = (type == "subtitle") && subtitleCodecIsText(codec)
                 && (ext == "srt" || ext == "ass" || ext == "vtt");
-            if (forceCopy) logImageSub(index, codec, strLangs.value(index));
+            bool ocrDone = false;
+            if (forceCopy && imageOcrCheck->isChecked()) {
+                const int ordinal = subtitleOrdinal(strTypes, index);
+                QString lang = normalizeLangCode(strLangs.value(index));
+                if (lang.isEmpty() || lang == "und")
+                    lang = QStringLiteral("track%1").arg(ordinal);
+                const QString ocrPath = claimUnique(baseName + "." + lang + ".ocr.srt");
+                QString ocrError;
+                int frames = 0, chars = 0, unknowns = 0;
+                if (ocrImageSubtitle(inputPath, ordinal, ocrPath,
+                                     &frames, &chars, &unknowns, &ocrError)) {
+                    const QString normLang = normalizeLangCode(strLangs.value(index));
+                    m_extractedSubs.append({inputPath, ocrPath,
+                                            (normLang.isEmpty() || normLang == "und") ? QString() : normLang,
+                                            strTitles.value(index)});
+                    logArea->append(tr("<font color='#39FF14'>  › Pista %1: OCR → %2 (%3 fotogramas, %4 caracteres, %5 glifos desconocidos).</font>")
+                        .arg(index).arg(QFileInfo(ocrPath).fileName().toHtmlEscaped())
+                        .arg(frames).arg(chars).arg(unknowns));
+                    ocrDone = true;
+                } else {
+                    logArea->append(tr("<font color='#FFCC00'>  › OCR falló en la pista %1: %2. Se conserva la copia .mks original.</font>")
+                        .arg(index).arg(ocrError.toHtmlEscaped()));
+                }
+            }
+            if (forceCopy && !ocrDone) logImageSub(index, codec, strLangs.value(index));
+            if (ocrDone) { anyAction = true; continue; }
 
             finalArgs << "-map" << QString("0:%1").arg(index);
             if (copyMode || forceCopy) {
@@ -1517,6 +1846,14 @@ void MainWindow::processNextInBatch()
 
     if (!anyAction) {
         logArea->append(tr("<font color='#FFCC00'>  › Sin pistas seleccionadas para este archivo, omitido.</font>"));
+        currentBatchIndex++;
+        processNextInBatch();
+        return;
+    }
+
+    if (finalArgs.size() <= 2) {
+        logArea->append(tr("<font color='#39FF14'>  › Solo se generaron salidas OCR; no hace falta copiar ninguna pista con ffmpeg.</font>"));
+        progressBar->setValue(100);
         currentBatchIndex++;
         processNextInBatch();
         return;
@@ -1624,7 +1961,9 @@ void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
         for (const QString &h : hits)
             logArea->append("<font color='#FF8844'>     " + h.toHtmlEscaped() + "</font>");
         if (imageSubRequested)
-            logArea->append(tr("<font color='#FFCC00'>     Los subtítulos de imagen (PGS/VobSub/DVB/XSUB) solo admiten copia de flujo a .mks: no se pueden convertir a texto sin OCR.</font>"));
+            logArea->append(imageOcrCheck->isChecked()
+                ? tr("<font color='#FFCC00'>     El OCR de imagen no pudo completarse; se conserva la copia original a .mks.</font>")
+                : tr("<font color='#FFCC00'>     Los subtítulos de imagen (PGS/VobSub/DVB/XSUB) solo admiten copia de flujo a .mks; activa «OCR de subtítulos de imagen» para convertirlos a texto.</font>"));
         else if (!copyModeCheckBox->isChecked())
             logArea->append(tr("<font color='#FFCC00'>     Prueba a activar Copiar pista original sin re-codificar.</font>"));
     }
@@ -2349,6 +2688,12 @@ void MainWindow::retranslateUi()
             tr("Si está marcado, al extraer subtítulos se traducirán automáticamente\n"
             "al idioma de destino seleccionado."));
     }
+    if (imageOcrCheck) {
+        imageOcrCheck->setText(tr("OCR de subtítulos de imagen (PGS/VobSub)"));
+        imageOcrCheck->setToolTip(
+            tr("Convierte PGS/VobSub/DVB/XSUB a .srt con nOCR (sin modelos pesados).\n"
+            "El resultado puede traducirse e incrustarse como cualquier otro subtítulo de texto."));
+    }
     if (muxOnExtractCheck) {
         muxOnExtractCheck->setText(tr("Incrustar la traducción (remux)"));
         muxOnExtractCheck->setToolTip(
@@ -2430,6 +2775,7 @@ void MainWindow::loadSettings()
 
     // Load auto-translate setting
     translateOnExtractCheck->setChecked(s.value("autoTranslate", false).toBool());
+    imageOcrCheck->setChecked(s.value("subtitles/imageOcr", false).toBool());
 
     // Migrate from old geometry format
     if (s.contains("geometry")) {
@@ -2472,6 +2818,7 @@ void MainWindow::saveSettings()
     s.setValue("srcLang",     srcLangCombo->currentData().toString());
     s.setValue("dstLang",     dstLangCombo->currentData().toString());
     s.setValue("autoTranslate", translateOnExtractCheck->isChecked());
+    s.setValue("subtitles/imageOcr", imageOcrCheck->isChecked());
 
     // Save window geometry (use normalGeometry when maximized)
     s.setValue("windowMaximized", isMaximized());

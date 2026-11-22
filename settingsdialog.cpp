@@ -232,6 +232,11 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
 
     m_onlineSubsBox = new QGroupBox(tr("Credenciales de OpenSubtitles"));
     QFormLayout *onlineForm = new QFormLayout(m_onlineSubsBox);
+    m_backendLbl = new QLabel(tr("Backend:"));
+    m_backendCombo = new QComboBox();
+    m_backendCombo->addItem(tr("XML-RPC (enlaces directos, tipo VLC)"), QStringLiteral("xmlrpc"));
+    m_backendCombo->addItem(tr("API REST (oficial)"), QStringLiteral("rest"));
+    onlineForm->addRow(m_backendLbl, m_backendCombo);
     m_apiKeyLbl = new QLabel(tr("Clave API:"));
     m_onlineUserLbl = new QLabel(tr("Usuario:"));
     m_onlinePasswordLbl = new QLabel(tr("Contraseña:"));
@@ -279,6 +284,18 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
     m_apiKeyEdit->setText(apiKey);
     m_onlineUserEdit->setText(onlineUser);
     m_onlinePasswordEdit->setText(onlinePassword);
+
+    const QString backend = s.value(QStringLiteral("onlineSubs/backend"),
+                                    QStringLiteral("xmlrpc")).toString();
+    const int backendIndex = m_backendCombo->findData(backend);
+    m_backendCombo->setCurrentIndex(backendIndex >= 0 ? backendIndex : 0);
+    connect(m_backendCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int) {
+        QSettings qs("LocalApp", "FFmpegExtractor");
+        qs.setValue(QStringLiteral("onlineSubs/backend"),
+                    m_backendCombo->currentData().toString());
+        emit settingsChanged();
+    });
 
     // Migración: purge de los antiguos valores en texto plano.
     s.remove("onlineSubs/apiKey");
@@ -394,6 +411,17 @@ void SettingsDialog::retranslateUi()
             tr("<b>tiny</b> ~15-25MB rápido · <b>base</b> ~50MB mejor calidad<br>"
             "Doble clic = activar/desactivar (solo activos se usan para traducir)"));
     if (m_onlineSubsBox) m_onlineSubsBox->setTitle(tr("Credenciales de OpenSubtitles"));
+    if (m_backendLbl)    m_backendLbl->setText(tr("Backend:"));
+    if (m_backendCombo) {
+        const QString current = m_backendCombo->currentData().toString();
+        m_backendCombo->blockSignals(true);
+        m_backendCombo->clear();
+        m_backendCombo->addItem(tr("XML-RPC (enlaces directos, tipo VLC)"), QStringLiteral("xmlrpc"));
+        m_backendCombo->addItem(tr("API REST (oficial)"), QStringLiteral("rest"));
+        const int index = m_backendCombo->findData(current);
+        m_backendCombo->setCurrentIndex(index >= 0 ? index : 0);
+        m_backendCombo->blockSignals(false);
+    }
     if (m_apiKeyLbl)     m_apiKeyLbl->setText(tr("Clave API:"));
     if (m_onlineUserLbl) m_onlineUserLbl->setText(tr("Usuario:"));
     if (m_onlinePasswordLbl) m_onlinePasswordLbl->setText(tr("Contraseña:"));
@@ -411,7 +439,10 @@ void SettingsDialog::updateOnlineSubsInfoLabel(const QString &saveError)
 
     const QString base = tr(
         "La búsqueda de subtítulos en <a href=\"https://www.opensubtitles.com\">OpenSubtitles.com</a> "
-        "es opcional: necesitas una cuenta y tu propia clave API.");
+        "es opcional: necesitas una cuenta y tu propia clave API.")
+        + QStringLiteral("<br>")
+        + tr("XML-RPC permite buscar sin credenciales, pero sin una cuenta con permisos de descarga "
+             "los enlaces devuelven un subtítulo de prueba VIP.");
     const QString status = !saveError.isEmpty()
         ? tr("No se pudieron guardar las credenciales en el almacén seguro: %1")
               .arg(saveError.toHtmlEscaped())
@@ -443,6 +474,8 @@ void SettingsDialog::saveOnlineSubsSettings()
     // Nunca se escriben credenciales en QSettings; se eliminan las claves
     // heredadas de versiones anteriores aunque el almacén no esté disponible.
     QSettings s("LocalApp", "FFmpegExtractor");
+    s.setValue(QStringLiteral("onlineSubs/backend"),
+               m_backendCombo->currentData().toString());
     s.remove("onlineSubs/apiKey");
     s.remove("onlineSubs/username");
     s.remove("onlineSubs/password");

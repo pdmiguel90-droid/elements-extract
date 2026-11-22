@@ -8,7 +8,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 
-// Resultado de una búsqueda en OpenSubtitles.com
+// Resultado de una búsqueda en OpenSubtitles
 struct OnlineSubtitle {
     QString fileId;
     QString language;
@@ -16,6 +16,7 @@ struct OnlineSubtitle {
     QString year;
     QString uploader;
     QString url;
+    QString downloadUrl;   // ZipDownloadLink de XML-RPC; vacío en resultados REST
     int downloads = 0;
     bool hashMatch = false;
 };
@@ -60,6 +61,7 @@ private:
         None,
         SearchByHash,
         SearchByQuery,
+        XmlRpcLoginForSearch,
         LoginForDownload,
         RequestDownload,
         FetchLink
@@ -91,18 +93,37 @@ private:
     DownloadState m_download;
     QString m_chosenEntry;   // si el usuario eligió una entrada dentro del ZIP
 
-    QNetworkRequest makeRequest(const QUrl &url, bool post) const;
+    QString m_backend;              // "rest" o "xmlrpc", desde onlineSubs/backend
+    QString m_xmlRpcUrl;            // override de prueba: ELEMENTS_EXTRACT_OS_XMLRPC_URL
+    QString m_xmlRpcToken;          // solo en memoria
+    bool m_fallbackAttempted = false;
+    QString m_searchError;          // error del backend preferido, para el fallback
+    Step m_pendingSearchStep = Step::None;
+
+    void readBackendSetting();
+    bool backendHasCredentials(const QString &backend) const;
+    void finishSearchFailure(const QString &error);
+
+    QNetworkRequest makeRequest(const QUrl &url, bool post, bool withApiKey = true) const;
+    QNetworkRequest makeXmlRpcRequest() const;
+    QUrl restSearchUrl(bool byHash, const QString &hash, qint64 size) const;
+    QByteArray xmlRpcLoginBody() const;
+    QByteArray xmlRpcSearchBody(bool byHash, const QString &hash, qint64 size) const;
     void startSearchByHash();
     void startSearchByQuery();
+    void startXmlRpcLogin();
     void startLogin();
     void startDownloadRequest();
-    void startLinkFetch(const QUrl &url);
+    void startLinkFetch(const QUrl &url, bool withApiKey = true);
 
     void handleSearchReply(QNetworkReply *reply, bool wasHashSearch);
+    void handleXmlRpcLoginReply(QNetworkReply *reply);
     void handleLoginReply(QNetworkReply *reply);
     void handleDownloadRequestReply(QNetworkReply *reply);
     void handleLinkReply(QNetworkReply *reply);
 
+    static QList<OnlineSubtitle> parseXmlRpcSearchResults(const QByteArray &data,
+                                                            QString *error);
     QString replyErrorMessage(QNetworkReply *reply);
     static QList<OnlineSubtitle> mergeResults(const QList<OnlineSubtitle> &hashResults,
                                                const QList<OnlineSubtitle> &queryResults);

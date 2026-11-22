@@ -4,22 +4,42 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QProcess>
 #include <QRegularExpression>
+#include <QSettings>
 #include <QTemporaryDir>
 #include <QUrlQuery>
 #include <QUuid>
+#include <QXmlStreamReader>
+#include <QXmlStreamWriter>
 
 #include <algorithm>
 
 namespace {
 
 const char *kBaseUrl = "https://api.opensubtitles.com/api/v1/";
+const char *kXmlRpcUrl = "https://api.opensubtitles.org/xml-rpc";
 const char *kUserAgent = "Elements-Extract/1.2";
+// El servicio XML-RPC solo entrega enlaces de descarga reales (/sub/) a los
+// clientes que conoce; con otros nombres devuelve un fichero VIP (/subad/).
+const char *kXmlRpcAppName = "VLSub 0.11.1";
+
+void setFollowRedirects(QNetworkRequest &request)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    request.setAttribute(QNetworkRequest::RedirectAttributePolicy,
+                         QNetworkRequest::FollowRedirectsAttribute);
+#else
+    // Qt 6.2–6.6: equivalente (https → https se sigue automáticamente).
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                         QNetworkRequest::NoLessSafeRedirectPolicy);
+#endif
+}
 
 bool isZipData(const QByteArray &data)
 {
@@ -149,6 +169,262 @@ bool extractGzip(const QString &archivePath, const QString &outputPath, QString 
 #endif
 }
 
+QString toThreeLetterCode(const QString &code)
+{
+    static const QHash<QString, QString> map = {
+        {"es", "spa"}, {"en", "eng"}, {"pt", "por"}, {"fr", "fra"}, {"de", "deu"},
+        {"it", "ita"}, {"ca", "cat"}, {"nl", "nld"}, {"pl", "pol"}, {"ru", "rus"},
+        {"tr", "tur"}, {"ja", "jpn"}, {"ko", "kor"}, {"zh", "zho"}, {"sv", "swe"},
+        {"da", "dan"}, {"no", "nor"}, {"fi", "fin"}, {"cs", "ces"}, {"sk", "slk"},
+        {"sl", "slv"}, {"el", "ell"}, {"he", "heb"}, {"ar", "ara"}, {"hi", "hin"},
+        {"id", "ind"}, {"th", "tha"}, {"vi", "vie"}, {"ro", "ron"}, {"hu", "hun"},
+        {"uk", "ukr"}, {"hr", "hrv"}, {"sr", "srp"}, {"bg", "bul"}, {"et", "est"},
+        {"lv", "lav"}, {"lt", "lit"}, {"fa", "fas"}, {"ur", "urd"}, {"bn", "ben"},
+        {"ta", "tam"}, {"te", "tel"}, {"ms", "msa"}, {"mk", "mkd"}, {"sq", "sqi"},
+        {"is", "isl"}, {"ga", "gle"}, {"mt", "mlt"}, {"cy", "cym"}, {"yi", "yid"}
+    };
+    const QString lang = code.trimmed().toLower().section('-', 0, 0);
+    if (lang.isEmpty() || lang == QLatin1String("all")) return QStringLiteral("all");
+    if (lang.size() == 3) return lang;
+    if (lang == QLatin1String("pb")) return QStringLiteral("por");
+    if (lang == QLatin1String("iw")) return QStringLiteral("heb");
+    if (lang == QLatin1String("in")) return QStringLiteral("ind");
+    if (lang == QLatin1String("ji")) return QStringLiteral("yid");
+    return map.value(lang, lang);
+}
+
+QString toTwoLetterCode(const QString &code)
+{
+    static const QHash<QString, QString> map = {
+        {"spa", "es"}, {"eng", "en"}, {"por", "pt"}, {"fra", "fr"}, {"fre", "fr"},
+        {"deu", "de"}, {"ger", "de"}, {"ita", "it"}, {"cat", "ca"}, {"nld", "nl"},
+        {"dut", "nl"}, {"pol", "pl"}, {"rus", "ru"}, {"tur", "tr"}, {"jpn", "ja"},
+        {"kor", "ko"}, {"zho", "zh"}, {"chi", "zh"}, {"swe", "sv"}, {"dan", "da"},
+        {"nor", "no"}, {"fin", "fi"}, {"ces", "cs"}, {"cze", "cs"}, {"slk", "sk"},
+        {"slv", "sl"}, {"ell", "el"}, {"heb", "he"}, {"ara", "ar"}, {"hin", "hi"},
+        {"ind", "id"}, {"tha", "th"}, {"vie", "vi"}, {"ron", "ro"}, {"rum", "ro"},
+        {"hun", "hu"}, {"ukr", "uk"}, {"hrv", "hr"}, {"srp", "sr"}, {"bul", "bg"},
+        {"est", "et"}, {"lav", "lv"}, {"lit", "lt"}, {"fas", "fa"}, {"per", "fa"},
+        {"urd", "ur"}, {"ben", "bn"}, {"tam", "ta"}, {"tel", "te"}, {"msa", "ms"},
+        {"mkd", "mk"}, {"sqi", "sq"}, {"isl", "is"}, {"gle", "ga"}, {"mlt", "mt"},
+        {"cym", "cy"}, {"yid", "yi"}
+    };
+    const QString lang = code.trimmed().toLower();
+    if (lang.size() != 3) return lang;
+    return map.value(lang, lang);
+}
+
+bool parseSeasonEpisode(const QString &query, QString *season, QString *episode)
+{
+    QRegularExpression re(QStringLiteral("[Ss](\\d{1,2})[Ee](\\d{1,3})"));
+    QRegularExpressionMatch match = re.match(query);
+    if (!match.hasMatch()) {
+        re.setPattern(QStringLiteral("(?:^|\\D)(\\d{1,2})x(\\d{1,3})(?:\\D|$)"));
+        match = re.match(query);
+    }
+    if (!match.hasMatch()) return false;
+    if (season) *season = match.captured(1);
+    if (episode) *episode = match.captured(2);
+    return true;
+}
+
+bool isVipDecoy(const QByteArray &data)
+{
+    const QString text = QString::fromUtf8(data.left(16384));
+    return text.contains(QStringLiteral("osdb.link/vip"), Qt::CaseInsensitive)
+        || text.contains(QStringLiteral("Become OpenSubtitles.org VIP member"),
+                         Qt::CaseInsensitive);
+}
+
+// Lector genérico de valores XML-RPC. El lector debe estar en el elemento <value>.
+QVariant readXmlRpcValue(QXmlStreamReader &xml, bool *ok)
+{
+    if (ok) *ok = false;
+    if (!xml.readNextStartElement()) {
+        if (xml.isEndElement() && xml.name() == QLatin1String("value"))
+            xml.readNext();
+        if (ok) *ok = true;
+        return QString();
+    }
+
+    const QString type = xml.name().toString();
+    QVariant result;
+    bool valid = true;
+
+    if (type == QLatin1String("string") || type == QLatin1String("dateTime.iso8601")
+        || type == QLatin1String("base64")) {
+        result = xml.readElementText();
+    } else if (type == QLatin1String("int") || type == QLatin1String("i4")
+               || type == QLatin1String("i8")) {
+        bool converted = false;
+        const qlonglong number = xml.readElementText().toLongLong(&converted);
+        valid = converted;
+        result = number;
+    } else if (type == QLatin1String("double")) {
+        bool converted = false;
+        const double number = xml.readElementText().toDouble(&converted);
+        valid = converted;
+        result = number;
+    } else if (type == QLatin1String("boolean")) {
+        const QString text = xml.readElementText().trimmed();
+        result = (text == QLatin1String("1")
+                  || text.compare(QLatin1String("true"), Qt::CaseInsensitive) == 0);
+    } else if (type == QLatin1String("nil")) {
+        xml.skipCurrentElement();
+    } else if (type == QLatin1String("array")) {
+        QVariantList values;
+        while (xml.readNextStartElement()) {
+            if (xml.name() == QLatin1String("data")) {
+                while (!xml.atEnd()) {
+                    if (xml.isStartElement() && xml.name() == QLatin1String("value")) {
+                        bool itemOk = false;
+                        values.append(readXmlRpcValue(xml, &itemOk));
+                        valid = valid && itemOk;
+                    } else if (xml.isEndElement() && xml.name() == QLatin1String("data")) {
+                        break;
+                    } else if (!xml.readNextStartElement()) {
+                        break;
+                    }
+                }
+            } else {
+                xml.skipCurrentElement();
+            }
+        }
+        result = values;
+    } else if (type == QLatin1String("struct")) {
+        QVariantMap members;
+        while (xml.readNextStartElement()) {
+            if (xml.name() == QLatin1String("member")) {
+                QString name;
+                QVariant value;
+                while (!xml.atEnd()) {
+                    if (xml.isEndElement() && xml.name() == QLatin1String("member"))
+                        break;   // el bucle exterior avanza al siguiente <member>
+                    if (!xml.readNextStartElement()) break;
+                    if (xml.name() == QLatin1String("name")) {
+                        name = xml.readElementText();
+                    } else if (xml.name() == QLatin1String("value")) {
+                        bool itemOk = false;
+                        value = readXmlRpcValue(xml, &itemOk);
+                        valid = valid && itemOk;
+                    } else {
+                        xml.skipCurrentElement();
+                    }
+                }
+                if (!name.isEmpty()) members.insert(name, value);
+            } else {
+                xml.skipCurrentElement();
+            }
+        }
+        result = members;
+    } else {
+        xml.skipCurrentElement();
+        valid = false;
+    }
+
+    while (!xml.atEnd() && !(xml.isEndElement() && xml.name() == QLatin1String("value"))) {
+        if (xml.isStartElement()) xml.skipCurrentElement();
+        xml.readNext();
+    }
+    if (xml.isEndElement() && xml.name() == QLatin1String("value"))
+        xml.readNext();
+
+    if (ok) *ok = valid;
+    return result;
+}
+
+QVariant parseXmlRpcResponse(const QByteArray &data, QString *error, bool *isFault)
+{
+    QXmlStreamReader xml(data);
+    QVariant result;
+    bool fault = false;
+    bool parsed = false;
+
+    while (!xml.atEnd() && !xml.hasError()) {
+        if (!xml.readNextStartElement()) break;
+        const QString name = xml.name().toString();
+        if (name == QLatin1String("methodResponse")) {
+            continue;
+        }
+        if (name == QLatin1String("fault") || name == QLatin1String("params")) {
+            fault = (name == QLatin1String("fault"));
+            const QString wrapper = fault ? QStringLiteral("value") : QStringLiteral("param");
+            while (xml.readNextStartElement()) {
+                if (xml.name() != wrapper) {
+                    xml.skipCurrentElement();
+                    continue;
+                }
+                if (fault) {
+                    bool itemOk = false;
+                    result = readXmlRpcValue(xml, &itemOk);
+                    parsed = itemOk;
+                } else {
+                    if (xml.readNextStartElement() && xml.name() == QLatin1String("value")) {
+                        bool itemOk = false;
+                        result = readXmlRpcValue(xml, &itemOk);
+                        parsed = itemOk;
+                    } else {
+                        xml.skipCurrentElement();
+                    }
+                }
+            }
+        } else {
+            xml.skipCurrentElement();
+        }
+    }
+
+    if (isFault) *isFault = fault;
+    if (xml.hasError()) {
+        if (error)
+            *error = SubtitleDownloader::tr("La respuesta XML-RPC de OpenSubtitles no es válida.");
+        return QVariant();
+    }
+    if (!parsed) {
+        if (error)
+            *error = SubtitleDownloader::tr("La respuesta XML-RPC de OpenSubtitles no contiene valores.");
+        return QVariant();
+    }
+    if (fault) {
+        if (error) {
+            const QString detail = result.toMap().value(QStringLiteral("faultString")).toString();
+            *error = SubtitleDownloader::tr("Error XML-RPC de OpenSubtitles: %1")
+                         .arg(detail.isEmpty() ? QStringLiteral("fault") : detail);
+        }
+        return QVariant();
+    }
+    return result;
+}
+
+void writeXmlRpcStringParam(QXmlStreamWriter &xml, const QString &value)
+{
+    xml.writeStartElement(QStringLiteral("param"));
+    xml.writeStartElement(QStringLiteral("value"));
+    xml.writeTextElement(QStringLiteral("string"), value);
+    xml.writeEndElement();
+    xml.writeEndElement();
+}
+
+void writeXmlRpcStringMember(QXmlStreamWriter &xml, const QString &name,
+                             const QString &value)
+{
+    xml.writeStartElement(QStringLiteral("member"));
+    xml.writeTextElement(QStringLiteral("name"), name);
+    xml.writeStartElement(QStringLiteral("value"));
+    xml.writeTextElement(QStringLiteral("string"), value);
+    xml.writeEndElement();
+    xml.writeEndElement();
+}
+
+void writeXmlRpcDoubleMember(QXmlStreamWriter &xml, const QString &name, qint64 value)
+{
+    xml.writeStartElement(QStringLiteral("member"));
+    xml.writeTextElement(QStringLiteral("name"), name);
+    xml.writeStartElement(QStringLiteral("value"));
+    xml.writeTextElement(QStringLiteral("double"), QString::number(value));
+    xml.writeEndElement();
+    xml.writeEndElement();
+}
+
 } // namespace
 
 SubtitleDownloader::SubtitleDownloader(QObject *parent)
@@ -161,6 +437,13 @@ SubtitleDownloader::SubtitleDownloader(QObject *parent)
     const QByteArray urlEnv = qgetenv("ELEMENTS_EXTRACT_OS_API_URL");
     m_baseUrl = urlEnv.isEmpty() ? QString::fromUtf8(kBaseUrl)
                                  : QString::fromUtf8(urlEnv).trimmed();
+    const QByteArray xmlEnv = qgetenv("ELEMENTS_EXTRACT_OS_XMLRPC_URL");
+    m_xmlRpcUrl = xmlEnv.isEmpty() ? QString::fromUtf8(kXmlRpcUrl)
+                                   : QString::fromUtf8(xmlEnv).trimmed();
+
+    // MainWindow solo llama a setCredentials(): se relee el backend también ahí
+    // para reflejar cambios de Ajustes sin reconstruir el downloader.
+    readBackendSetting();
 
     const QByteArray env = qgetenv("ELEMENTS_EXTRACT_OS_API_KEY");
     if (!env.isEmpty()) {
@@ -184,31 +467,140 @@ void SubtitleDownloader::setCredentials(const QString &apiKey, const QString &us
     m_password = password;
     // Un cambio de credenciales invalida la sesión cacheada.
     m_token.clear();
-    qInfo() << "[ONLINE-SUBS] credentials updated";
+    m_xmlRpcToken.clear();
+    readBackendSetting();
+    qInfo() << "[ONLINE-SUBS] credentials updated, backend:" << m_backend;
+}
+
+void SubtitleDownloader::readBackendSetting()
+{
+    QSettings settings("LocalApp", "FFmpegExtractor");
+    const QString value = settings.value(QStringLiteral("onlineSubs/backend"),
+                                         QStringLiteral("xmlrpc")).toString();
+    m_backend = (value == QLatin1String("rest")) ? QStringLiteral("rest")
+                                                 : QStringLiteral("xmlrpc");
+}
+
+bool SubtitleDownloader::backendHasCredentials(const QString &backend) const
+{
+    if (backend == QLatin1String("xmlrpc"))
+        return true;   // la búsqueda anónima está permitida
+    return !m_apiKey.isEmpty() && !m_user.isEmpty() && !m_password.isEmpty();
 }
 
 bool SubtitleDownloader::hasCredentials() const
 {
-    return !m_apiKey.isEmpty();
+    return backendHasCredentials(m_backend);
 }
 
-QNetworkRequest SubtitleDownloader::makeRequest(const QUrl &url, bool post) const
+void SubtitleDownloader::finishSearchFailure(const QString &error)
+{
+    if (!m_fallbackAttempted) {
+        const QString other = m_backend == QLatin1String("xmlrpc")
+                                  ? QStringLiteral("rest") : QStringLiteral("xmlrpc");
+        if (backendHasCredentials(other)) {
+            m_searchError = error;
+            m_fallbackAttempted = true;
+            m_backend = other;
+            m_hashResults.clear();
+            m_pendingSearchStep = Step::None;
+            emit statusMessage(other == QLatin1String("xmlrpc")
+                                   ? tr("Cambiando al backend XML-RPC…")
+                                   : tr("Cambiando al backend API REST…"));
+            startSearchByHash();
+            return;
+        }
+    }
+    const QString original = m_fallbackAttempted && !m_searchError.isEmpty()
+                                 ? m_searchError : error;
+    emit statusMessage(original);
+    emit searchFinished(m_currentVideoPath, {}, original);
+}
+
+QNetworkRequest SubtitleDownloader::makeRequest(const QUrl &url, bool post,
+                                                 bool withApiKey) const
 {
     QNetworkRequest request(url);
     // La API responde 301 si la URL no es canónica: seguimos redirecciones.
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-    request.setAttribute(QNetworkRequest::RedirectAttributePolicy,
-                         QNetworkRequest::FollowRedirectsAttribute);
-#else
-    // Qt 6.2–6.6: equivalente (https → https se sigue automáticamente).
-    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
-                         QNetworkRequest::NoLessSafeRedirectPolicy);
-#endif
-    request.setRawHeader("Api-Key", m_apiKey.toUtf8());
+    setFollowRedirects(request);
+    if (withApiKey)
+        request.setRawHeader("Api-Key", m_apiKey.toUtf8());
     request.setRawHeader("User-Agent", kUserAgent);
     if (post)
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     return request;
+}
+
+QNetworkRequest SubtitleDownloader::makeXmlRpcRequest() const
+{
+    QNetworkRequest request{QUrl(m_xmlRpcUrl)};
+    setFollowRedirects(request);
+    request.setRawHeader("User-Agent", kUserAgent);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml");
+    return request;
+}
+
+QByteArray SubtitleDownloader::xmlRpcLoginBody() const
+{
+    QByteArray body;
+    QXmlStreamWriter xml(&body);
+    xml.setAutoFormatting(false);
+    xml.writeStartDocument();
+    xml.writeStartElement(QStringLiteral("methodCall"));
+    xml.writeTextElement(QStringLiteral("methodName"), QStringLiteral("LogIn"));
+    xml.writeStartElement(QStringLiteral("params"));
+    writeXmlRpcStringParam(xml, m_user);
+    writeXmlRpcStringParam(xml, m_password);
+    writeXmlRpcStringParam(xml, QStringLiteral("en"));
+    writeXmlRpcStringParam(xml, QString::fromUtf8(kXmlRpcAppName));
+    xml.writeEndElement();
+    xml.writeEndElement();
+    xml.writeEndDocument();
+    return body;
+}
+
+QByteArray SubtitleDownloader::xmlRpcSearchBody(bool byHash, const QString &hash,
+                                                 qint64 size) const
+{
+    QByteArray body;
+    QXmlStreamWriter xml(&body);
+    xml.setAutoFormatting(false);
+    xml.writeStartDocument();
+    xml.writeStartElement(QStringLiteral("methodCall"));
+    xml.writeTextElement(QStringLiteral("methodName"), QStringLiteral("SearchSubtitles"));
+    xml.writeStartElement(QStringLiteral("params"));
+    writeXmlRpcStringParam(xml, m_xmlRpcToken);
+    xml.writeStartElement(QStringLiteral("param"));
+    xml.writeStartElement(QStringLiteral("value"));
+    xml.writeStartElement(QStringLiteral("array"));
+    xml.writeStartElement(QStringLiteral("data"));
+    xml.writeStartElement(QStringLiteral("value"));
+    xml.writeStartElement(QStringLiteral("struct"));
+    writeXmlRpcStringMember(xml, QStringLiteral("sublanguageid"),
+                            toThreeLetterCode(m_language));
+    if (byHash) {
+        writeXmlRpcStringMember(xml, QStringLiteral("moviehash"), hash);
+        writeXmlRpcDoubleMember(xml, QStringLiteral("moviebytesize"), size);
+    } else {
+        writeXmlRpcStringMember(xml, QStringLiteral("query"), m_query);
+        QString season, episode;
+        if (parseSeasonEpisode(m_query, &season, &episode)) {
+            writeXmlRpcStringMember(xml, QStringLiteral("season"),
+                                    QString::number(season.toInt()));
+            writeXmlRpcStringMember(xml, QStringLiteral("episode"),
+                                    QString::number(episode.toInt()));
+        }
+    }
+    xml.writeEndElement();   // struct
+    xml.writeEndElement();   // value
+    xml.writeEndElement();   // data
+    xml.writeEndElement();   // array
+    xml.writeEndElement();   // value
+    xml.writeEndElement();   // param
+    xml.writeEndElement();   // params
+    xml.writeEndElement();   // methodCall
+    xml.writeEndDocument();
+    return body;
 }
 
 QString SubtitleDownloader::computeMovieHash(const QString &videoPath, qint64 *fileSize)
@@ -284,14 +676,50 @@ void SubtitleDownloader::search(const QString &videoPath, const QString &query,
     m_language = language.trimmed();
     m_hashResults.clear();
     m_download = DownloadState();
+    m_fallbackAttempted = false;
+    m_searchError.clear();
+    m_pendingSearchStep = Step::None;
+    readBackendSetting();
 
     if (!hasCredentials()) {
-        const QString error = tr("Falta la clave de API de OpenSubtitles. Configúrala en Ajustes → Subtítulos online.");
+        const QString error = tr("Faltan credenciales de OpenSubtitles para la API REST (clave API, usuario y contraseña). Configúralas en Ajustes → Subtítulos online.");
         emit statusMessage(error);
         emit searchFinished(m_currentVideoPath, {}, error);
         return;
     }
     startSearchByHash();
+}
+
+QUrl SubtitleDownloader::restSearchUrl(bool byHash, const QString &hash, qint64 size) const
+{
+    QUrl url(m_baseUrl + "subtitles");
+    QUrlQuery params;
+    if (byHash) {
+        params.addQueryItem("moviehash", hash);
+        params.addQueryItem("moviebytesize", QString::number(size));
+    } else {
+        params.addQueryItem("query", m_query);
+        QString season, episode;
+        if (parseSeasonEpisode(m_query, &season, &episode)) {
+            params.addQueryItem("type", "episode");
+            params.addQueryItem("season_number", season);
+            params.addQueryItem("episode_number", episode);
+        } else {
+            params.addQueryItem("type", "movie");
+        }
+    }
+    if (!m_language.isEmpty() && m_language != "all")
+        params.addQueryItem("languages", m_language);
+    url.setQuery(params);
+    return url;
+}
+
+void SubtitleDownloader::startXmlRpcLogin()
+{
+    m_step = Step::XmlRpcLoginForSearch;
+    emit statusMessage(tr("Iniciando sesión en OpenSubtitles (XML-RPC)…"));
+    qInfo() << "[ONLINE-SUBS] XML-RPC login";
+    m_activeReply = m_manager->post(makeXmlRpcRequest(), xmlRpcLoginBody());
 }
 
 void SubtitleDownloader::startSearchByHash()
@@ -303,19 +731,19 @@ void SubtitleDownloader::startSearchByHash()
         startSearchByQuery();
         return;
     }
-
-    QUrl url(m_baseUrl + "subtitles");
-    QUrlQuery params;
-    params.addQueryItem("moviehash", hash);
-    params.addQueryItem("moviebytesize", QString::number(size));
-    if (!m_language.isEmpty() && m_language != "all")
-        params.addQueryItem("languages", m_language);
-    url.setQuery(params);
+    if (m_backend == QLatin1String("xmlrpc") && m_xmlRpcToken.isEmpty()) {
+        m_pendingSearchStep = Step::SearchByHash;
+        startXmlRpcLogin();
+        return;
+    }
 
     m_step = Step::SearchByHash;
     emit statusMessage(tr("Buscando subtítulos por hash…"));
     qInfo() << "[ONLINE-SUBS] searching by hash" << hash << size;
-    m_activeReply = m_manager->get(makeRequest(url, false));
+    if (m_backend == QLatin1String("xmlrpc"))
+        m_activeReply = m_manager->post(makeXmlRpcRequest(), xmlRpcSearchBody(true, hash, size));
+    else
+        m_activeReply = m_manager->get(makeRequest(restSearchUrl(true, hash, size), false));
 }
 
 void SubtitleDownloader::startSearchByQuery()
@@ -328,32 +756,20 @@ void SubtitleDownloader::startSearchByQuery()
         return;
     }
 
-    QUrl url(m_baseUrl + "subtitles");
-    QUrlQuery params;
-    params.addQueryItem("query", m_query);
-
-    // S01E02 / 1x02 → búsqueda de episodio con temporada y capítulo.
-    QRegularExpression re(QStringLiteral("[Ss](\\d{1,2})[Ee](\\d{1,3})"));
-    QRegularExpressionMatch match = re.match(m_query);
-    if (!match.hasMatch()) {
-        re.setPattern(QStringLiteral("(?:^|\\D)(\\d{1,2})x(\\d{1,3})(?:\\D|$)"));
-        match = re.match(m_query);
+    if (m_backend == QLatin1String("xmlrpc") && m_xmlRpcToken.isEmpty()) {
+        m_pendingSearchStep = Step::SearchByQuery;
+        startXmlRpcLogin();
+        return;
     }
-    if (match.hasMatch()) {
-        params.addQueryItem("type", "episode");
-        params.addQueryItem("season_number", match.captured(1));
-        params.addQueryItem("episode_number", match.captured(2));
-    } else {
-        params.addQueryItem("type", "movie");
-    }
-    if (!m_language.isEmpty() && m_language != "all")
-        params.addQueryItem("languages", m_language);
-    url.setQuery(params);
 
     m_step = Step::SearchByQuery;
     emit statusMessage(tr("Buscando subtítulos por título…"));
     qInfo() << "[ONLINE-SUBS] searching by query" << m_query;
-    m_activeReply = m_manager->get(makeRequest(url, false));
+    if (m_backend == QLatin1String("xmlrpc"))
+        m_activeReply = m_manager->post(makeXmlRpcRequest(),
+                                        xmlRpcSearchBody(false, QString(), 0));
+    else
+        m_activeReply = m_manager->get(makeRequest(restSearchUrl(false, QString(), 0), false));
 }
 
 void SubtitleDownloader::download(const OnlineSubtitle &item, const QString &targetPath,
@@ -366,14 +782,19 @@ void SubtitleDownloader::download(const OnlineSubtitle &item, const QString &tar
     m_download.targetPath = targetPath;
     m_download.authRetried = false;
 
+    if (!item.downloadUrl.isEmpty()) {
+        // XML-RPC: ZipDownloadLink directo, sin login ni petición /download.
+        startLinkFetch(QUrl(item.downloadUrl), false);
+        return;
+    }
     if (!hasCredentials()) {
-        const QString error = tr("Falta la clave de API de OpenSubtitles. Configúrala en Ajustes → Subtítulos online.");
+        const QString error = tr("Faltan credenciales de OpenSubtitles para la API REST (clave API, usuario y contraseña). Configúralas en Ajustes → Subtítulos online.");
         emit statusMessage(error);
         emit downloadFinished(m_currentVideoPath, QString(), error);
         return;
     }
     if (item.fileId.trimmed().isEmpty()) {
-        emit downloadFinished(m_currentVideoPath, QString(), tr("El subtítulo seleccionado no tiene identificador de archivo."));
+        emit downloadFinished(m_currentVideoPath, QString(), tr("El subtítulo seleccionado no tiene identificador de archivo ni enlace de descarga."));
         return;
     }
     if (m_token.isEmpty()) {
@@ -420,12 +841,12 @@ void SubtitleDownloader::startDownloadRequest()
     m_activeReply = m_manager->post(request, QJsonDocument(body).toJson(QJsonDocument::Compact));
 }
 
-void SubtitleDownloader::startLinkFetch(const QUrl &url)
+void SubtitleDownloader::startLinkFetch(const QUrl &url, bool withApiKey)
 {
     m_step = Step::FetchLink;
     emit statusMessage(tr("Descargando el subtítulo…"));
     qInfo() << "[ONLINE-SUBS] fetching subtitle link";
-    m_activeReply = m_manager->get(makeRequest(url, false));
+    m_activeReply = m_manager->get(makeRequest(url, false, withApiKey));
 }
 
 void SubtitleDownloader::cancel()
@@ -440,7 +861,8 @@ void SubtitleDownloader::cancel()
     }
     m_step = Step::None;
     emit statusMessage(tr("Operación cancelada."));
-    if (previous == Step::SearchByHash || previous == Step::SearchByQuery)
+    if (previous == Step::SearchByHash || previous == Step::SearchByQuery
+        || previous == Step::XmlRpcLoginForSearch)
         emit searchFinished(m_currentVideoPath, {}, tr("Búsqueda cancelada."));
     else
         emit downloadFinished(m_currentVideoPath, QString(), tr("Descarga cancelada."));
@@ -484,8 +906,10 @@ void SubtitleDownloader::onReplyFinished(QNetworkReply *reply)
                 emit searchFinished(m_currentVideoPath, m_hashResults, QString());
                 m_hashResults.clear();
             } else {
-                emit searchFinished(m_currentVideoPath, {}, error);
+                finishSearchFailure(error);
             }
+        } else if (step == Step::XmlRpcLoginForSearch) {
+            finishSearchFailure(error);
         } else {
             emit downloadFinished(m_currentVideoPath, QString(), error);
         }
@@ -496,6 +920,9 @@ void SubtitleDownloader::onReplyFinished(QNetworkReply *reply)
     case Step::SearchByHash:
     case Step::SearchByQuery:
         handleSearchReply(reply, step == Step::SearchByHash);
+        break;
+    case Step::XmlRpcLoginForSearch:
+        handleXmlRpcLoginReply(reply);
         break;
     case Step::LoginForDownload:
         handleLoginReply(reply);
@@ -533,37 +960,107 @@ QString SubtitleDownloader::replyErrorMessage(QNetworkReply *reply)
     return message;
 }
 
-void SubtitleDownloader::handleSearchReply(QNetworkReply *reply, bool wasHashSearch)
+QList<OnlineSubtitle> SubtitleDownloader::parseXmlRpcSearchResults(
+    const QByteArray &data, QString *error)
 {
-    QJsonParseError parseError;
-    const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &parseError);
-    if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
-        m_hashResults.clear();
-        emit searchFinished(m_currentVideoPath, {}, tr("La respuesta de OpenSubtitles no es un JSON válido."));
-        return;
-    }
+    bool isFault = false;
+    const QVariant response = parseXmlRpcResponse(data, error, &isFault);
+    if (isFault || (error && !error->isEmpty())) return {};
+
+    QVariantList rows;
+    const QVariantMap wrapper = response.toMap();
+    if (!wrapper.isEmpty())
+        rows = wrapper.value(QStringLiteral("data")).toList();
+    else
+        rows = response.toList();
 
     QList<OnlineSubtitle> results;
-    const QJsonArray data = doc.object().value("data").toArray();
-    for (const QJsonValue &value : data) {
-        const QJsonObject attrs = value.toObject().value("attributes").toObject();
+    for (const QVariant &row : rows) {
+        const QVariantMap fields = row.toMap();
+        if (fields.isEmpty()) continue;
         OnlineSubtitle item;
-        item.language = attrs.value("language").toString();
-        item.release = attrs.value("release").toString();
+        item.fileId = fields.value(QStringLiteral("IDSubtitleFile")).toString();
+        item.release = fields.value(QStringLiteral("MovieReleaseName")).toString().trimmed();
         if (item.release.isEmpty())
-            item.release = attrs.value("feature_details").toObject().value("title").toString();
-        item.year = attrs.value("year").toVariant().toString();
+            item.release = fields.value(QStringLiteral("SubFileName")).toString().trimmed();
+        item.language = toTwoLetterCode(fields.value(QStringLiteral("SubLanguageID")).toString());
+        item.year = fields.value(QStringLiteral("Year")).toString();
         if (item.year.isEmpty())
-            item.year = attrs.value("feature_details").toObject()
-                            .value("year").toVariant().toString();
-        item.downloads = attrs.value("download_count").toInt();
-        item.hashMatch = attrs.value("moviehash_match").toBool();
-        item.uploader = attrs.value("uploader").toObject().value("name").toString();
-        item.url = attrs.value("url").toString();
-        const QJsonArray files = attrs.value("files").toArray();
-        if (!files.isEmpty())
-            item.fileId = files.first().toObject().value("file_id").toVariant().toString();
+            item.year = fields.value(QStringLiteral("MovieYear")).toString();
+        item.downloads = fields.value(QStringLiteral("SubDownloadsCnt")).toInt();
+        item.hashMatch = fields.value(QStringLiteral("MatchedBy")).toString()
+                             .contains(QStringLiteral("moviehash"), Qt::CaseInsensitive);
+        item.downloadUrl = fields.value(QStringLiteral("ZipDownloadLink")).toString();
         results.append(item);
+    }
+    return results;
+}
+
+void SubtitleDownloader::handleXmlRpcLoginReply(QNetworkReply *reply)
+{
+    QString error;
+    bool isFault = false;
+    const QVariant response = parseXmlRpcResponse(reply->readAll(), &error, &isFault);
+    const QString token = response.toMap().value(QStringLiteral("token")).toString();
+    if (token.isEmpty()) {
+        if (error.isEmpty())
+            error = tr("OpenSubtitles (XML-RPC) no devolvió un token de sesión.");
+        finishSearchFailure(error);
+        return;
+    }
+    m_xmlRpcToken = token;   // solo en memoria
+    qInfo() << "[ONLINE-SUBS] XML-RPC login successful";
+    const Step pending = m_pendingSearchStep;
+    m_pendingSearchStep = Step::None;
+    if (pending == Step::SearchByQuery)
+        startSearchByQuery();
+    else
+        startSearchByHash();
+}
+
+void SubtitleDownloader::handleSearchReply(QNetworkReply *reply, bool wasHashSearch)
+{
+    const QByteArray body = reply->readAll();
+    QList<OnlineSubtitle> results;
+
+    if (m_backend == QLatin1String("xmlrpc")) {
+        QString parseError;
+        results = parseXmlRpcSearchResults(body, &parseError);
+        if (!parseError.isEmpty()) {
+            m_hashResults.clear();
+            finishSearchFailure(parseError);
+            return;
+        }
+    } else {
+        QJsonParseError parseError;
+        const QJsonDocument doc = QJsonDocument::fromJson(body, &parseError);
+        if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
+            m_hashResults.clear();
+            finishSearchFailure(tr("La respuesta de OpenSubtitles no es un JSON válido."));
+            return;
+        }
+
+        const QJsonArray data = doc.object().value("data").toArray();
+        for (const QJsonValue &value : data) {
+            const QJsonObject attrs = value.toObject().value("attributes").toObject();
+            OnlineSubtitle item;
+            item.language = attrs.value("language").toString();
+            item.release = attrs.value("release").toString();
+            if (item.release.isEmpty())
+                item.release = attrs.value("feature_details").toObject().value("title").toString();
+            item.year = attrs.value("year").toVariant().toString();
+            if (item.year.isEmpty())
+                item.year = attrs.value("feature_details").toObject()
+                                .value("year").toVariant().toString();
+            item.downloads = attrs.value("download_count").toInt();
+            item.hashMatch = attrs.value("moviehash_match").toBool();
+            item.uploader = attrs.value("uploader").toObject().value("name").toString();
+            item.url = attrs.value("url").toString();
+            const QJsonArray files = attrs.value("files").toArray();
+            if (!files.isEmpty())
+                item.fileId = files.first().toObject().value("file_id").toVariant().toString();
+            results.append(item);
+        }
     }
 
     qInfo() << "[ONLINE-SUBS] search returned" << results.size() << "results";
@@ -596,7 +1093,7 @@ void SubtitleDownloader::handleSearchReply(QNetworkReply *reply, bool wasHashSea
                      });
 
     if (results.isEmpty()) {
-        emit searchFinished(m_currentVideoPath, {}, tr("No se encontraron subtítulos."));
+        finishSearchFailure(tr("No se encontraron subtítulos."));
         return;
     }
     emit searchFinished(m_currentVideoPath, results, QString());
@@ -891,6 +1388,14 @@ bool SubtitleDownloader::writeSubtitleBytes(const QByteArray &raw, const QString
 
     const QFileInfo info(targetPath);
     const QString path = info.absolutePath() + "/" + info.completeBaseName() + "." + extension;
+    if (isVipDecoy(data)) {
+        QFile::remove(path);
+        qWarning() << "[ONLINE-SUBS] VIP decoy subtitle rejected:" << path;
+        if (error) {
+            *error = tr("OpenSubtitles devolvió un subtítulo de prueba VIP; inicia sesión con una cuenta con permisos de descarga o usa la API REST.");
+        }
+        return false;
+    }
     QDir().mkpath(info.absolutePath());
     QFile output(path);
     if (!output.open(QIODevice::WriteOnly | QIODevice::Truncate)

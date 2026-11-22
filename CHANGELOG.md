@@ -5,7 +5,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
-## [No publicado]
+## [1.2.7] - 2026-11-22
+
+### Añadido
+- Backend XML-RPC de opensubtitles.org como opción predeterminada, con búsqueda y descarga anónimas mediante enlaces directos al estilo de VLSub en VLC; en Ajustes se puede volver a la API REST de opensubtitles.com
+- OCR opcional de subtítulos de imagen con nOCR: extrae los fotogramas con ffmpeg, genera un .srt traducible e incorporable y conserva la copia .mks original si el OCR falla
+- Base de plantillas Latin.nocr de Subtitle Edit incluida como recurso (537 KB, licencia MIT) y atribución en share/ocr/NOTICE.txt
+- El OCR se marca como experimental: muestra progreso en el registro y avisa de que un episodio completo puede tardar varios minutos. Corregida la binarización de PGS con contorno negro (antes se reconocía el contorno en vez del relleno, con hasta un 46 % de glifos desconocidos; con el PGS real de Suits baja al 1,1 %) y el espaciado entre palabras
 
 ### Corregido
 - La búsqueda online combinaba solo el hash del archivo y, si ese lanzamiento tenía subtítulos en inglés, no llegaban los de otros idiomas. Ahora se busca también por título/temporada/capítulo y se fusionan ambos resultados sin duplicados, aplicando el filtro de idioma en las dos consultas

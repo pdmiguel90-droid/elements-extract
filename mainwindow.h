@@ -27,6 +27,7 @@
 #include <QCoreApplication>
 #include <QGroupBox>
 #include "credentialstore.h"
+#include "nocrengine.h"
 
 // Forward declarations for translation classes
 class SubtitleTranslator;
@@ -162,6 +163,10 @@ private:
     void    updateProgressFromLine(const QString &line);
     QString extensionForType(const QString &type);
     QString extensionForCodec(const QString &codec, const QString &type);
+    bool    ocrImageSubtitle(const QString &videoPath, int subtitleOrdinal,
+                             const QString &srtPath, int *framesWithText,
+                             int *recognizedChars, int *unknownGlyphs,
+                             QString *error);
 
     // ── Widgets ──────────────────────────────────────────────────────────────
     QListWidget  *fileListWidget;
@@ -217,6 +222,7 @@ private:
     QComboBox    *srcLangCombo;
     QComboBox    *dstLangCombo;
     QCheckBox    *translateOnExtractCheck;
+    QCheckBox    *imageOcrCheck;
     QCheckBox    *muxOnExtractCheck;
     QPushButton  *manageModelsButton;
     QPushButton  *translateFilesButton;
@@ -236,6 +242,8 @@ private:
     ModelDownloader *modelDownloader;
     SubtitleDownloader *onlineSubDownloader = nullptr;
     CredentialStore m_credentialStore;
+    NOcrEngine m_imageOcrEngine;
+    bool       m_imageOcrEngineReady = false;
 
     // ── Estado ───────────────────────────────────────────────────────────────
     QString  lastSelectedFile;

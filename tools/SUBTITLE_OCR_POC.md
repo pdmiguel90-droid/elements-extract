@@ -131,3 +131,23 @@ Recomendación: **implementar nOCR en C++**, empezando por el parser y el matche
 validar con varias películas reales antes de activarlo por defecto. Es ligero,
 compatible con la licencia y encaja con la arquitectura actual; el riesgo está en la
 calidad del segmentador, no en el tamaño ni en dependencias.
+
+## Validación con PGS real (Suits S01E01)
+
+Medido sobre la pista PGS real del MKV de Suits (1920x1080, 3155 fotogramas):
+
+- Extracción de PNG con ffmpeg: **2 min 23 s**; 58 MB temporales.
+- Reconocimiento (motor C++ integrado): **~5 min 40 s**; 1576 fotogramas con texto,
+  43749 glifos, 469 desconocidos (**1,1 %**).
+- Antes del arreglo de binarización el porcentaje de desconocidos era del **46 %**
+  y el texto salía tipo `l-d□n□□ngs□men□□enM□`. El problema era que la máscara
+  incluía el contorno negro del PGS además del relleno blanco. Ahora se descarta
+  el contorno (gray <= 160) cuando ambos componentes existen.
+- El umbral de espacio entre palabras se calcula a partir de la distribución de
+  huecos de cada imagen, porque el factor fijo 0,35 que funciona con la muestra
+  sintética parte las palabras en el PGS real.
+- Resultado real: `I'd been working six months when Mr. Hunt started asking me to
+  work more.`, `Order dinner.`, `The next day, I requested a change in assignment.`
+- Quedan errores típicos (`l` por `I` en algunas fuentes) y el proceso es lento,
+  así que la opción sigue siendo **experimental y desactivada por defecto**; la
+  app muestra el progreso en el registro y conviene revisar el SRT resultante.

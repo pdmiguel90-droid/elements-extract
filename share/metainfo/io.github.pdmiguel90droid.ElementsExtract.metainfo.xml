@@ -62,6 +62,13 @@
   </screenshots>
 
   <releases>
+    <release version="1.2.7" date="2026-11-22">
+      <description>
+        <p>Default online subtitle backend switched to the opensubtitles.org XML-RPC API, with direct download links and anonymous search like VLSub in VLC; the official opensubtitles.com REST API remains available in Settings.</p>
+        <p>Optional, experimental image subtitle OCR with nOCR: extracts PGS/VobSub frames with ffmpeg and writes a translatable .srt, keeping the original .mks copy if recognition fails. Progress is shown in the log and a full episode can take several minutes.</p>
+        <p>Online search now combines file hash and title/season/episode results without duplicates, so releases with only English hash matches also find translations in other languages.</p>
+      </description>
+    </release>
     <release version="1.2.6" date="2026-11-22">
       <description>
         <p>Prefer the target language from Settings when searching online subtitles: it is highlighted and its results are sorted first. When no subtitle exists in that language, the app offers downloading another language and translating it with the existing triangular path. Help updated.</p>

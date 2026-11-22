@@ -98,6 +98,8 @@ private:
     QComboBox *m_uiLangCombo;
 
     QGroupBox *m_onlineSubsBox;
+    QLabel *m_backendLbl;
+    QComboBox *m_backendCombo;
     QLabel *m_apiKeyLbl;
     QLabel *m_onlineUserLbl;
     QLabel *m_onlinePasswordLbl;
