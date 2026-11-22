@@ -257,6 +257,23 @@ QString SubtitleDownloader::computeMovieHash(const QString &videoPath, qint64 *f
                                  .arg(lo, 8, 16, QLatin1Char('0'));
 }
 
+QList<OnlineSubtitle> SubtitleDownloader::mergeResults(
+    const QList<OnlineSubtitle> &hashResults,
+    const QList<OnlineSubtitle> &queryResults)
+{
+    QList<OnlineSubtitle> merged = hashResults;
+    for (const OnlineSubtitle &item : queryResults) {
+        const bool duplicate = std::any_of(merged.constBegin(), merged.constEnd(),
+            [&item](const OnlineSubtitle &existing) {
+                if (!item.fileId.isEmpty() && !existing.fileId.isEmpty())
+                    return existing.fileId == item.fileId;
+                return existing.language == item.language && existing.release == item.release;
+            });
+        if (!duplicate) merged.append(item);
+    }
+    return merged;
+}
+
 void SubtitleDownloader::search(const QString &videoPath, const QString &query,
                                 const QString &language)
 {
@@ -265,6 +282,7 @@ void SubtitleDownloader::search(const QString &videoPath, const QString &query,
     m_currentVideoPath = videoPath;
     m_query = query.trimmed();
     m_language = language.trimmed();
+    m_hashResults.clear();
     m_download = DownloadState();
 
     if (!hasCredentials()) {
@@ -290,6 +308,8 @@ void SubtitleDownloader::startSearchByHash()
     QUrlQuery params;
     params.addQueryItem("moviehash", hash);
     params.addQueryItem("moviebytesize", QString::number(size));
+    if (!m_language.isEmpty() && m_language != "all")
+        params.addQueryItem("languages", m_language);
     url.setQuery(params);
 
     m_step = Step::SearchByHash;
@@ -459,7 +479,13 @@ void SubtitleDownloader::onReplyFinished(QNetworkReply *reply)
             emit statusMessage(tr("Búsqueda por hash no disponible; probando por título…"));
             startSearchByQuery();
         } else if (step == Step::SearchByQuery) {
-            emit searchFinished(m_currentVideoPath, {}, error);
+            if (!m_hashResults.isEmpty()) {
+                emit statusMessage(tr("Búsqueda por título no disponible; se muestran los resultados por hash."));
+                emit searchFinished(m_currentVideoPath, m_hashResults, QString());
+                m_hashResults.clear();
+            } else {
+                emit searchFinished(m_currentVideoPath, {}, error);
+            }
         } else {
             emit downloadFinished(m_currentVideoPath, QString(), error);
         }
@@ -512,6 +538,7 @@ void SubtitleDownloader::handleSearchReply(QNetworkReply *reply, bool wasHashSea
     QJsonParseError parseError;
     const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &parseError);
     if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
+        m_hashResults.clear();
         emit searchFinished(m_currentVideoPath, {}, tr("La respuesta de OpenSubtitles no es un JSON válido."));
         return;
     }
@@ -539,20 +566,35 @@ void SubtitleDownloader::handleSearchReply(QNetworkReply *reply, bool wasHashSea
         results.append(item);
     }
 
+    qInfo() << "[ONLINE-SUBS] search returned" << results.size() << "results";
+
+    // El hash solo encuentra subtítulos subidos para esa Versión concreta: suele
+    // devolver únicamente inglés aunque el mismo título tenga otros idiomas.
+    // Se completa siempre con la búsqueda por título y se fusionan las dos listas.
+    if (wasHashSearch) {
+        m_hashResults = results;
+        if (!m_query.isEmpty()) {
+            emit statusMessage(tr("Buscando también por título…"));
+            startSearchByQuery();
+            return;
+        }
+    } else {
+        results = mergeResults(m_hashResults, results);
+        m_hashResults.clear();
+    }
+
+    const QString preferred = m_language.trimmed().toLower();
     std::stable_sort(results.begin(), results.end(),
-                     [](const OnlineSubtitle &a, const OnlineSubtitle &b) {
+                     [&preferred](const OnlineSubtitle &a, const OnlineSubtitle &b) {
+                         const bool aPreferred = !preferred.isEmpty()
+                             && a.language.trimmed().toLower() == preferred;
+                         const bool bPreferred = !preferred.isEmpty()
+                             && b.language.trimmed().toLower() == preferred;
+                         if (aPreferred != bPreferred) return aPreferred > bPreferred;
                          if (a.hashMatch != b.hashMatch) return a.hashMatch > b.hashMatch;
                          return a.downloads > b.downloads;
                      });
 
-    qInfo() << "[ONLINE-SUBS] search returned" << results.size() << "results";
-
-    // En el primer intento (hash) sin resultados, se repite la búsqueda por título.
-    if (results.isEmpty() && wasHashSearch && !m_query.isEmpty()) {
-        emit statusMessage(tr("Sin coincidencias por hash; buscando por título…"));
-        startSearchByQuery();
-        return;
-    }
     if (results.isEmpty()) {
         emit searchFinished(m_currentVideoPath, {}, tr("No se encontraron subtítulos."));
         return;

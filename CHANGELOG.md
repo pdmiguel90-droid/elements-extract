@@ -5,6 +5,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [No publicado]
+
+### Corregido
+- La búsqueda online combinaba solo el hash del archivo y, si ese lanzamiento tenía subtítulos en inglés, no llegaban los de otros idiomas. Ahora se busca también por título/temporada/capítulo y se fusionan ambos resultados sin duplicados, aplicando el filtro de idioma en las dos consultas
+
+---
+
 ## [1.2.6] - 2026-11-22
 
 ### Añadido

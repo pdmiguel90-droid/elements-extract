@@ -1774,6 +1774,14 @@ Diretório procurado: %3</translation>
         <translation>Buscando legendas por hash…</translation>
     </message>
     <message>
+        <source>Buscando también por título…</source>
+        <translation>Buscando também por título…</translation>
+    </message>
+    <message>
+        <source>Búsqueda por título no disponible; se muestran los resultados por hash.</source>
+        <translation>Pesquisa por título indisponível; mostrando os resultados por hash.</translation>
+    </message>
+    <message>
         <source>Buscando subtítulos por título…</source>
         <translation>Buscando legendas por título…</translation>
     </message>

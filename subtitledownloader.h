@@ -87,6 +87,7 @@ private:
     QString m_currentVideoPath;  // vídeo al que pertenece la operación en curso
     QString m_query;
     QString m_language;
+    QList<OnlineSubtitle> m_hashResults;  // se fusionan con los resultados por título
     DownloadState m_download;
     QString m_chosenEntry;   // si el usuario eligió una entrada dentro del ZIP
 
@@ -103,6 +104,8 @@ private:
     void handleLinkReply(QNetworkReply *reply);
 
     QString replyErrorMessage(QNetworkReply *reply);
+    static QList<OnlineSubtitle> mergeResults(const QList<OnlineSubtitle> &hashResults,
+                                               const QList<OnlineSubtitle> &queryResults);
     static QString computeMovieHash(const QString &videoPath, qint64 *fileSize = nullptr);
     bool writeSubtitleBytes(const QByteArray &raw, const QString &targetPath,
                             QString *outPath, QString *error);

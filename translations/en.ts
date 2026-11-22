@@ -1774,6 +1774,14 @@ Directory searched: %3</translation>
         <translation>Searching for subtitles by hash…</translation>
     </message>
     <message>
+        <source>Buscando también por título…</source>
+        <translation>Also searching by title…</translation>
+    </message>
+    <message>
+        <source>Búsqueda por título no disponible; se muestran los resultados por hash.</source>
+        <translation>Title search unavailable; showing hash results.</translation>
+    </message>
+    <message>
         <source>Buscando subtítulos por título…</source>
         <translation>Searching for subtitles by title…</translation>
     </message>
