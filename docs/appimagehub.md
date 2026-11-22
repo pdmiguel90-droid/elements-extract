@@ -21,6 +21,7 @@ y publica la ficha (no hay que redactar nada más).
 - [x] Interfaz en inglés con locale C (fallback `C/POSIX → en` en
       `main.cpp` + `changeUILanguage`; verificado con `LC_ALL=C`).
 - [x] Ventana principal visible < 30 s (probado).
+- [x] Capturas en inglés (hechas con `LC_ALL=C` y `language=en`) en `screenshots/`; AppImageHub exige capturas en inglés.
 - [x] `desktop-file-validate` limpio.
 - [x] Metainfo AppStream embebido (`usr/share/metainfo/*.metainfo.xml`),
       `appstreamcli` limpio salvo URLs que requieren push.
