@@ -115,13 +115,14 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 | ffprobe     | 4.0  | Análisis de streams y metadatos |
 | CMake       | 3.5  | Sistema de compilación |
 | C++ compiler| C++17 | GCC ≥ 7 / Clang ≥ 5 |
+| zlib1g-dev   | —     | Descompresión de la base nOCR del OCR opcional |
 
 > **Nota sobre versiones de ffmpeg**: Versión 4.x+ recomendada para mejor soporte de subtítulos PGS (Blu-ray) y códecs modernos (AV1, Opus). Cualquier ffmpeg de los últimos 3 años funciona correctamente.
 
 ### Instalar dependencias en Debian/Ubuntu
 
 ```bash
-sudo apt install qt6-base-dev libgl1-mesa-dev cmake build-essential ffmpeg
+sudo apt install qt6-base-dev libgl1-mesa-dev cmake build-essential ffmpeg zlib1g-dev
 ```
 
 ### Instalar dependencias en Fedora

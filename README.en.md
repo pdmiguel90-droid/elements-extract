@@ -116,13 +116,14 @@ So I thought: *what if I could take the file I already have on disk and translat
 | ffprobe     | 4.0  | Stream and metadata analysis |
 | CMake       | 3.5  | Build system |
 | C++ compiler| C++17 | GCC ≥ 7 / Clang ≥ 5 |
+| zlib1g-dev   | —     | Decompression of the optional nOCR database |
 
 > **Note on ffmpeg versions**: 4.x+ recommended for better PGS (Blu-ray) subtitle support and modern codecs (AV1, Opus). Any ffmpeg from the last 3 years works fine.
 
 ### Install dependencies on Debian/Ubuntu
 
 ```bash
-sudo apt install qt6-base-dev libgl1-mesa-dev cmake build-essential ffmpeg
+sudo apt install qt6-base-dev libgl1-mesa-dev cmake build-essential ffmpeg zlib1g-dev
 ```
 
 ### Install dependencies on Fedora
