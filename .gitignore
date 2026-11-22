@@ -60,6 +60,8 @@ bin/libopenblas.so.0
 
 # Archivos generados por el empaquetado Debian
 *.gz
+# Base de plantillas nOCR: recurso fuente, no artefacto generado
+!share/ocr/Latin.nocr.gz
 
 # Empaquetado AppImage
 *.AppImage
