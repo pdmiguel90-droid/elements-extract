@@ -56,7 +56,6 @@ private slots:
                             const QString &error);
     void downloadAndTranslate();
     void downloadOnly();
-    void applyTriangularChoice();
 
 private:
     void startSearch(bool selectedOnly);
@@ -75,6 +74,8 @@ private:
     void setBusy(bool busy);
     void updateTriangularHint(const QStringList &affectedFiles);
     void clearTriangularHint();
+    QString exampleOtherLanguage() const;
+    void ensureTriangularSelection(const QStringList &files);
     bool fileHasPreferredResults(const QString &videoPath) const;
     int bestOtherLanguageRow(const QString &videoPath) const;
     int fileRowFor(const QString &videoPath) const;
@@ -112,7 +113,6 @@ private:
     QLabel *m_triangularHintLabel;
     QPushButton *m_translateButton;
     QPushButton *m_downloadButton;
-    QPushButton *m_triangularButton;
     QPushButton *m_closeButton;
 };
 

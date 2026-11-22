@@ -1746,18 +1746,6 @@ Diretório procurado: %3</translation>
         <source>Afecta a %1 archivo(s).</source>
         <translation>Afeta %1 arquivo(s).</translation>
     </message>
-    <message>
-        <source>Descargar en otro idioma y traducir (triangular)</source>
-        <translation>Baixar em outro idioma e traduzir (triangular)</translation>
-    </message>
-    <message>
-        <source>Marca el mejor subtítulo disponible en otro idioma para traducirlo al idioma preferido</source>
-        <translation>Marque a melhor legenda disponível em outro idioma para traduzi-la ao idioma preferido</translation>
-    </message>
-    <message>
-        <source>Seleccionados subtítulos en otros idiomas para traducción triangular.</source>
-        <translation>Legendas em outros idiomas selecionadas para tradução triangular.</translation>
-    </message>
 </context>
 <context>
     <name>SubtitleDownloader</name>
@@ -1900,6 +1888,14 @@ Diretório procurado: %3</translation>
     <message>
         <source>No se pudo listar el ZIP: tiempo de espera agotado.</source>
         <translation>Não foi possível listar o ZIP: tempo esgotado.</translation>
+    </message>
+    <message>
+        <source>No hay subtítulos en %1 para uno o más archivos. Se descargará el mejor subtítulo disponible (p. ej. %2) y se traducirá a %1 mediante traducción triangular. ¿Continuar?</source>
+        <translation>Não há legendas em %1 para um ou mais arquivos. A melhor legenda disponível (p. ex. %2) será baixada e traduzida para %1 através da tradução triangular. Continuar?</translation>
+    </message>
+    <message>
+        <source>Traducción triangular</source>
+        <translation>Tradução triangular</translation>
     </message>
 </context>
 </TS>

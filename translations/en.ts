@@ -1746,18 +1746,6 @@ Directory searched: %3</translation>
         <source>Afecta a %1 archivo(s).</source>
         <translation>Affects %1 file(s).</translation>
     </message>
-    <message>
-        <source>Descargar en otro idioma y traducir (triangular)</source>
-        <translation>Download in another language and translate (triangular)</translation>
-    </message>
-    <message>
-        <source>Marca el mejor subtítulo disponible en otro idioma para traducirlo al idioma preferido</source>
-        <translation>Select the best available subtitle in another language to translate it into the preferred language</translation>
-    </message>
-    <message>
-        <source>Seleccionados subtítulos en otros idiomas para traducción triangular.</source>
-        <translation>Selected subtitles in other languages for triangular translation.</translation>
-    </message>
 </context>
 <context>
     <name>SubtitleDownloader</name>
@@ -1900,6 +1888,14 @@ Directory searched: %3</translation>
     <message>
         <source>No se pudo listar el ZIP: tiempo de espera agotado.</source>
         <translation>Could not list the ZIP: timed out.</translation>
+    </message>
+    <message>
+        <source>No hay subtítulos en %1 para uno o más archivos. Se descargará el mejor subtítulo disponible (p. ej. %2) y se traducirá a %1 mediante traducción triangular. ¿Continuar?</source>
+        <translation>There are no subtitles in %1 for one or more files. The best available subtitle (e.g. %2) will be downloaded and translated into %1 using triangular translation. Continue?</translation>
+    </message>
+    <message>
+        <source>Traducción triangular</source>
+        <translation>Triangular translation</translation>
     </message>
 </context>
 </TS>
