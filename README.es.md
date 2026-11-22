@@ -52,6 +52,7 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 - 🌐 **Traducción de subtítulos offline** — traduce subtítulos extraídos al idioma que quieras (en, es, fr, pt)
 - 🌐 **Subtítulos online** — búsqueda manual y por lote en opensubtitles.org (XML-RPC estilo VLC, sin clave API) o en opensubtitles.com (REST), con descarga y traducción posterior
 - 🅾️ **OCR de imagen (experimental)** — convierte PGS/VobSub a `.srt` con nOCR; desactivado por defecto y con progreso en el registro
+- 🔔 **Aviso de versiones nuevas** — consulta GitHub Releases al arrancar; también en Ayuda → Buscar actualizaciones…
 - ➡️ **Incrustar la traducción (remux)** — el subtítulo traducido se incrusta en un nuevo .mkv/.mp4 con el vídeo y el audio originales, sin re-codificar (estilo MKVToolNix)
 - 🎯 **Filtro de subtítulos por idioma** — selecciona y traduce solo los subtítulos de un idioma concreto en todos los archivos del lote
 - 🔄 **Traducción triangular** — si no hay modelo directo (ej. pt→es), usa intermediarios (pt→en→es)

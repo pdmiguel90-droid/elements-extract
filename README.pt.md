@@ -52,6 +52,7 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 - 🌐 **Tradução de legendas offline** — traduza legendas extraídas para o idioma que quiser (en, es, fr, pt)
 - 🌐 **Legendas online** — busca manual e em lote no opensubtitles.org (XML-RPC estilo VLC, sem chave API) ou no opensubtitles.com (REST), com download e tradução posterior
 - 🅾️ **OCR de imagem (experimental)** — converte PGS/VobSub em `.srt` com nOCR; desativado por padrão e com progresso no registro
+- 🔔 **Aviso de novas versões** — consulta o GitHub Releases ao arrancar; também em Ajuda → Procurar atualizações…
 - ➡️ **Incrustar a tradução (remux)** — a legenda traduzida é incorporada num novo .mkv/.mp4 com o vídeo e o áudio originais, sem re-codificar (estilo MKVToolNix)
 - 🎯 **Filtro de legendas por idioma** — seleciona e traduz apenas as legendas de um idioma específico em todos os arquivos do lote
 - 🔄 **Tradução triangular** — quando não há modelo direto (ex.: pt→es), usa intermediários (pt→en→es)

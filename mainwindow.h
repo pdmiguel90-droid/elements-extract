@@ -34,6 +34,8 @@ class SubtitleTranslator;
 class ModelDownloader;
 class SettingsDialog;
 class SubtitleDownloader;
+class UpdateChecker;
+struct UpdateInfo;
 
 // Sub extraído que puede traducirse/incrustarse de vuelta en su vídeo
 struct SubExtractInfo {
@@ -94,6 +96,10 @@ private slots:
     void clearAllSelections();
     void showAbout();
     void showHelp();
+    void checkForUpdates(bool manual = false);
+    void onUpdateAvailable(const UpdateInfo &info);
+    void onUpToDate();
+    void onUpdateCheckFailed(const QString &error);
     void showOnlineSubsDialog();
     void onOnlineSubtitleReady(const QString &filePath, const QString &videoPath,
                                const QString &language, bool translate);
@@ -196,6 +202,7 @@ private:
     QAction      *actSalir;
     QAction      *actSettings;
     QAction      *actAyuda;
+    QAction      *actCheckUpdates;
     QAction      *actAcerca;
     QLabel       *loteLabel;
     QLabel       *pistasLabel;
@@ -241,6 +248,9 @@ private:
     SubtitleTranslator *subtitleTranslator;
     ModelDownloader *modelDownloader;
     SubtitleDownloader *onlineSubDownloader = nullptr;
+    UpdateChecker *updateChecker = nullptr;
+    bool m_manualUpdateCheck = false;
+    bool m_updateCheckDone = false;
     CredentialStore m_credentialStore;
     NOcrEngine m_imageOcrEngine;
     bool       m_imageOcrEngineReady = false;

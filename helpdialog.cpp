@@ -178,7 +178,7 @@ HelpDialog::HelpDialog(QWidget *parent) : QDialog(parent)
     // ════════════════════════════════════════════════════════════════════
     QTextBrowser *shortcutsPage = new QTextBrowser();
     shortcutsPage->setOpenExternalLinks(false);
-    shortcutsPage->setHtml(
+    const QString helpHtml =
         tr(
         "<h2>Atajos de Teclado</h2>"
 
@@ -214,7 +214,16 @@ HelpDialog::HelpDialog(QWidget *parent) : QDialog(parent)
         "<h3>Soporte</h3>"
         "<p>Repositorio: <b>github.com/pdmiguel90-droid/elements-extract</b></p>"
         "<p>Para reportar errores o sugerencias, abre un issue en GitHub.</p>"
-        ));
+        );
+
+    const QString updatesHtml =
+        tr("<h3>Actualizaciones</h3>"
+           "<p>La aplicación comprueba si hay versiones nuevas al arrancar. "
+           "También puedes usar <b>Ayuda → Buscar actualizaciones…</b> cuando "
+           "quieras. El aviso muestra las notas de la versión y un enlace de "
+           "descarga; si eliges «No mostrar esta versión», no volverá a "
+           "aparecer.</p>");
+    shortcutsPage->setHtml(helpHtml + updatesHtml);
     tabs->addTab(shortcutsPage, tr("Atajos y Ajustes"));
 
     root->addWidget(tabs, 1);

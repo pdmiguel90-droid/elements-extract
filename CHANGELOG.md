@@ -5,6 +5,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.9] - 2026-11-22
+
+### Añadido
+- Notificador de versiones nuevas mediante la API de GitHub Releases: comprobación automática al arrancar y acción manual «Buscar actualizaciones…» en el menú Ayuda, con notas de la versión y enlace de descarga.
+- La versión detectada se puede ignorar para no volver a mostrar el aviso; los fallos de red nunca interrumpen el arranque.
+
+---
+
 ## [1.2.8] - 2026-11-22
 
 ### Corregido

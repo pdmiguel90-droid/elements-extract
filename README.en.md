@@ -53,6 +53,7 @@ So I thought: *what if I could take the file I already have on disk and translat
 - 🌐 **Offline subtitle translation** — translate extracted subtitles to the language you want (en, es, fr, pt)
 - 🌐 **Online subtitles** — manual and batch search on opensubtitles.org (VLC-style XML-RPC, no API key) or opensubtitles.com (REST), with download and later translation
 - 🅾️ **Optional OCR (experimental)** — converts PGS/VobSub to `.srt` with nOCR; off by default and reports progress in the log
+- 🔔 **Update notifier** — checks GitHub Releases at startup, or on demand from Help → Check for updates…
 - ➡️ **Mux the translation (remux)** — the translated subtitle is embedded into a new .mkv/.mp4 with the original video and audio, without re-encoding (MKVToolNix style)
 - 🎯 **Subtitle language filter** — select and translate only the subtitles of a given language across the whole batch
 - 🔄 **Triangular translation** — when no direct model exists (e.g. pt→es), it uses intermediates (pt→en→es)

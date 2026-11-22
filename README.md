@@ -34,6 +34,7 @@ La interfaz también habla inglés y portugués (detección automática del sist
 - 🌍 **Traducción offline** en↔es/fr/pt (+ triangular vía inglés) con modelos descargables.
 - 🌐 **Subtítulos online**: búsqueda manual o por lote en opensubtitles.org (XML-RPC estilo VLC, sin clave) o en opensubtitles.com (REST), con descarga, descompresión y traducción posterior.
 - 🅾️ **OCR opcional y experimental** de PGS/VobSub a `.srt` traducible con nOCR (desactivado por defecto; puede tardar varios minutos por episodio).
+- 🔔 **Aviso de versiones nuevas** desde GitHub Releases, al arrancar o desde Ayuda → Buscar actualizaciones…
 - 🎯 **Filtro "Solo subs"** por idioma en todo el lote.
 - 📦 **Remux**: un solo `.mkv`/`.mp4` con todas las pistas traducidas, sin re-codificar (repliegue MP4→MKV, limpieza opcional de intermedios).
 - 🖥️ Qt6, tema oscuro/claro, español/inglés/portugués.

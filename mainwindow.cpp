@@ -6,6 +6,7 @@
 #include "modeldownloader.h"
 #include "subtitledownloader.h"
 #include "onlinesubsdialog.h"
+#include "updatechecker.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -13,6 +14,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -254,6 +256,22 @@ MainWindow::MainWindow(QWidget *parent)
                             .arg(message.toHtmlEscaped()));
     });
 
+    // Comprobación silenciosa de versiones nuevas (GitHub Releases).
+    // Se retrasa unos segundos para no competir con la carga de modelos.
+    updateChecker = new UpdateChecker(this);
+    connect(updateChecker, &UpdateChecker::updateAvailable,
+            this, &MainWindow::onUpdateAvailable);
+    connect(updateChecker, &UpdateChecker::upToDate,
+            this, &MainWindow::onUpToDate);
+    connect(updateChecker, &UpdateChecker::checkFailed,
+            this, &MainWindow::onUpdateCheckFailed);
+    QSettings updateSettings("LocalApp", "FFmpegExtractor");
+    if (updateSettings.value("updates/checkOnStartup", true).toBool()) {
+        QTimer::singleShot(4000, this, [this]() {
+            if (!m_updateCheckDone) checkForUpdates(false);
+        });
+    }
+
     // Icono de la aplicación
     QIcon appIcon(":/ffmpeg-extractor.svg");
     setWindowIcon(appIcon);
@@ -342,6 +360,11 @@ void MainWindow::setupMenuBar()
     actAyuda->setShortcut(Qt::Key_F1);
     connect(actAyuda, &QAction::triggered, this, &MainWindow::showHelp);
     menuAyuda->addSeparator();
+    actCheckUpdates = menuAyuda->addAction(
+        QIcon(":/icons/refresh.svg"), tr("Buscar actualizaciones…"));
+    connect(actCheckUpdates, &QAction::triggered, this, [this]() {
+        checkForUpdates(true);
+    });
     actAcerca = menuAyuda->addAction(
         QIcon(":/icons/check.svg"), tr("Acerca de…"));
     connect(actAcerca, &QAction::triggered, this, &MainWindow::showAbout);
@@ -2060,6 +2083,76 @@ void MainWindow::showHelp()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Actualizaciones (GitHub Releases)
+// ─────────────────────────────────────────────────────────────────────────────
+void MainWindow::checkForUpdates(bool manual)
+{
+    if (!updateChecker || updateChecker->isInFlight()) return;
+    m_updateCheckDone = true;
+    m_manualUpdateCheck = manual;
+    if (manual) statusBar()->showMessage(tr("Buscando actualizaciones…"), 3000);
+    updateChecker->check();
+}
+
+void MainWindow::onUpdateAvailable(const UpdateInfo &info)
+{
+    QSettings s("LocalApp", "FFmpegExtractor");
+    if (!m_manualUpdateCheck &&
+        s.value("updates/ignoreVersion").toString() == info.version) {
+        return;
+    }
+
+    QString notes = info.notes;
+    notes.replace(QStringLiteral("**"), QString()); // el body usa Markdown
+    if (notes.size() > 800) notes = notes.left(800) + QStringLiteral("…");
+
+    QMessageBox box(this);
+    box.setIcon(QMessageBox::Information);
+    box.setWindowTitle(tr("Nueva versión disponible"));
+    box.setTextFormat(Qt::RichText);
+    box.setText(tr("Hay una versión nueva de Elements Extract: <b>%1</b>")
+                    .arg(info.version.toHtmlEscaped()));
+    box.setInformativeText(notes.isEmpty()
+                               ? tr("Abre la página de la versión para ver los cambios.")
+                               : notes);
+    QPushButton *downloadButton =
+        box.addButton(tr("Descargar…"), QMessageBox::AcceptRole);
+    QPushButton *laterButton =
+        box.addButton(tr("Más tarde"), QMessageBox::RejectRole);
+    QPushButton *skipButton =
+        box.addButton(tr("No mostrar esta versión"), QMessageBox::ActionRole);
+    box.exec();
+
+    if (box.clickedButton() == downloadButton) {
+        QDesktopServices::openUrl(QUrl(info.url));
+    } else if (box.clickedButton() == skipButton) {
+        s.setValue("updates/ignoreVersion", info.version);
+    }
+}
+
+void MainWindow::onUpToDate()
+{
+    const QString message =
+        tr("Ya tienes la versión más reciente (%1).")
+            .arg(QStringLiteral(ELEMENTS_EXTRACT_VERSION));
+    if (m_manualUpdateCheck)
+        QMessageBox::information(this, tr("Actualizaciones"), message);
+    else
+        statusBar()->showMessage(message, 4000);
+}
+
+void MainWindow::onUpdateCheckFailed(const QString &error)
+{
+    if (m_manualUpdateCheck) {
+        QMessageBox::warning(this, tr("Actualizaciones"),
+                             tr("No se pudo comprobar si hay actualizaciones: %1")
+                                 .arg(error.left(200)));
+    } else {
+        qWarning() << "[UPDATES] check failed:" << error;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Subtítulos online (OpenSubtitles.com)
 // ─────────────────────────────────────────────────────────────────────────────
 void MainWindow::showOnlineSubsDialog()
@@ -2631,6 +2724,7 @@ void MainWindow::retranslateUi()
     if (actSalir)    actSalir->setText(tr("Salir"));
     if (actSettings) actSettings->setText(tr("Configuración y Modelos…"));
     if (actAyuda)    actAyuda->setText(tr("Manual de uso"));
+    if (actCheckUpdates) actCheckUpdates->setText(tr("Buscar actualizaciones…"));
     if (actAcerca)   actAcerca->setText(tr("Acerca de…"));
 
     // ── Panel izquierdo ──

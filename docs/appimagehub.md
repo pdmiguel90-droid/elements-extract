@@ -12,7 +12,7 @@ y publica la ficha (no hay que redactar nada más).
 2. El bot comenta el resultado: captura si pasa, error con pista si falla.
    Re-test con el comentario `/retest`.
 
-## Checklist verificado en este repo (v1.2.8)
+## Checklist verificado en este repo (v1.2.9)
 
 - [x] AppImage tipo 2 autónomo, construido en Ubuntu 22.04 (glibc 2.35,
       LTS más antiguo con soporte) → `error-glibc-too-new` OK.
@@ -29,3 +29,14 @@ y publica la ficha (no hay que redactar nada más).
       vieja: Flathub exige `*.metainfo.xml`, que es lo que llevamos).
 - [x] `update-info` zsync embebido + `.zsync` publicado en cada Release `v*`.
 - [x] `README.en.md` presente (el repo es ES-primero con README en inglés).
+
+## Tareas al publicar cada versión
+
+1. Subir el tag y los artefactos del Release (AppImage, `.zsync`, SHA256SUMS).
+2. Actualizar `<release>` del metainfo, `CHANGELOG.md` y las capturas si cambió la UI.
+3. Comentar `/retest` en el PR #10408 de `AppImage/appimage.github.io` para que
+   el bot vuelva a leer el AppImage más reciente y regenere la ficha. El catálogo
+   oficial es `https://appimage.github.io/Elements_Extract/` (el dominio
+   `www.appimagehub.com` no es el destino de ese PR).
+4. Mantener los metadatos del repo al día (descripción, topics y README en inglés)
+   para que el feed `https://appimage.github.io/feed.json` muestre la ficha correcta.
