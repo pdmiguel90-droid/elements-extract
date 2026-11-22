@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
+#include <QFont>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QInputDialog>
@@ -13,17 +14,25 @@
 #include <QRegularExpression>
 #include <QSettings>
 #include <QSignalBlocker>
+#include <QStandardItem>
+#include <QStandardItemModel>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include <algorithm>
+
 OnlineSubsDialog::OnlineSubsDialog(SubtitleDownloader *downloader,
                                    const QStringList &videoPaths,
+                                   const QString &preferredLanguage,
                                    QWidget *parent)
     : QDialog(parent)
     , m_downloader(downloader)
 {
+    m_preferredLanguage = preferredLanguage.trimmed().isEmpty()
+                              ? QStringLiteral("es")
+                              : normalizedLanguage(preferredLanguage);
     for (const QString &path : videoPaths) {
         const QString trimmed = path.trimmed();
         if (trimmed.isEmpty()) continue;
@@ -55,13 +64,36 @@ OnlineSubsDialog::OnlineSubsDialog(SubtitleDownloader *downloader,
     topRow->addWidget(m_filesLabel, 1);
     topRow->addWidget(new QLabel(tr("Idioma:")));
     m_languageCombo = new QComboBox();
-    m_languageCombo->addItem(tr("Todos"), "all");
-    m_languageCombo->addItem(tr("Inglés"), "en");
-    m_languageCombo->addItem(tr("Español"), "es");
-    m_languageCombo->addItem(tr("Francés"), "fr");
-    m_languageCombo->addItem(tr("Portugués"), "pt");
-    m_languageCombo->addItem(tr("Alemán"), "de");
-    m_languageCombo->addItem(tr("Italiano"), "it");
+    QStandardItemModel *languagesModel = new QStandardItemModel(m_languageCombo);
+    m_languageCombo->setModel(languagesModel);
+
+    QStandardItem *allItem = new QStandardItem(tr("Todos"));
+    allItem->setData(QStringLiteral("all"), Qt::UserRole);
+    languagesModel->appendRow(allItem);
+
+    // El idioma preferido va primero (y en negrita) para que destaque.
+    QStringList languageCodes = {QStringLiteral("en"), QStringLiteral("es"),
+                                 QStringLiteral("fr"), QStringLiteral("pt"),
+                                 QStringLiteral("de"), QStringLiteral("it")};
+    languageCodes.removeAll(m_preferredLanguage);
+    languageCodes.prepend(m_preferredLanguage);
+    int preferredIndex = 1;   // justo después de «Todos»
+    for (int i = 0; i < languageCodes.size(); ++i) {
+        const QString &code = languageCodes.at(i);
+        const bool preferred = (code == m_preferredLanguage);
+        const QString name = languageDisplayName(code);
+        QStandardItem *item = new QStandardItem(
+            preferred ? tr("%1 (preferido)").arg(name) : name);
+        if (preferred) {
+            QFont boldFont = item->font();
+            boldFont.setBold(true);
+            item->setFont(boldFont);
+            preferredIndex = languagesModel->rowCount();
+        }
+        item->setData(code, Qt::UserRole);
+        languagesModel->appendRow(item);
+    }
+    m_languageCombo->setCurrentIndex(preferredIndex);
     topRow->addWidget(m_languageCombo);
     root->addLayout(topRow);
 
@@ -160,13 +192,24 @@ OnlineSubsDialog::OnlineSubsDialog(SubtitleDownloader *downloader,
     m_statusLabel->setProperty("labelColor", "muted");
     root->addWidget(m_statusLabel);
 
+    m_triangularHintLabel = new QLabel();
+    m_triangularHintLabel->setWordWrap(true);
+    m_triangularHintLabel->setProperty("labelColor", "accent");
+    m_triangularHintLabel->setVisible(false);
+    root->addWidget(m_triangularHintLabel);
+
     QHBoxLayout *buttons = new QHBoxLayout();
     buttons->addStretch(1);
     m_translateButton = new QPushButton(tr("Descargar y traducir seleccionados"));
     m_downloadButton = new QPushButton(tr("Solo descargar seleccionados"));
+    m_triangularButton = new QPushButton(tr("Descargar en otro idioma y traducir (triangular)"));
+    m_triangularButton->setToolTip(
+        tr("Marca el mejor subtítulo disponible en otro idioma para traducirlo al idioma preferido"));
+    m_triangularButton->setEnabled(false);
     m_closeButton = new QPushButton(tr("Cerrar"));
     buttons->addWidget(m_translateButton);
     buttons->addWidget(m_downloadButton);
+    buttons->addWidget(m_triangularButton);
     buttons->addWidget(m_closeButton);
     root->addLayout(buttons);
 
@@ -174,7 +217,11 @@ OnlineSubsDialog::OnlineSubsDialog(SubtitleDownloader *downloader,
             this, &OnlineSubsDialog::downloadAndTranslate);
     connect(m_downloadButton, &QPushButton::clicked,
             this, &OnlineSubsDialog::downloadOnly);
+    connect(m_triangularButton, &QPushButton::clicked,
+            this, &OnlineSubsDialog::applyTriangularChoice);
     connect(m_closeButton, &QPushButton::clicked, this, [this]() { reject(); });
+    connect(m_languageCombo, &QComboBox::currentIndexChanged,
+            this, &OnlineSubsDialog::clearTriangularHint);
 
     if (m_downloader) {
         connect(m_downloader, &SubtitleDownloader::searchFinished,
@@ -245,6 +292,48 @@ QString OnlineSubsDialog::languageFor(const ResultState &result) const
     return result.sub.language.isEmpty() ? QStringLiteral("en") : result.sub.language;
 }
 
+QString OnlineSubsDialog::normalizedLanguage(const QString &language)
+{
+    QString code = language.trimmed().toLower();
+    if (code.size() > 2) code = code.left(2);
+    if (code.isEmpty()) code = QStringLiteral("en");   // coherente con languageFor()
+    return code;
+}
+
+QString OnlineSubsDialog::languageDisplayName(const QString &code)
+{
+    if (code == QStringLiteral("en")) return tr("Inglés");
+    if (code == QStringLiteral("es")) return tr("Español");
+    if (code == QStringLiteral("fr")) return tr("Francés");
+    if (code == QStringLiteral("pt")) return tr("Portugués");
+    if (code == QStringLiteral("de")) return tr("Alemán");
+    if (code == QStringLiteral("it")) return tr("Italiano");
+    return code.toUpper();   // idioma añadido dinámicamente: mostrar su código
+}
+
+bool OnlineSubsDialog::fileHasPreferredResults(const QString &videoPath) const
+{
+    for (const ResultState &result : m_results) {
+        if (result.videoPath != videoPath) continue;
+        if (normalizedLanguage(result.sub.language) == m_preferredLanguage)
+            return true;
+    }
+    return false;
+}
+
+int OnlineSubsDialog::bestOtherLanguageRow(const QString &videoPath) const
+{
+    int bestRow = -1;
+    for (int i = 0; i < m_results.size(); ++i) {
+        const ResultState &result = m_results.at(i);
+        if (result.videoPath != videoPath) continue;
+        if (normalizedLanguage(result.sub.language) == m_preferredLanguage) continue;
+        if (bestRow < 0 || result.sub.downloads > m_results.at(bestRow).sub.downloads)
+            bestRow = i;
+    }
+    return bestRow;
+}
+
 void OnlineSubsDialog::setFileStatus(const QString &videoPath, const QString &status,
                                      int resultCount)
 {
@@ -288,6 +377,7 @@ void OnlineSubsDialog::setBusy(bool busy)
     const bool ready = m_downloader && m_downloader->hasCredentials() && !m_files.isEmpty();
     m_searchSelectedButton->setEnabled(!busy && ready);
     m_searchAllButton->setEnabled(!busy && ready);
+    m_triangularButton->setEnabled(!busy && !m_triangularFiles.isEmpty());
     updateDownloadButtons();
 }
 
@@ -305,6 +395,7 @@ void OnlineSubsDialog::startSearch(bool selectedOnly)
 {
     if (!m_downloader || m_busy) return;
 
+    clearTriangularHint();
     m_searchQueue.clear();
     for (int row = 0; row < m_files.size(); ++row) {
         if (selectedOnly) {
@@ -371,6 +462,57 @@ void OnlineSubsDialog::finishSearch()
     m_currentSearchPath.clear();
     setBusy(false);
     m_statusLabel->setText(tr("Búsqueda finalizada: %1 resultados.").arg(m_results.size()));
+
+    // Solo avisamos de archivos que tienen resultados, pero ninguno en el idioma preferido.
+    QStringList affectedFiles;
+    for (const FileState &file : m_files) {
+        bool hasResults = false;
+        for (const ResultState &result : m_results) {
+            if (result.videoPath != file.path) continue;
+            hasResults = true;
+            if (normalizedLanguage(result.sub.language) == m_preferredLanguage) break;
+        }
+        if (hasResults && !fileHasPreferredResults(file.path))
+            affectedFiles.append(file.path);
+    }
+    updateTriangularHint(affectedFiles);
+}
+
+void OnlineSubsDialog::updateTriangularHint(const QStringList &affectedFiles)
+{
+    m_triangularFiles = affectedFiles;
+    if (m_triangularFiles.isEmpty()) {
+        clearTriangularHint();
+        return;
+    }
+
+    int bestRow = -1;
+    for (int i = 0; i < m_results.size(); ++i) {
+        const ResultState &result = m_results.at(i);
+        if (!m_triangularFiles.contains(result.videoPath)) continue;
+        if (normalizedLanguage(result.sub.language) == m_preferredLanguage) continue;
+        if (bestRow < 0 || result.sub.downloads > m_results.at(bestRow).sub.downloads)
+            bestRow = i;
+    }
+    const QString example = languageDisplayName(
+        bestRow >= 0 ? normalizedLanguage(m_results.at(bestRow).sub.language)
+                     : QStringLiteral("en"));
+
+    m_triangularHintLabel->setText(
+        tr("No hay subtítulos en %1 para uno o más archivos. Puedes descargar el subtítulo disponible (p. ej. %2) y traducirlo a %1 mediante traducción triangular.")
+            .arg(languageDisplayName(m_preferredLanguage), example)
+        + QStringLiteral(" ")
+        + tr("Afecta a %1 archivo(s).").arg(m_triangularFiles.size()));
+    m_triangularHintLabel->setVisible(true);
+    m_triangularButton->setEnabled(!m_busy);
+}
+
+void OnlineSubsDialog::clearTriangularHint()
+{
+    m_triangularFiles.clear();
+    m_triangularHintLabel->clear();
+    m_triangularHintLabel->setVisible(false);
+    m_triangularButton->setEnabled(false);
 }
 
 void OnlineSubsDialog::removeResultsFor(const QString &videoPath)
@@ -391,9 +533,21 @@ void OnlineSubsDialog::addResultsFor(const QString &videoPath,
     removeResultsFor(videoPath);
     const QString fileName = QFileInfo(videoPath).fileName();
 
+    QList<OnlineSubtitle> sortedResults = results;
+    std::stable_sort(sortedResults.begin(), sortedResults.end(),
+                     [this](const OnlineSubtitle &a, const OnlineSubtitle &b) {
+        const QString langA = normalizedLanguage(a.language);
+        const QString langB = normalizedLanguage(b.language);
+        const bool preferredA = (langA == m_preferredLanguage);
+        const bool preferredB = (langB == m_preferredLanguage);
+        if (preferredA != preferredB) return preferredA;
+        if (a.downloads != b.downloads) return a.downloads > b.downloads;
+        return langA < langB;
+    });
+
     QSignalBlocker blocker(m_resultsTable);
     bool firstForThisVideo = true;
-    for (const OnlineSubtitle &sub : results) {
+    for (const OnlineSubtitle &sub : sortedResults) {
         ResultState state;
         state.videoPath = videoPath;
         state.sub = sub;
@@ -437,6 +591,32 @@ void OnlineSubsDialog::downloadAndTranslate()
 void OnlineSubsDialog::downloadOnly()
 {
     startDownload(false);
+}
+
+void OnlineSubsDialog::applyTriangularChoice()
+{
+    if (m_busy || m_triangularFiles.isEmpty()) return;
+
+    {
+        QSignalBlocker blocker(m_resultsTable);
+        for (int i = 0; i < m_results.size(); ++i) {
+            ResultState &result = m_results[i];
+            if (!m_triangularFiles.contains(result.videoPath)) continue;
+            result.selected = false;
+            if (QTableWidgetItem *check = m_resultsTable->item(i, 0))
+                check->setCheckState(Qt::Unchecked);
+        }
+        for (const QString &videoPath : m_triangularFiles) {
+            const int row = bestOtherLanguageRow(videoPath);
+            if (row < 0) continue;
+            m_results[row].selected = true;
+            if (QTableWidgetItem *check = m_resultsTable->item(row, 0))
+                check->setCheckState(Qt::Checked);
+        }
+    }
+
+    updateDownloadButtons();
+    m_statusLabel->setText(tr("Seleccionados subtítulos en otros idiomas para traducción triangular."));
 }
 
 void OnlineSubsDialog::startDownload(bool translate)

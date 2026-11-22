@@ -5,6 +5,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.6] - 2026-11-22
+
+### Añadido
+- Preferencia del idioma de destino de Ajustes en la búsqueda de subtítulos online: aparece marcado como «(preferido)» y en negrita en el desplegable, y sus resultados se ordenan primero
+- Aviso y botón «Descargar en otro idioma y traducir (triangular)» cuando un vídeo no tiene subtítulos en el idioma preferido: selecciona el mejor subtítulo disponible en otro idioma para traducirlo mediante la ruta triangular
+- Ayuda actualizada con el nuevo flujo online, la preferencia de idioma, la traducción triangular aplicada a subtítulos descargados y el atajo Ctrl+Shift+S
+
+---
+
 ## [1.2.5] - 2026-11-22
 
 ### Añadido

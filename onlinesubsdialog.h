@@ -36,6 +36,7 @@ public:
 
     explicit OnlineSubsDialog(SubtitleDownloader *downloader,
                               const QStringList &videoPaths,
+                              const QString &preferredLanguage,
                               QWidget *parent = nullptr);
 
 signals:
@@ -55,6 +56,7 @@ private slots:
                             const QString &error);
     void downloadAndTranslate();
     void downloadOnly();
+    void applyTriangularChoice();
 
 private:
     void startSearch(bool selectedOnly);
@@ -71,14 +73,22 @@ private:
     void setResultStatus(int row, const QString &status);
     void updateDownloadButtons() const;
     void setBusy(bool busy);
+    void updateTriangularHint(const QStringList &affectedFiles);
+    void clearTriangularHint();
+    bool fileHasPreferredResults(const QString &videoPath) const;
+    int bestOtherLanguageRow(const QString &videoPath) const;
     int fileRowFor(const QString &videoPath) const;
     QString languageFor(const ResultState &result) const;
     QString cleanQuery(const QString &fileName) const;
     QString downloadDirectory(const QString &videoPath) const;
+    static QString normalizedLanguage(const QString &language);
+    static QString languageDisplayName(const QString &code);
 
     SubtitleDownloader *m_downloader = nullptr;
     QList<FileState> m_files;
     QList<ResultState> m_results;
+    QString m_preferredLanguage = QStringLiteral("es");
+    QStringList m_triangularFiles;   // archivos con resultados, pero sin el idioma preferido
 
     QStringList m_searchQueue;
     QString m_currentSearchPath;
@@ -99,8 +109,10 @@ private:
     QPushButton *m_searchAllButton;
     QTableWidget *m_resultsTable;
     QLabel *m_statusLabel;
+    QLabel *m_triangularHintLabel;
     QPushButton *m_translateButton;
     QPushButton *m_downloadButton;
+    QPushButton *m_triangularButton;
     QPushButton *m_closeButton;
 };
 

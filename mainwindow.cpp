@@ -1749,7 +1749,8 @@ void MainWindow::showOnlineSubsDialog()
         return;
     }
 
-    OnlineSubsDialog dlg(onlineSubDownloader, paths, this);
+    OnlineSubsDialog dlg(onlineSubDownloader, paths,
+                         dstLangCombo->currentData().toString(), this);
     connect(&dlg, &OnlineSubsDialog::subtitleReady,
             this, &MainWindow::onOnlineSubtitleReady);
     dlg.exec();
