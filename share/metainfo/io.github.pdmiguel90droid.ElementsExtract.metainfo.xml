@@ -72,6 +72,12 @@
   </screenshots>
 
   <releases>
+    <release version="1.2.8" date="2026-11-22">
+      <description>
+        <p>Build fixes: Linux CI now installs zlib1g-dev and the nOCR template database is shipped as a tracked resource, so clean checkouts compile again.</p>
+        <p>Public documentation and English screenshots updated for AppImageHub, covering the online subtitle backends and the experimental image OCR.</p>
+      </description>
+    </release>
     <release version="1.2.7" date="2026-11-22">
       <description>
         <p>Default online subtitle backend switched to the opensubtitles.org XML-RPC API, with direct download links and anonymous search like VLSub in VLC; the official opensubtitles.com REST API remains available in Settings.</p>

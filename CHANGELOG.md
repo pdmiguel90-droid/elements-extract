@@ -5,6 +5,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.8] - 2026-11-22
+
+### Corregido
+- Las compilaciones limpias de CI volvían a fallar: se instala `zlib1g-dev` en las workflows de Linux y se versiona `share/ocr/Latin.nocr.gz`, que estaba excluido por el patrón `*.gz` de `.gitignore` y es necesario para `resources.qrc`
+- Capturas de pantalla actualizadas y en inglés para AppImageHub, con el diálogo de subtítulos online y el backend XML-RPC
+- Documentación pública al día en los cuatro README: funciones online, OCR experimental y dependencia zlib
+- Checklist de AppImageHub actualizado a la versión 1.2.8
+
+---
+
 ## [1.2.7] - 2026-11-22
 
 ### Añadido

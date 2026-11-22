@@ -1,3 +1,10 @@
+elements-extract (1.2.8) unstable; urgency=medium
+
+  * Corregidas las compilaciones limpias: zlib1g-dev en CI y base nOCR versionada
+  * Capturas en inglés y documentación pública actualizada
+
+ -- pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>  Sun, 22 Nov 2026 21:07:36 +0000
+
 elements-extract (1.2.0) unstable; urgency=medium
 
   * Traducción automática de subtítulos con bergamot-translator
