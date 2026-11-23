@@ -560,8 +560,8 @@ bool CredentialStore::load(const QString &service, const QString &key,
         return false;
     }
     if (cred->CredentialBlob && cred->CredentialBlobSize >= sizeof(ushort)) {
-        *value = QString::fromUtf16(reinterpret_cast<const ushort *>(cred->CredentialBlob),
-                                    static_cast<int>(cred->CredentialBlobSize / sizeof(ushort)));
+        *value = QString::fromUtf16(reinterpret_cast<const char16_t *>(cred->CredentialBlob),
+                                    static_cast<qsizetype>(cred->CredentialBlobSize / sizeof(char16_t)));
     }
     CredFree(cred);
     return true;

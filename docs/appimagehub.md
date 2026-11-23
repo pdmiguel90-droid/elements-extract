@@ -12,7 +12,7 @@ y publica la ficha (no hay que redactar nada más).
 2. El bot comenta el resultado: captura si pasa, error con pista si falla.
    Re-test con el comentario `/retest`.
 
-## Checklist verificado en este repo (v1.2.11)
+## Checklist verificado en este repo (v1.2.12)
 
 - [x] AppImage tipo 2 autónomo, construido en Ubuntu 22.04 (glibc 2.35,
       LTS más antiguo con soporte) → `error-glibc-too-new` OK.

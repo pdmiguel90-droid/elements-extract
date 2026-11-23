@@ -31,14 +31,10 @@ const char *kXmlRpcAppName = "VLSub 0.11.1";
 
 void setFollowRedirects(QNetworkRequest &request)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-    request.setAttribute(QNetworkRequest::RedirectAttributePolicy,
-                         QNetworkRequest::FollowRedirectsAttribute);
-#else
-    // Qt 6.2–6.6: equivalente (https → https se sigue automáticamente).
+    // API válida en todo Qt 6 (6.2–6.9): los nombres "RedirectAttributePolicy"
+    // y "FollowRedirectsAttribute" no existen en Qt 6.8.
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                          QNetworkRequest::NoLessSafeRedirectPolicy);
-#endif
 }
 
 bool isZipData(const QByteArray &data)

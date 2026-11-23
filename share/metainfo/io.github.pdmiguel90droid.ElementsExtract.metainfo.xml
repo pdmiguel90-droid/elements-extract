@@ -72,6 +72,11 @@
   </screenshots>
 
   <releases>
+    <release version="1.2.12" date="2026-11-22">
+      <description>
+        <p>Windows build fix: use the Qt 6 redirect API supported by Qt 6.8, stop passing the GCC-only -s flag to MSVC, and remove deprecated API warnings.</p>
+      </description>
+    </release>
     <release version="1.2.11" date="2026-11-22">
       <description>
         <p>Build fix: removed the zlib dependency so the Windows build configures cleanly. The nOCR template database is now shipped uncompressed and loaded directly from resources.</p>

@@ -64,13 +64,9 @@ void UpdateChecker::check()
     QNetworkRequest request{url};
     request.setRawHeader("User-Agent", "Elements-Extract/1.2");
     request.setRawHeader("Accept", "application/vnd.github+json");
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-    request.setAttribute(QNetworkRequest::RedirectAttributePolicy,
-                         QNetworkRequest::FollowRedirectsAttribute);
-#else
+    // API válida en todo Qt 6 (6.2–6.9).
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                          QNetworkRequest::NoLessSafeRedirectPolicy);
-#endif
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // Sin conexión no debe bloquear ni siquiera el arranque: 10 s de margen.
     request.setTransferTimeout(10000);

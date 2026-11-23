@@ -5,6 +5,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.12] - 2026-11-22
+
+### Corregido
+- El build de Windows compila con Qt 6.8: se usa `RedirectPolicyAttribute` / `NoLessSafeRedirectPolicy`, los nombres válidos en Qt 6, en el descargador de subtítulos y en el notificador de versiones.
+- El flag `-s` de GCC/Clang ya no se pasa a MSVC.
+- Se eliminaron los avisos de API obsoleta de `QCheckBox::stateChanged` y `QString::fromUtf16`.
+
+---
+
 ## [1.2.11] - 2026-11-22
 
 ### Corregido

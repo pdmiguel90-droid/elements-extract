@@ -1179,7 +1179,12 @@ void MainWindow::probeFinished(int exitCode, QProcess::ExitStatus exitStatus)
         cb->setProperty("streamCodec", codec);
         if (saved.contains(index) || globalSelectionTypes.contains(type))
             cb->setChecked(true);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+        connect(cb, &QCheckBox::checkStateChanged, this,
+                [this](Qt::CheckState) { onStreamToggled(0); });
+#else
         connect(cb, &QCheckBox::stateChanged, this, &MainWindow::onStreamToggled);
+#endif
         // clicked solo lo emite la interacción del usuario (setChecked no):
         // sirve para recordar desmarcados manuales frente al filtro.
         connect(cb, &QCheckBox::clicked, this, &MainWindow::onStreamClicked);

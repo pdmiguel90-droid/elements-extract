@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(ElementsExtract VERSION 1.2.11 LANGUAGES CXX)
+project(ElementsExtract VERSION 1.2.12 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,9 +9,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Strip Release binaries
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+# Strip Release binaries (-s es opción de GCC/Clang, no de MSVC)
+if(NOT MSVC)
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+endif()
 
 # Qt6 (requerido: Core, Widgets, Network). DBus se busca por separado porque
 # en Linux es obligatorio para el almacén de credenciales, pero en Windows y
