@@ -5,6 +5,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.11] - 2026-11-22
+
+### Corregido
+- El build de Windows ya no falla en la configuración: se eliminó la dependencia de zlib. La base de plantillas nOCR se distribuye sin comprimir (857 KB) y se carga directamente desde recursos.
+- Los workflows de Linux y los README ya no instalan ni documentan `zlib1g-dev`.
+
+---
+
 ## [1.2.10] - 2026-11-22
 
 ### Corregido

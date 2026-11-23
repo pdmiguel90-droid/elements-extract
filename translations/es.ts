@@ -75,8 +75,8 @@ Extracción</translation>
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="41"/>
-        <source>Versión 1.2.10  ·  2026</source>
-        <translation>Versión 1.2.10  ·  2026</translation>
+        <source>Versión 1.2.11  ·  2026</source>
+        <translation>Versión 1.2.11  ·  2026</translation>
     </message>
     <message>
         <location filename="../aboutdialog.cpp" line="57"/>

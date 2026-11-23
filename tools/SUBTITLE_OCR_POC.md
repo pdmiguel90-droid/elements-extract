@@ -9,7 +9,7 @@ Pillow, numpy y ffmpeg. No se instala nada en la app y la base se descarga a cac
 - Motor de plantillas: cada glifo es un conjunto de líneas de prueba (foreground /
   background) escaladas a la caja candidata. No hay red neuronal.
 - Licencia MIT, compatible con el GPL-3.0 de Elements Extract (con atribución).
-- `Latin.nocr`: 537.165 bytes comprimido con gzip, 857.110 bytes sin comprimir;
+- `Latin.nocr`: 857.110 bytes sin comprimir (537.165 bytes con gzip);
   2.371 glifos (97 expandidos), 142 caracteres. Cabe en el binario o se descarga.
 
 ## Formatos reales (importante)
@@ -31,16 +31,16 @@ implementa lo que ffmpeg y Subtitle Edit leen realmente:
 ```bash
 cd /home/pm/Descargas/ffmpeg_extractor
 python3 tools/subtitle-ocr-poc.py make-sample --out /tmp/ocr_poc
-python3 tools/subtitle-ocr-poc.py load-db --db /tmp/ocr_poc/Latin.nocr.gz
+python3 tools/subtitle-ocr-poc.py load-db --db share/ocr/Latin.nocr
 ffprobe -hide_banner -i /tmp/ocr_poc/sample.sup
 ffmpeg -hide_banner -v error -i /tmp/ocr_poc/sample.sup \
   -filter_complex "[0:s]format=rgba[v]" -map "[v]" \
   -f image2 -fps_mode passthrough /tmp/ocr_poc/frame_%03d.png
 python3 tools/subtitle-ocr-poc.py run \
-  --input /tmp/ocr_poc/sample.sup --db /tmp/ocr_poc/Latin.nocr.gz \
+  --input /tmp/ocr_poc/sample.sup --db share/ocr/Latin.nocr \
   --reference /tmp/ocr_poc/sample.reference.srt --out /tmp/ocr_poc/output.default.srt
 python3 tools/subtitle-ocr-poc.py run \
-  --input /tmp/ocr_poc/sample.sup --db /tmp/ocr_poc/Latin.nocr.gz \
+  --input /tmp/ocr_poc/sample.sup --db share/ocr/Latin.nocr \
   --reference /tmp/ocr_poc/sample.reference.srt --out /tmp/ocr_poc/output.ocr.srt \
   --max-wrong 50 --space-gap-factor 0.35
 ```

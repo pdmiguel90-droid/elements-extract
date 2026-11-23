@@ -116,14 +116,13 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 | ffprobe     | 4.0  | Análise de streams e metadados |
 | CMake       | 3.5  | Sistema de compilação |
 | Compilador C++ | C++17 | GCC ≥ 7 / Clang ≥ 5 |
-| zlib1g-dev   | —     | Descompactação da base nOCR do OCR opcional |
 
 > **Nota sobre versões do ffmpeg**: Versão 4.x+ recomendada para melhor suporte a legendas PGS (Blu-ray) e codecs modernos (AV1, Opus). Qualquer ffmpeg dos últimos 3 anos funciona corretamente.
 
 ### Instalar dependências no Debian/Ubuntu
 
 ```bash
-sudo apt install qt6-base-dev libgl1-mesa-dev cmake build-essential ffmpeg zlib1g-dev
+sudo apt install qt6-base-dev libgl1-mesa-dev cmake build-essential ffmpeg
 ```
 
 ### Instalar dependências no Fedora

@@ -72,6 +72,11 @@
   </screenshots>
 
   <releases>
+    <release version="1.2.11" date="2026-11-22">
+      <description>
+        <p>Build fix: removed the zlib dependency so the Windows build configures cleanly. The nOCR template database is now shipped uncompressed and loaded directly from resources.</p>
+      </description>
+    </release>
     <release version="1.2.10" date="2026-11-22">
       <description>
         <p>Layout fix: the Cancel and Start Extraction buttons now stay visible in a fixed footer, and the activity log no longer shrinks the work area.</p>

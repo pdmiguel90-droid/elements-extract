@@ -3,7 +3,6 @@
 #include <QColor>
 #include <QtMath>
 
-#include <zlib.h>
 
 #include <algorithm>
 #include <climits>
@@ -73,52 +72,6 @@ private:
 } // namespace
 
 NOcrEngine::NOcrEngine() = default;
-
-QByteArray NOcrEngine::gunzip(const QByteArray &data, QString *error)
-{
-    if (data.size() < 2) {
-        if (error) *error = QStringLiteral("gzip: datos vacíos");
-        return QByteArray();
-    }
-
-    z_stream strm;
-    memset(&strm, 0, sizeof(strm));
-    strm.next_in = reinterpret_cast<Bytef *>(const_cast<char *>(data.constData()));
-    strm.avail_in = static_cast<uInt>(data.size());
-    if (inflateInit2(&strm, 15 + 32) != Z_OK) {
-        if (error) *error = QStringLiteral("gzip: inflateInit2 falló");
-        return QByteArray();
-    }
-
-    QByteArray out;
-    const int chunk = 65536;
-    int ret = Z_OK;
-    do {
-        const int before = out.size();
-        out.resize(before + chunk);
-        strm.next_out = reinterpret_cast<Bytef *>(out.data() + before);
-        strm.avail_out = static_cast<uInt>(chunk);
-        ret = inflate(&strm, Z_NO_FLUSH);
-        out.resize(before + chunk - static_cast<int>(strm.avail_out));
-        if (ret != Z_OK && ret != Z_STREAM_END) {
-            if (error) *error = QStringLiteral("gzip: datos corruptos (%1)").arg(ret);
-            inflateEnd(&strm);
-            return QByteArray();
-        }
-        if (ret == Z_OK && strm.avail_in == 0 && strm.avail_out == static_cast<uInt>(chunk)) {
-            if (error) *error = QStringLiteral("gzip: flujo incompleto");
-            inflateEnd(&strm);
-            return QByteArray();
-        }
-    } while (ret != Z_STREAM_END && strm.avail_in > 0);
-
-    inflateEnd(&strm);
-    if (ret != Z_STREAM_END) {
-        if (error) *error = QStringLiteral("gzip: flujo incompleto");
-        return QByteArray();
-    }
-    return out;
-}
 
 QList<NOcrEngine::Glyph> NOcrEngine::parseDatabase(const QByteArray &raw, QString *error)
 {
@@ -192,18 +145,9 @@ bool NOcrEngine::loadDatabase(const QByteArray &data, QString *error)
     m_glyphs.clear();
     m_bySize.clear();
 
-    QByteArray raw = data;
-    if (raw.startsWith("\x1f\x8b")) {
-        QString gzipError;
-        raw = gunzip(raw, &gzipError);
-        if (raw.isEmpty()) {
-            if (error) *error = gzipError.isEmpty() ? QStringLiteral("no se pudo descomprimir la base") : gzipError;
-            return false;
-        }
-    }
-
+    // La base se distribuye sin comprimir: así no hace falta zlib en Windows.
     QString parseError;
-    m_glyphs = parseDatabase(raw, &parseError);
+    m_glyphs = parseDatabase(data, &parseError);
     if (m_glyphs.isEmpty()) {
         if (error) *error = parseError;
         return false;

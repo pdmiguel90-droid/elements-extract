@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(ElementsExtract VERSION 1.2.10 LANGUAGES CXX)
+project(ElementsExtract VERSION 1.2.11 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,8 +12,6 @@ set(CMAKE_AUTOUIC ON)
 # Strip Release binaries
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
-
-find_package(ZLIB REQUIRED)
 
 # Qt6 (requerido: Core, Widgets, Network). DBus se busca por separado porque
 # en Linux es obligatorio para el almacén de credenciales, pero en Windows y
@@ -74,7 +72,6 @@ target_compile_definitions(elements-extract PRIVATE
 target_link_libraries(elements-extract PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Network
-    ZLIB::ZLIB
 )
 
 if(ELEMENTS_EXTRACT_HAVE_SECRET_SERVICE)
@@ -143,7 +140,7 @@ set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_CONTACT "pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>")
 # libgfortran5: runtime del motor bergamot (OpenBLAS, estático o dinámico)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "ffmpeg (>= 4.0), libqt6widgets6 (>= 6.2), libqt6network6 (>= 6.2), libc6 (>= 2.31), libgfortran5, zlib1g")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "ffmpeg (>= 4.0), libqt6widgets6 (>= 6.2), libqt6network6 (>= 6.2), libc6 (>= 2.31), libgfortran5")
 if(ELEMENTS_EXTRACT_HAVE_SECRET_SERVICE)
     string(APPEND CPACK_DEBIAN_PACKAGE_DEPENDS ", libqt6dbus6 (>= 6.2)")
 endif()

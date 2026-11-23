@@ -1,3 +1,9 @@
+elements-extract (1.2.11) unstable; urgency=medium
+
+  * Eliminada la dependencia de zlib: base nOCR sin comprimir (arregla el build de Windows)
+
+ -- pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>  Sun, 22 Nov 2026 23:50:00 +0000
+
 elements-extract (1.2.10) unstable; urgency=medium
 
   * Botones de acción en pie fijo y registro con altura máxima

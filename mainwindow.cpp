@@ -1339,7 +1339,7 @@ bool MainWindow::ocrImageSubtitle(const QString &videoPath, int subtitleOrdinal,
     QGuiApplication::processEvents();
 
     if (!m_imageOcrEngineReady) {
-        QFile db(QStringLiteral(":/ocr/Latin.nocr.gz"));
+        QFile db(QStringLiteral(":/ocr/Latin.nocr"));
         if (!db.open(QIODevice::ReadOnly))
             return fail(tr("la base nOCR no está incluida en los recursos"));
         QString dbError;

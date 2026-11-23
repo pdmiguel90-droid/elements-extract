@@ -737,7 +737,7 @@ def main():
     sample.add_argument("--font-size", type=int, default=48)
     sample.set_defaults(func=make_sample)
 
-    db = sub.add_parser("load-db", help="download and parse a gzip .nocr database")
+    db = sub.add_parser("load-db", help="download and parse an nOCR database (gzip supported)")
     db.add_argument("--db", type=Path, default=DEFAULT_DB)
     db.set_defaults(func=load_db_command)
 

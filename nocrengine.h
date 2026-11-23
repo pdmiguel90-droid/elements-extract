@@ -76,7 +76,6 @@ private:
         bool deepSeek = false;
     };
 
-    static QByteArray gunzip(const QByteArray &data, QString *error);
     static QList<Glyph> parseDatabase(const QByteArray &raw, QString *error);
     static Mask makeMask(const QImage &frame);
     static Mask cropMask(const Mask &source, int left, int top, int width, int height);

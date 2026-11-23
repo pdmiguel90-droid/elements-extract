@@ -25,7 +25,7 @@
     <file>icons/refresh.svg</file>
     <file>icons/model.svg</file>
     <file>icons/empty.svg</file>
-    <file alias="ocr/Latin.nocr.gz">share/ocr/Latin.nocr.gz</file>
+    <file alias="ocr/Latin.nocr">share/ocr/Latin.nocr</file>
     <file alias="ocr/NOTICE.txt">share/ocr/NOTICE.txt</file>
 </qresource>
 </RCC>
