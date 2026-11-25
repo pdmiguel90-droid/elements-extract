@@ -221,6 +221,15 @@ QString SubtitleTranslator::normalizeLanguageCode(const QString &raw)
     return normalizeModelLangCode(raw);
 }
 
+QStringList SubtitleTranslator::bundledModelIds()
+{
+    return {
+        QStringLiteral("en-es-tiny"), QStringLiteral("es-en-tiny"),
+        QStringLiteral("en-fr-tiny"), QStringLiteral("fr-en-tiny"),
+        QStringLiteral("en-pt-tiny"), QStringLiteral("pt-en-tiny")
+    };
+}
+
 QStringList SubtitleTranslator::supportedSourceLanguages()
 {
     return installedLanguageCodes();

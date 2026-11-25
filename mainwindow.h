@@ -153,6 +153,7 @@ private:
                              const QString &subDetail = QString());
     void loadSettings();
     void saveSettings();
+    void restoreWindowGeometry();
     // Repuebla los selectores con los idiomas de los modelos instalados.
     void refreshTranslationLanguageCombos();
     QString getUniqueFilePath(const QString &fullPath);

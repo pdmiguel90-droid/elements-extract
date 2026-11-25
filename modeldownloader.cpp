@@ -84,7 +84,7 @@ QString ModelDownloader::registryUrl() const
 QList<RemoteModel> ModelDownloader::fetchAvailableModels()
 {
     if (m_registryUrl.isEmpty()) {
-        emit fetchError("Registry URL not set");
+        emit fetchError(tr("URL del registro no configurada"));
         return QList<RemoteModel>();
     }
 
@@ -319,7 +319,7 @@ QString ModelDownloader::modelIdForPair(const QString &sourceLang, const QString
 void ModelDownloader::onRegistryReply(QNetworkReply *reply)
 {
     if (reply->error() != QNetworkReply::NoError) {
-        emit fetchError("Failed to fetch model registry: " + reply->errorString());
+        emit fetchError(tr("No se pudo cargar el registro: ") + reply->errorString());
         reply->deleteLater();
         return;
     }
@@ -331,6 +331,11 @@ void ModelDownloader::onRegistryReply(QNetworkReply *reply)
     QJsonArray modelsArray = rootObj.value("models").toArray();
     if (modelsArray.isEmpty() && doc.isArray()) {
         modelsArray = doc.array();
+    }
+    if (modelsArray.isEmpty()) {
+        emit fetchError(tr("El registro devolvió una lista vacía o JSON inválido"));
+        reply->deleteLater();
+        return;
     }
     m_cachedModels.clear();
     QSet<QString> seenIds;

@@ -29,11 +29,7 @@
 #include <algorithm>
 
 // Modelos tiny incluidos en la app (instalados por defecto en todos los builds).
-static const QStringList kBundledModelIds = {
-    QStringLiteral("en-es-tiny"), QStringLiteral("es-en-tiny"),
-    QStringLiteral("en-fr-tiny"), QStringLiteral("fr-en-tiny"),
-    QStringLiteral("en-pt-tiny"), QStringLiteral("pt-en-tiny")
-};
+static const QStringList kBundledModelIds = SubtitleTranslator::bundledModelIds();
 
 static QString bundledModelSize(const QString &id)
 {
@@ -404,6 +400,10 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
             refreshLocalModels();
             refreshOnlineModels();
         });
+        connect(m_downloader, &ModelDownloader::fetchError, this, [this](const QString &message) {
+            m_statusLabel->setText(tr("Error al cargar modelos online: %1").arg(message));
+            refreshOnlineModels();
+        });
     }
 
     refreshLocalModels();
@@ -608,6 +608,9 @@ void SettingsDialog::onDeleteModel(const QString &modelId)
     searchDirs << m_translator->modelDirectory();
     searchDirs << QCoreApplication::applicationDirPath() + "/../models";
     searchDirs << QCoreApplication::applicationDirPath() + "/models";
+    // En el AppImage los modelos incluidos viven aquí y el mounted es de solo
+    // lectura: hay que buscarlos aunque no sean el directorio de descargas.
+    searchDirs << QCoreApplication::applicationDirPath() + "/../share/elements-extract/models";
     searchDirs << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
 
     for (const QString &baseDir : searchDirs) {
@@ -735,6 +738,9 @@ void SettingsDialog::refreshLocalModels()
     searchDirs << m_translator->modelDirectory();
     searchDirs << QCoreApplication::applicationDirPath() + "/../models";
     searchDirs << QCoreApplication::applicationDirPath() + "/models";
+    // En el AppImage los modelos incluidos viven aquí y el mounted es de solo
+    // lectura: hay que buscarlos aunque no sean el directorio de descargas.
+    searchDirs << QCoreApplication::applicationDirPath() + "/../share/elements-extract/models";
     searchDirs << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
 
     QMap<QString, QString> found;

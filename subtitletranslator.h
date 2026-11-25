@@ -43,6 +43,8 @@ public:
     static QString languageName(const QString &code);
     // Normaliza códigos/nombres del registro remoto a códigos cortos (en, es, …).
     static QString normalizeLanguageCode(const QString &raw);
+    // Los seis modelos tiny que se distribuyen con la aplicación.
+    static QStringList bundledModelIds();
 
     // ── Model management ────────────────────────────────────────────────────
     QList<LanguagePair> availableModels();

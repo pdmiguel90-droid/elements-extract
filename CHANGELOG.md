@@ -18,6 +18,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **Windows ya traduce**: los workflows extraen los tar.gz con `--strip-components=1` y empaquetan los seis modelos en la ruta plana que busca la app. El zip de v1.2.12 dejaba la configuración en `models/en-es-tiny/enes.student.tiny11/` y `isModelInstalled()` devolvía falso.
 - Compatibilidad con instalaciones antiguas: el traductor y el gestor de modelos reconocen también el layout anidado de v1.2.12, así que no hace falta reinstalar para volver a traducir.
 - Resolución de alias de idioma: un modelo del registro con ID `hbs-eng-tiny` se usa correctamente para `hbs→en`, y se respeta el directorio de modelos personalizado al detectar idiomas y rutas.
+- El gestor de modelos vuelve a encontrar los seis modelos incluidos dentro del AppImage aunque el directorio montado sea de solo lectura, y los marca como `activo` en la primera ejecución. La lista online y el registro remoto funcionan igual en el AppImage que en el binario del sistema.
+- Al cerrar Ajustes la ventana principal ya no se recoloca ni se maximiza de nuevo: la geometría solo se restaura al arrancar, no cada vez que se recarga la configuración.
+- Si falla la carga del registro online, el gestor muestra el error en la barra de estado en lugar de dejar la lista vacía sin explicación.
 - CMake solo instala el launcher `bergamot` y `libopenblas` de Linux en builds UNIX; el zip de Windows no mezcla binarios de otros sistemas.
 - Ayuda, READMEs (es/en/pt), `models/README.md`, `docs/modelos.md`, metainfo y traducciones en/pt actualizados con el estado real de los modelos incluidos, el buscador y la descarga de cualquier par del registro.
 

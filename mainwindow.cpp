@@ -171,6 +171,15 @@ MainWindow::MainWindow(QWidget *parent)
     setupMenuBar();
     setAcceptDrops(true);
     loadSettings();
+    restoreWindowGeometry();
+
+    // Los seis modelos incluidos están activos en la primera ejecución; si no,
+    // el gestor mostraría "0 en uso" aunque puedan traducir.
+    {
+        QSettings s("LocalApp", "FFmpegExtractor");
+        if (!s.contains("activeModels") || !s.value("activeModels").isValid())
+            s.setValue("activeModels", SubtitleTranslator::bundledModelIds());
+    }
 
     // Initialize translation engine
     subtitleTranslator = new SubtitleTranslator(this);
@@ -2892,33 +2901,37 @@ void MainWindow::loadSettings()
     // Load auto-translate setting
     translateOnExtractCheck->setChecked(s.value("autoTranslate", false).toBool());
     imageOcrCheck->setChecked(s.value("subtitles/imageOcr", false).toBool());
+}
+
+void MainWindow::restoreWindowGeometry()
+{
+    QSettings s("LocalApp", "FFmpegExtractor");
 
     // Migrate from old geometry format
     if (s.contains("geometry")) {
         s.remove("geometry");
     }
 
-    // Restore window geometry safely
-    if (s.contains("windowWidth") && s.contains("windowHeight")) {
-        int w = s.value("windowWidth", 980).toInt();
-        int h = s.value("windowHeight", 680).toInt();
-        int x = s.value("windowX", -1).toInt();
-        int y = s.value("windowY", -1).toInt();
+    if (!s.contains("windowWidth") || !s.contains("windowHeight")) return;
 
-        // Acotar a la pantalla: si la geometría "normal" es casi de pantalla completa
-        // (p. ej. guardada estando maximizada), al restaurarla no se distingue del
-        // estado maximizado y el botón de maximizar queda inoperante.
-        const QRect wa = QGuiApplication::primaryScreen()->availableGeometry();
-        if (w > wa.width() - 60) w = wa.width() - 60;
-        if (h > wa.height() - 60) h = wa.height() - 60;
-        if (w < 640) w = 640;
-        if (h < 480) h = 480;
+    int w = s.value("windowWidth", 980).toInt();
+    int h = s.value("windowHeight", 680).toInt();
+    int x = s.value("windowX", -1).toInt();
+    int y = s.value("windowY", -1).toInt();
 
-        resize(w, h);
-        if (x >= 0 && y >= 0) move(x, y);
-        if (s.value("windowMaximized", false).toBool()) {
-            setWindowState(windowState() | Qt::WindowMaximized);
-        }
+    // Acotar a la pantalla: si la geometría "normal" es casi de pantalla completa
+    // (p. ej. guardada estando maximizada), al restaurarla no se distingue del
+    // estado maximizado y el botón de maximizar queda inoperante.
+    const QRect wa = QGuiApplication::primaryScreen()->availableGeometry();
+    if (w > wa.width() - 60) w = wa.width() - 60;
+    if (h > wa.height() - 60) h = wa.height() - 60;
+    if (w < 640) w = 640;
+    if (h < 480) h = 480;
+
+    resize(w, h);
+    if (x >= 0 && y >= 0) move(x, y);
+    if (s.value("windowMaximized", false).toBool()) {
+        setWindowState(windowState() | Qt::WindowMaximized);
     }
 }
 
