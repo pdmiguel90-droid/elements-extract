@@ -61,7 +61,7 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 - 🎯 **Filtro de legendas por idioma** — seleciona e traduz apenas as legendas de um idioma específico em todos os arquivos do lote
 - 🔄 **Tradução triangular** — quando não há modelo direto (ex.: pt→es), usa intermediários (pt→en→es)
 - 🤖 **Detecção automática de idioma** — detecta o idioma das legendas a partir dos metadados do arquivo
-- ⬇️ **Gerenciamento de modelos** — os incluídos aparecem como tal; os baixáveis são agrupados por idioma e os `base` de idiomas não suportados ficam ocultos com uma nota
+- ⬇️ **Gerenciamento de modelos** — incluídos não removíveis, baixados e todos os modelos online com buscador; ao instalar um par, o idioma aparece nos seletores
 
 ---
 
@@ -110,8 +110,8 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 | Francés → Español | ↻ Triangular (fr→en→es) |
 
 Os seis pares diretos acima vêm **incluídos** no instalador, no AppImage e no zip.
-Nenhum modelo `base` é empacotado; as entradas `base` de cs/de/is do registro remoto são ocultadas
-porque o app não suporta esses idiomas.
+Nenhum modelo `base` é empacotado, mas **todos** os modelos do registro podem ser baixados;
+ao instalar um par de outro idioma, ele aparece nos seletores de origem e destino.
 
 ---
 
@@ -217,9 +217,10 @@ sudo dpkg -i elements-extract-*.deb
 
 1. Vá em **Ajustes → Configuração e Modelos** (`Ctrl+,`)
 2. Na aba **Modelos de Tradução**:
-   - **Instalados — incluídos e baixados**: os seis modelos `tiny` incluídos vêm primeiro e marcados como `incluídos`; clique duas vezes para ativar/desativar
-   - **Disponíveis para baixar — clique duas vezes para baixar**: apenas idiomas suportados, agrupados e ordenados, com `↻ atualizar` quando há versão nova
-3. Um cabeçalho resume as rotas diretas/triangulares; os modelos `base` não suportados são ocultados com uma nota como “5 modelos ocultos (idiomas não suportados: cs, de, is)”
+   - **Incluídos (não removíveis)**: os seis modelos `tiny` com idioma, tamanho aproximado e versão; clique duas vezes para ativar/desativar
+   - **Baixados**: os que você adicionou; removidos com **Excluir**
+   - **Online — clique duas vezes para baixar**: todos os modelos do registro, ordenados por idioma, com nome, tipo, tamanho, versão e `↻ atualizar`
+2. Um **buscador** filtra ambas as listas; um cabeçalho resume as rotas diretas/triangulares. Ao baixar um modelo de outro idioma, ele aparece nos seletores.
 
 ### Atalhos de teclado
 

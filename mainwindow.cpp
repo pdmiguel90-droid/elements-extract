@@ -120,26 +120,7 @@ QString srtTimestamp(qint64 ms)
 // ─────────────────────────────────────────────────────────────────────────────
 static QString normalizeLangCode(const QString &raw)
 {
-    const QString c = raw.trimmed().toLower();
-    static const QMap<QString, QString> map = {
-        {"en", "en"}, {"eng", "en"}, {"english", "en"},
-        {"es", "es"}, {"spa", "es"}, {"spanish", "es"}, {"cast", "es"},
-        {"fr", "fr"}, {"fra", "fr"}, {"fre", "fr"}, {"french", "fr"},
-        {"pt", "pt"}, {"por", "pt"}, {"portuguese", "pt"},
-        {"de", "de"}, {"ger", "de"}, {"deu", "de"}, {"german", "de"},
-        {"it", "it"}, {"ita", "it"}, {"italian", "it"},
-        {"ja", "ja"}, {"jpn", "ja"}, {"japanese", "ja"},
-        {"zh", "zh"}, {"chi", "zh"}, {"zho", "zh"}, {"chinese", "zh"},
-        {"ko", "ko"}, {"kor", "ko"}, {"korean", "ko"},
-        {"ru", "ru"}, {"rus", "ru"}, {"russian", "ru"},
-        {"ar", "ar"}, {"ara", "ar"}, {"arabic", "ar"},
-        {"hi", "hi"}, {"hin", "hi"}, {"hindi", "hi"},
-        {"nl", "nl"}, {"dut", "nl"}, {"nld", "nl"}, {"dutch", "nl"},
-        {"sv", "sv"}, {"swe", "sv"}, {"swedish", "sv"},
-        {"pl", "pl"}, {"pol", "pl"}, {"polish", "pl"},
-        {"tr", "tr"}, {"tur", "tr"}, {"turkish", "tr"}
-    };
-    return map.value(c, c);
+    return SubtitleTranslator::normalizeLanguageCode(raw);
 }
 
 // Credenciales de OpenSubtitles: se leen siempre del almacén seguro del
@@ -209,6 +190,10 @@ MainWindow::MainWindow(QWidget *parent)
     } else {
         modelsPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
     }
+    const QString configuredModelsDir =
+        QSettings("LocalApp", "FFmpegExtractor").value("modelsDir").toString().trimmed();
+    if (!configuredModelsDir.isEmpty() && QDir(configuredModelsDir).exists())
+        modelsPath = configuredModelsDir;
     subtitleTranslator->setModelDirectory(modelsPath);
 
     // bergamot binary found automatically by findBergamotBinary()
@@ -551,16 +536,9 @@ void MainWindow::setupUi()
     transLangLayout->setSpacing(8);
     srcPromptLabel = fmtLabel(tr("Origen:"));
     srcLangCombo = new QComboBox();
-    srcLangCombo->addItem("English", "en");
-    srcLangCombo->addItem("Español", "es");
-    srcLangCombo->addItem("Français", "fr");
-    srcLangCombo->addItem("Português", "pt");
     dstPromptLabel = fmtLabel(tr("Destino:"));
     dstLangCombo = new QComboBox();
-    dstLangCombo->addItem("Español", "es");
-    dstLangCombo->addItem("English", "en");
-    dstLangCombo->addItem("Français", "fr");
-    dstLangCombo->addItem("Português", "pt");
+    refreshTranslationLanguageCombos();
     transLangLayout->addWidget(srcPromptLabel);
     transLangLayout->addWidget(srcLangCombo, 1);
     transLangLayout->addWidget(dstPromptLabel);
@@ -2866,6 +2844,33 @@ void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
+void MainWindow::refreshTranslationLanguageCombos()
+{
+    if (!srcLangCombo || !dstLangCombo) return;
+
+    const QString prevSrc = srcLangCombo->count() ? srcLangCombo->currentData().toString() : QStringLiteral("en");
+    const QString prevDst = dstLangCombo->count() ? dstLangCombo->currentData().toString() : QStringLiteral("es");
+    const QStringList languages = SubtitleTranslator::supportedSourceLanguages();
+
+    srcLangCombo->blockSignals(true);
+    dstLangCombo->blockSignals(true);
+    srcLangCombo->clear();
+    dstLangCombo->clear();
+    for (const QString &code : languages) {
+        const QString name = SubtitleTranslator::languageName(code);
+        srcLangCombo->addItem(name, code);
+        dstLangCombo->addItem(name, code);
+    }
+
+    int idx = srcLangCombo->findData(prevSrc);
+    srcLangCombo->setCurrentIndex(idx >= 0 ? idx : 0);
+    idx = dstLangCombo->findData(prevDst);
+    if (idx < 0) idx = dstLangCombo->findData(QStringLiteral("es"));
+    dstLangCombo->setCurrentIndex(idx >= 0 ? idx : 0);
+    srcLangCombo->blockSignals(false);
+    dstLangCombo->blockSignals(false);
+}
+
 void MainWindow::loadSettings()
 {
     QSettings s("LocalApp", "FFmpegExtractor");
@@ -3254,6 +3259,9 @@ void MainWindow::showSettings()
 
 void MainWindow::onSettingsChanged()
 {
+    // Puede haber nuevos modelos descargados: actualizar idiomas antes de
+    // aplicar las preferencias guardadas.
+    refreshTranslationLanguageCombos();
     // Reload settings after dialog closes
     loadSettings();
     applyOnlineSubCredentials(onlineSubDownloader, m_credentialStore);

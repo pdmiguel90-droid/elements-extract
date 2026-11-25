@@ -13,6 +13,16 @@
 
 static const QString DEFAULT_REGISTRY_URL = "https://translatelocally.com/models.json";
 
+namespace {
+QStringList langCodesFromModelId(const QString &id)
+{
+    const QStringList parts = id.split('-', Qt::SkipEmptyParts);
+    if (parts.size() < 2) return {};
+    return {SubtitleTranslator::normalizeLanguageCode(parts.at(0)),
+            SubtitleTranslator::normalizeLanguageCode(parts.at(1))};
+}
+} // namespace
+
 ModelDownloader::ModelDownloader(QObject *parent)
     : QObject(parent)
     , m_networkManager(new QNetworkAccessManager(this))
@@ -323,20 +333,30 @@ void ModelDownloader::onRegistryReply(QNetworkReply *reply)
         modelsArray = doc.array();
     }
     m_cachedModels.clear();
+    QSet<QString> seenIds;
 
-    // Listar TODOS los modelos del registro: el usuario elige cuál descargar
-    // (incluso pares fuera de en/es/fr/pt, útiles por ejemplo en traducciones
-    // triangulares). No filtrar por idioma.
+    // Listar TODOS los modelos del registro: el usuario elige cuál descargar.
+    // Los códigos se derivan del id (`is-en-base`, `hbs-eng-tiny`) porque los
+    // campos `src`/`trg` del registro a veces traen nombres completos.
     for (const QJsonValue &value : modelsArray) {
         QJsonObject obj = value.toObject();
 
         RemoteModel model;
         model.id = obj["shortName"].toString();
+        if (model.id.isEmpty() || seenIds.contains(model.id)) continue;
+        seenIds.insert(model.id);
         model.name = obj["modelName"].toString();
+        const QStringList idLangs = langCodesFromModelId(model.id);
         QJsonObject srcTags = obj["srcTags"].toObject();
-        model.sourceLang = srcTags.keys().isEmpty() ? obj["src"].toString().toLower() : srcTags.keys().first().toLower();
-        model.targetLang = obj["trgTag"].toString().toLower();
-        if (model.targetLang.isEmpty()) model.targetLang = obj["trg"].toString().toLower();
+        model.sourceLang = idLangs.isEmpty()
+            ? SubtitleTranslator::normalizeLanguageCode(
+                  srcTags.keys().isEmpty() ? obj["src"].toString() : srcTags.keys().first())
+            : idLangs.at(0);
+        model.targetLang = idLangs.size() > 1
+            ? idLangs.at(1)
+            : SubtitleTranslator::normalizeLanguageCode(
+                  obj["trgTag"].toString().isEmpty() ? obj["trg"].toString()
+                                                     : obj["trgTag"].toString());
         model.type = obj["type"].toString();
         model.downloadUrl = obj["url"].toString();
         model.checksum = obj["checksum"].toString();

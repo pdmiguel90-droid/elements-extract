@@ -2,7 +2,8 @@ elements-extract (1.2.13) unstable; urgency=medium
 
   * Arreglo de la traducción en Windows: modelos aplanados con --strip-components=1,
     seis pares tiny incluidos y compatibilidad con el layout anidado de v1.2.12
-  * Gestor de modelos con incluidos/descargables, rutas resumidas y base no soportados ocultos
+  * Gestor de modelos con incluidos no eliminables, descargados y todos los modelos online con buscador
+  * Selectores de idioma dinámicos: al instalar un modelo se añade su idioma a origen/destino
   * Acerca de rediseñado, capturas en inglés y documentación/traducciones actualizadas
 
  -- pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>  Wed, 25 Nov 2026 18:00:00 +0000

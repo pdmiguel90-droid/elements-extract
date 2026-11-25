@@ -96,8 +96,9 @@ En v1.2.13:
   `--strip-components=1` y empaquetan los seis pares `tiny` en los tres artefactos;
 - `SubtitleTranslator` acepta tanto el layout plano como el anidado, de modo que
   una instalación de Windows v1.2.12 traduce sin reinstallar;
-- Ajustes → Modelos de Traducción nombra los seis modelos incluidos, marca los
-  descargados y oculta los `base` de idiomas no soportados (cs/de/is) con una nota.
+- Ajustes → Modelos de Traducción separa **incluidos (no eliminables)** de
+  **descargados**, muestra **todos** los modelos online con buscador y añade
+  automáticamente a los selectores cualquier idioma cuyo modelo se instale.
 
 ### Mirror público en GitHub Pages (opcional)
 

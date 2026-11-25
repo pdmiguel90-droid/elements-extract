@@ -33,7 +33,7 @@ La interfaz también habla inglés y portugués (detección automática del sist
 ## ✨ Qué hace
 
 - 📼 **Extracción por lotes** de audio, vídeo y subtítulos (MKV, MP4, AVI…).
-- 🌍 **Traducción offline** en↔es/fr/pt (+ triangular vía inglés): **6 modelos tiny incluidos**, sin modelos `base` empaquetados.
+- 🌍 **Traducción offline** en↔es/fr/pt (+ triangular vía inglés): **6 modelos tiny incluidos**. Otros pares del registro se descargan y sus idiomas aparecen en los selectores.
 - 🌐 **Subtítulos online**: búsqueda manual o por lote en opensubtitles.org (XML-RPC estilo VLC, sin clave) o en opensubtitles.com (REST), con descarga, descompresión y traducción posterior.
 - 🅾️ **OCR opcional y experimental** de PGS/VobSub a `.srt` traducible con nOCR (desactivado por defecto; puede tardar varios minutos por episodio).
 - 🔔 **Aviso de versiones nuevas** desde GitHub Releases, al arrancar o desde Ayuda → Buscar actualizaciones…
@@ -53,8 +53,8 @@ La interfaz también habla inglés y portugués (detección automática del sist
 | `pt-en-tiny` | Português → English | ~25 MB |
 
 **Total ~142 MB.** No se incluye ningún modelo `base`. Ajustes → Modelos de Traducción
-muestra estos seis como **incluidos**, separa los descargados y oculta los modelos `base`
-del registro remoto de idiomas no soportados (cs/de/is) con una nota explicativa.
+muestra estos seis como **incluidos y no eliminables**, separa los descargados y ofrece
+**todos** los modelos del registro con buscador por ID, idioma, nombre o tamaño.
 
 Detalles por idioma en los README localizados. Mantenimiento de modelos: [docs/modelos.md](docs/modelos.md).
 

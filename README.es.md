@@ -61,7 +61,7 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 - 🎯 **Filtro de subtítulos por idioma** — selecciona y traduce solo los subtítulos de un idioma concreto en todos los archivos del lote
 - 🔄 **Traducción triangular** — si no hay modelo directo (ej. pt→es), usa intermediarios (pt→en→es)
 - 🤖 **Detección automática de idioma** — detecta el idioma de los subtítulos desde la metadata del archivo
-- ⬇️ **Gestión de modelos** — los incluidos aparecen como tales; los descargables se agrupan por idioma y los `base` de idiomas no soportados se ocultan con una nota
+- ⬇️ **Gestión de modelos** — incluidos no eliminables, descargados y todos los modelos online con buscador; al instalar un par, su idioma aparece en los selectores
 
 ---
 
@@ -110,8 +110,8 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 | Francés → Español | ↻ Via triangular (fr→en→es) |
 
 Los seis pares directos de arriba vienen **incluidos** en el instalador, el AppImage y el zip.
-No se empaqueta ningún modelo `base`; las entradas `base` de cs/de/is del registro remoto se ocultan
-porque la app no soporta esos idiomas.
+No se empaqueta ningún modelo `base`, pero **todos** los modelos del registro se pueden descargar;
+al instalar un par de otro idioma, ese idioma aparece en los selectores de origen y destino.
 
 ---
 
@@ -217,9 +217,10 @@ sudo dpkg -i elements-extract-*.deb
 
 1. Ve a **Ajustes → Configuración y Modelos** (`Ctrl+,`)
 2. En la pestaña **Modelos de Traducción**:
-   - **Instalados — incluidos y descargados**: los seis modelos `tiny` incluidos se nombran primero y se marcan como `incluidos`; doble clic para activar/desactivar
-   - **Disponibles para descargar — doble clic para descargar**: solo idiomas soportados, ordenados y agrupados, con `↻ actualizar` si hay versión nueva
-3. Una cabecera resume las rutas directas/triangulares; los modelos `base` no soportados se ocultan con una nota como «5 modelos ocultos (idiomas no soportados: cs, de, is)»
+   - **Incluidos (no eliminables)**: los seis modelos `tiny` con idioma, tamaño aproximado y versión; doble clic para activar/desactivar
+   - **Descargados**: los que añadiste tú; se quitan con **Eliminar**
+   - **Online — doble clic para descargar**: todos los modelos del registro, ordenados por idioma, con nombre, tipo, tamaño, versión y `↻ actualizar`
+2. Un **buscador** filtra ambas listas; una cabecera resume las rutas directas/triangulares. Al descargar un modelo de otro idioma, ese idioma aparece en los selectores.
 
 ### Atajos de teclado
 

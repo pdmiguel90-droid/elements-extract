@@ -32,7 +32,7 @@
       <li>Single-file remux with all translated tracks, MP4-safe fallback to MKV</li>
       <li>Optional OpenSubtitles search (anonymous XML-RPC or REST) without uploading the video</li>
       <li>Experimental OCR of PGS/VobSub subtitles with nOCR, off by default</li>
-      <li>Bundled tiny translation models; supported downloadable models shown by language</li>
+      <li>Bundled tiny translation models (not deletable) plus a searchable list of every downloadable registry model</li>
       <li>Update notifier backed by GitHub Releases</li>
     </ul>
     <ul xml:lang="es">
@@ -42,7 +42,7 @@
       <li>Remux en un solo archivo con todas las pistas, con repliegue MP4→MKV</li>
       <li>Búsqueda opcional en OpenSubtitles (XML-RPC anónima o REST) sin subir el vídeo</li>
       <li>OCR experimental de PGS/VobSub con nOCR, desactivado por defecto</li>
-      <li>Modelos tiny incluidos; descargables compatibles agrupados por idioma</li>
+      <li>Modelos tiny incluidos (no eliminables) y todos los descargables con buscador</li>
       <li>Aviso de versiones nuevas desde GitHub Releases</li>
     </ul>
   </description>
@@ -97,7 +97,7 @@
     <release version="1.2.13" date="2026-11-25">
       <description>
         <p>Fixed Windows subtitle translation: release workflows now flatten model archives with --strip-components=1 and bundle all six tiny language pairs. Older nested v1.2.12 installs are also detected, so reinstalling is not required.</p>
-        <p>The model manager names the six bundled models as included, groups supported downloadable pairs with update hints, and hides unsupported base models with an explanatory note.</p>
+        <p>The model manager separates bundled models (included, not deletable) from downloaded ones, lists every registry model with a search box and details, and makes any newly installed language available in the source/target selectors.</p>
         <p>Redesigned About dialog, updated help and READMEs, new English screenshots, and completed English/Portuguese translations.</p>
       </description>
     </release>

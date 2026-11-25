@@ -41,6 +41,8 @@ public:
     static QStringList supportedSourceLanguages();
     static QStringList supportedTargetLanguages();
     static QString languageName(const QString &code);
+    // Normaliza códigos/nombres del registro remoto a códigos cortos (en, es, …).
+    static QString normalizeLanguageCode(const QString &raw);
 
     // ── Model management ────────────────────────────────────────────────────
     QList<LanguagePair> availableModels();

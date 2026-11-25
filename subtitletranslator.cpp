@@ -8,6 +8,159 @@
 #include <QCoreApplication>
 #include <QStandardPaths>
 #include <QSettings>
+#include <QHash>
+#include <algorithm>
+
+namespace {
+// El registro remoto mezcla códigos ISO con nombres completos; los modelos
+// incluidos usan códigos cortos. Unificar aquí evita que un modelo descargado
+// quede "instalado" pero invisible en los selectores de idioma.
+const QHash<QString, QString> kLangAliases = {
+    {"eng", "en"}, {"english", "en"},
+    {"spa", "es"}, {"spanish", "es"}, {"cast", "es"}, {"español", "es"},
+    {"fra", "fr"}, {"fre", "fr"}, {"french", "fr"}, {"français", "fr"},
+    {"por", "pt"}, {"portuguese", "pt"}, {"português", "pt"},
+    {"cze", "cs"}, {"czech", "cs"},
+    {"ger", "de"}, {"deu", "de"}, {"german", "de"}, {"deutsch", "de"},
+    {"est", "et"}, {"estonian", "et"},
+    {"ice", "is"}, {"isl", "is"}, {"icelandic", "is"},
+    {"nob", "nb"}, {"norwegian (bokmål)", "nb"}, {"norwegian bokmål", "nb"},
+    {"nno", "nn"}, {"norwegian (nynorsk)", "nn"}, {"norwegian nynorsk", "nn"},
+    {"bul", "bg"}, {"bulgarian", "bg"},
+    {"pol", "pl"}, {"polish", "pl"}, {"polaco", "pl"},
+    {"hbs", "hbs"}, {"serbo-croatian", "hbs"},
+    {"sl", "sl"}, {"slovene", "sl"}, {"slovenian", "sl"},
+    {"mk", "mk"}, {"macedonian", "mk"},
+    {"mt", "mt"}, {"maltese", "mt"},
+    {"tr", "tr"}, {"turkish", "tr"}, {"turco", "tr"},
+    {"sq", "sq"}, {"albanian", "sq"},
+    {"ca", "ca"}, {"catalan", "ca"},
+    {"el", "el"}, {"greek", "el"},
+    {"uk", "uk"}, {"ukrainian", "uk"},
+    {"it", "it"}, {"ita", "it"}, {"italian", "it"},
+    {"ru", "ru"}, {"rus", "ru"}, {"russian", "ru"},
+    {"zh", "zh"}, {"chi", "zh"}, {"zho", "zh"}, {"chinese", "zh"},
+    {"ja", "ja"}, {"jpn", "ja"}, {"japanese", "ja"},
+    {"ko", "ko"}, {"kor", "ko"}, {"korean", "ko"},
+    {"ar", "ar"}, {"ara", "ar"}, {"arabic", "ar"},
+    {"hi", "hi"}, {"hin", "hi"}, {"hindi", "hi"},
+    {"nl", "nl"}, {"dut", "nl"}, {"nld", "nl"}, {"dutch", "nl"},
+    {"sv", "sv"}, {"swe", "sv"}, {"swedish", "sv"}
+};
+
+QString normalizeModelLangCode(const QString &raw)
+{
+    const QString c = raw.trimmed().toLower();
+    return kLangAliases.value(c, c);
+}
+
+QStringList modelSearchBases()
+{
+    QStringList bases;
+    QSettings settings("LocalApp", "FFmpegExtractor");
+    const QString customDir = settings.value("modelsDir").toString().trimmed();
+    if (!customDir.isEmpty()) bases << customDir;
+    bases << QCoreApplication::applicationDirPath() + "/../models";
+    bases << QCoreApplication::applicationDirPath() + "/models";
+    bases << QCoreApplication::applicationDirPath() + "/../share/elements-extract/models";
+    bases << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
+    bases.removeDuplicates();
+    return bases;
+}
+
+bool hasBergamotConfig(const QString &dir)
+{
+    return QFile::exists(dir + "/config.intgemm8bitalpha.yml") ||
+           QFile::exists(dir + "/config.yml");
+}
+
+// El registro usa a veces códigos distintos de los del selector (p. ej.
+// `hbs-eng-tiny` frente a `hbs-en-tiny`). Probar las variantes evita que un
+// modelo descargado quede instalado pero inalcanzable para el traductor.
+QStringList modelIdVariants(const QString &modelId)
+{
+    QStringList variants;
+    variants << modelId;
+    const QStringList parts = modelId.split('-', Qt::SkipEmptyParts);
+    if (parts.size() < 3) return variants;
+
+    const QString suffix = QStringList(parts.mid(2)).join('-');
+    auto aliasesOf = [](const QString &canonical) {
+        QStringList list {canonical};
+        for (auto it = kLangAliases.constBegin(); it != kLangAliases.constEnd(); ++it) {
+            if (it.value() == canonical && !list.contains(it.key())) list << it.key();
+        }
+        return list;
+    };
+
+    for (const QString &src : aliasesOf(normalizeModelLangCode(parts.at(0)))) {
+        for (const QString &trg : aliasesOf(normalizeModelLangCode(parts.at(1)))) {
+            const QString candidate = src + "-" + trg + "-" + suffix;
+            if (!variants.contains(candidate)) variants << candidate;
+        }
+    }
+    return variants;
+}
+
+// Devuelve el directorio que contiene la configuración bergamot de un modelo.
+// Acepta el layout plano (models/<id>/config...) y el anidado que dejaban los
+// tar.gz antes de usar --strip-components=1 (zip de Windows v1.2.12).
+QString locateModelDir(const QString &modelId, const QString &primaryDir)
+{
+    QStringList bases;
+    if (!primaryDir.isEmpty()) bases << primaryDir;
+    bases << modelSearchBases();
+
+    for (const QString &variant : modelIdVariants(modelId)) {
+        for (const QString &base : bases) {
+            if (base.isEmpty()) continue;
+            const QString dir = base + "/" + variant;
+            if (hasBergamotConfig(dir)) return dir;
+
+            QDir parent(dir);
+            if (!parent.exists()) continue;
+            for (const QString &sub : parent.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+                const QString nested = dir + "/" + sub;
+                if (hasBergamotConfig(nested)) return nested;
+            }
+        }
+    }
+    return QString();
+}
+
+QStringList installedLanguageCodes()
+{
+    QStringList codes = {"en", "es", "fr", "pt"};
+    QSet<QString> seen(codes.begin(), codes.end());
+
+    for (const QString &base : modelSearchBases()) {
+        QDir d(base);
+        if (!d.exists()) continue;
+        for (const QString &entry : d.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+            const QString dir = base + "/" + entry;
+            bool usable = hasBergamotConfig(dir);
+            if (!usable) {
+                QDir modelDir(dir);
+                for (const QString &sub : modelDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+                    if (hasBergamotConfig(dir + "/" + sub)) { usable = true; break; }
+                }
+            }
+            if (!usable) continue;
+
+            const QStringList parts = entry.split('-', Qt::SkipEmptyParts);
+            for (int i = 0; i < qMin(2, parts.size()); ++i) {
+                const QString code = normalizeModelLangCode(parts.at(i));
+                if (!code.isEmpty() && !seen.contains(code)) {
+                    seen.insert(code);
+                    codes << code;
+                }
+            }
+        }
+    }
+    std::sort(codes.begin() + 4, codes.end());
+    return codes;
+}
+} // namespace
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Construction / Destruction
@@ -63,30 +216,37 @@ QString SubtitleTranslator::bergamotBinary() const
 // ─────────────────────────────────────────────────────────────────────────────
 // Available languages
 // ─────────────────────────────────────────────────────────────────────────────
+QString SubtitleTranslator::normalizeLanguageCode(const QString &raw)
+{
+    return normalizeModelLangCode(raw);
+}
+
 QStringList SubtitleTranslator::supportedSourceLanguages()
 {
-    return {"en", "es", "fr", "pt"};
+    return installedLanguageCodes();
 }
 
 QStringList SubtitleTranslator::supportedTargetLanguages()
 {
-    return {"en", "es", "fr", "pt"};
+    return installedLanguageCodes();
 }
 
 QString SubtitleTranslator::languageName(const QString &code)
 {
     static QMap<QString, QString> names = {
-        {"en", "English"},
-        {"es", "Español"},
-        {"fr", "Français"},
-        {"pt", "Português"},
-        // Solo para mensajes legibles: estos idiomas no tienen modelo local
-        {"de", "Deutsch"}, {"it", "Italiano"}, {"ru", "Ruso"},
-        {"zh", "Chino"}, {"ja", "Japonés"}, {"ko", "Coreano"},
-        {"ar", "Árabe"}, {"hi", "Hindi"}, {"nl", "Holandés"},
-        {"sv", "Sueco"}, {"pl", "Polaco"}, {"tr", "Turco"}
+        {"en", "English"}, {"es", "Español"}, {"fr", "Français"}, {"pt", "Português"},
+        {"cs", "Čeština"}, {"de", "Deutsch"}, {"et", "Eesti"}, {"is", "Íslenska"},
+        {"nb", "Norsk bokmål"}, {"nn", "Norsk nynorsk"}, {"bg", "Български"},
+        {"pl", "Polski"}, {"hbs", "Srpskohrvatski"}, {"sl", "Slovenščina"},
+        {"mk", "Македонски"}, {"mt", "Malti"}, {"tr", "Türkçe"}, {"sq", "Shqip"},
+        {"ca", "Català"}, {"el", "Ελληνικά"}, {"uk", "Українська"},
+        {"it", "Italiano"}, {"ita", "Italiano"}, {"ru", "Русский"}, {"rus", "Русский"},
+        {"zh", "中文"}, {"chi", "中文"}, {"zho", "中文"}, {"ja", "日本語"}, {"jpn", "日本語"},
+        {"ko", "한국어"}, {"kor", "한국어"}, {"ar", "العربية"}, {"ara", "العربية"},
+        {"hi", "हिन्दी"}, {"hin", "हिन्दी"}, {"nl", "Nederlands"}, {"dut", "Nederlands"},
+        {"nld", "Nederlands"}, {"sv", "Svenska"}, {"swe", "Svenska"}
     };
-    return names.value(code, code);
+    return names.value(normalizeModelLangCode(code), code);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -126,41 +286,6 @@ QList<LanguagePair> SubtitleTranslator::installedModels()
     }
     return installed;
 }
-
-namespace {
-bool hasBergamotConfig(const QString &dir)
-{
-    return QFile::exists(dir + "/config.intgemm8bitalpha.yml") ||
-           QFile::exists(dir + "/config.yml");
-}
-
-// Devuelve el directorio que contiene la configuración bergamot de un modelo.
-// Acepta el layout plano (models/<id>/config...) y el anidado que dejaban los
-// tar.gz antes de usar --strip-components=1 (zip de Windows v1.2.12).
-QString locateModelDir(const QString &modelId, const QString &primaryDir)
-{
-    QStringList bases;
-    bases << primaryDir;
-    bases << QCoreApplication::applicationDirPath() + "/../models";
-    bases << QCoreApplication::applicationDirPath() + "/models";
-    bases << QCoreApplication::applicationDirPath() + "/../share/elements-extract/models";
-    bases << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
-
-    for (const QString &base : bases) {
-        if (base.isEmpty()) continue;
-        const QString dir = base + "/" + modelId;
-        if (hasBergamotConfig(dir)) return dir;
-
-        QDir parent(dir);
-        if (!parent.exists()) continue;
-        for (const QString &sub : parent.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-            const QString nested = dir + "/" + sub;
-            if (hasBergamotConfig(nested)) return nested;
-        }
-    }
-    return QString();
-}
-} // namespace
 
 bool SubtitleTranslator::isModelInstalled(const QString &sourceLang, const QString &targetLang)
 {

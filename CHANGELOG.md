@@ -8,17 +8,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 ## [1.2.13] - 2026-11-25
 
 ### Añadido
-- Ajustes → Modelos de Traducción distingue claramente los seis modelos `tiny` **incluidos** (`en↔es/fr/pt`, ~142 MB) de los descargados, con nombres legibles, badges `⚡ tiny` / `★ base` y marca `activo`.
-- La lista de modelos disponibles se agrupa y ordena por idioma, añade una cabecera con el resumen de rutas directas/triangulares y muestra `↻ actualizar` cuando hay versión nueva.
-- Los modelos `base` del registro remoto de idiomas no soportados (cs/de/is) se ocultan con una nota: «5 modelos ocultos (idiomas no soportados: cs, de, is)».
+- Ajustes → Modelos de Traducción separa dos apartados: **incluidos (no eliminables)** —los seis `tiny` de `en↔es/fr/pt`, ~142 MB— y **descargados**, con idioma, nombre, tamaño aproximado, versión y marca `activo`. El botón Eliminar se desactiva para los incluidos y tampoco se pueden volver a descargar.
+- La lista **online** muestra todos los modelos del registro (31 únicos, duplicados eliminados), ordenados por idioma, con badges `⚡ tiny` / `★ base`, `↻ actualizar` y un **buscador** que filtra ambas listas por ID, idioma, nombre o tamaño.
+- Los idiomas dejan de estar fijos en `en/es/fr/pt`: al descargar un modelo de otro par (de, cs, is, pl…), ese idioma aparece automáticamente en los selectores de origen/destino y se usa en rutas directas o triangulares. Ya no se oculta ningún modelo.
 - Diálogo **Acerca de** rediseñado: scroll, carta de presentación por bloques, aviso de privacidad y siete chips tecnológicos (Qt, C++17, FFmpeg, bergamot, nOCR, OpenSubtitles y GitHub Releases).
 - Nuevas capturas en inglés de modelos y About, referenciadas en los README y en el metainfo; documento `docs/github-metadata.md` con la descripción/topics/homepage pendientes de aplicar en GitHub.
 
 ### Corregido
 - **Windows ya traduce**: los workflows extraen los tar.gz con `--strip-components=1` y empaquetan los seis modelos en la ruta plana que busca la app. El zip de v1.2.12 dejaba la configuración en `models/en-es-tiny/enes.student.tiny11/` y `isModelInstalled()` devolvía falso.
 - Compatibilidad con instalaciones antiguas: el traductor y el gestor de modelos reconocen también el layout anidado de v1.2.12, así que no hace falta reinstalar para volver a traducir.
+- Resolución de alias de idioma: un modelo del registro con ID `hbs-eng-tiny` se usa correctamente para `hbs→en`, y se respeta el directorio de modelos personalizado al detectar idiomas y rutas.
 - CMake solo instala el launcher `bergamot` y `libopenblas` de Linux en builds UNIX; el zip de Windows no mezcla binarios de otros sistemas.
-- Ayuda, READMEs (es/en/pt), `models/README.md`, `docs/modelos.md`, metainfo y traducciones en/pt actualizados con el estado real de los modelos incluidos.
+- Ayuda, READMEs (es/en/pt), `models/README.md`, `docs/modelos.md`, metainfo y traducciones en/pt actualizados con el estado real de los modelos incluidos, el buscador y la descarga de cualquier par del registro.
 
 ### Nota
 - No se empaquetan modelos `base`: los incluidos son los seis `tiny`. No se requiere descarga inicial para en↔es/fr/pt.

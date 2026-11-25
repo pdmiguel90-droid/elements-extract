@@ -24,6 +24,7 @@ y publica la ficha (no hay que redactar nada más).
 - [x] Capturas en inglés (hechas con `LC_ALL=C` y `language=en`) en `screenshots/`:
       ventana principal, filtro de subs, búsqueda online, backend XML-RPC,
       modelos de traducción y About; AppImageHub exige capturas en inglés.
+      La captura de modelos muestra los seis incluidos no eliminables y el buscador.
 - [x] `desktop-file-validate` limpio.
 - [x] Metainfo AppStream embebido (`usr/share/metainfo/*.metainfo.xml`),
       `appstreamcli` limpio salvo URLs que requieren push.

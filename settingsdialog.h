@@ -63,6 +63,7 @@ protected:
 private:
     void refreshLocalModels();
     void refreshOnlineModels();
+    void refreshLanguageCombos();
     void retranslateUi();
     void updateOnlineSubsInfoLabel(const QString &saveError = QString());
     QString formatSize(qint64 bytes);
@@ -84,6 +85,7 @@ private:
     QLabel     *m_langLbl;
     QLabel     *m_leftTitle;
     QLabel     *m_rightTitle;
+    QLineEdit  *m_searchEdit;
     QPushButton *m_fetchBtn;
     QPushButton *m_deleteBtn;
     QLabel     *m_infoLbl;

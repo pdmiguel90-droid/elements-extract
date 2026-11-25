@@ -153,6 +153,8 @@ private:
                              const QString &subDetail = QString());
     void loadSettings();
     void saveSettings();
+    // Repuebla los selectores con los idiomas de los modelos instalados.
+    void refreshTranslationLanguageCombos();
     QString getUniqueFilePath(const QString &fullPath);
     QString ensureOutputSubdir(const QString &subName);
     int     pruneEmptyExtractions(const QString &videoInput);

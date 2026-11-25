@@ -54,7 +54,7 @@ So I thought: *what if I could take the file I already have on disk and translat
 - 💾 **Persistence** — remembers output folder, formats and window size between sessions
 - 🖱️ **Drag & Drop** — drop files straight onto the window
 - ⌨️ **Keyboard shortcuts** — `Ctrl+O`, `Del`, `Ctrl+Enter`, `Escape`, `F1`
-- 🌐 **Offline subtitle translation** — translate extracted subtitles to the language you want (en, es, fr, pt), with 6 bundled tiny models and no `base` model packaged by default
+- 🌐 **Offline subtitle translation** — 6 bundled tiny models for en↔es/fr/pt; download any other registry pair and its language appears in the selectors
 - 🌐 **Online subtitles** — manual and batch search on opensubtitles.org (VLC-style XML-RPC, no API key) or opensubtitles.com (REST), with download and later translation
 - 🅾️ **Optional OCR (experimental)** — converts PGS/VobSub to `.srt` with nOCR; off by default and reports progress in the log
 - 🔔 **Update notifier** — checks GitHub Releases at startup, or on demand from Help → Check for updates…
@@ -62,7 +62,7 @@ So I thought: *what if I could take the file I already have on disk and translat
 - 🎯 **Subtitle language filter** — select and translate only the subtitles of a given language across the whole batch
 - 🔄 **Triangular translation** — when no direct model exists (e.g. pt→es), it uses intermediates (pt→en→es)
 - 🤖 **Automatic language detection** — detects subtitle language from file metadata
-- ⬇️ **Model manager** — bundled models are marked as included; downloadable models are grouped by language and unsupported-language `base` models are hidden with a note
+- ⬇️ **Model manager** — bundled models are non-deletable, downloaded models are separate, every online model is downloadable with a search box, and installing a pair adds its language to the selectors
 
 ---
 
@@ -111,8 +111,8 @@ So I thought: *what if I could take the file I already have on disk and translat
 | French → Spanish | ↻ Triangular (fr→en→es) |
 
 All six direct pairs above are **included** in the installer/AppImage/zip. No `base` models are
-bundled; the remote `base` entries for cs/de/is are hidden because the app does not support
-those languages.
+bundled, but every other registry model is downloadable; once installed, its language becomes
+selectable for direct or triangular translation.
 
 ---
 
@@ -218,9 +218,10 @@ sudo dpkg -i elements-extract-*.deb
 
 1. Go to **Settings → Settings and Models** (`Ctrl+,`)
 2. In the **Translation Models** tab:
-   - **Installed — bundled and downloaded**: the six included `tiny` models are named first and marked `included`; double-click to enable/disable
-   - **Available to download — double-click to download**: only supported languages, grouped and sorted, with `↻ update` when a newer version exists
-3. A header summarizes direct/triangular routes; unsupported `base` models are hidden with a note such as “5 hidden models (unsupported languages: cs, de, is)”
+   - **Included (not deletable)**: the six bundled `tiny` models with language, approximate size and version; double-click to enable/disable
+   - **Downloaded**: your own models, removable with the Delete button
+   - **Online — double-click to download**: every registry model, sorted by language, with name, type, size, version and `↻ update`
+2. A search box filters both lists; a header summarizes the available direct/triangular routes. Downloading a model for a new language adds it to the source/target selectors.
 
 ### Keyboard shortcuts
 
