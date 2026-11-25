@@ -29,7 +29,7 @@ describe la infra que ya existe y la única vía real de refresco.
 | Registro por defecto | `https://translatelocally.com/models.json` | Lista de modelos disponibles (33, sin pt) |
 | Override del registro | `modeldownloader.cpp` (constructor) | `ELEMENTS_EXTRACT_MODEL_REGISTRY` (env) → QSettings `[models]/registryUrl` → default |
 | Vigilancia | `tools/check-model-updates.py` + `tools/model-catalog.json` | Detecta modelos nuevos / bump de versión / eliminados; exit 1 si hay cambios |
-| Mirror | `tools/mirror-models.py` | Descarga tar.gz verificando SHA-256 y genera un `models.json` propio |
+| Mirror | `tools/mirror-models.py` + `tools/bundled-models.json` | Descarga tar.gz verificando SHA-256, empaqueta los pares `pt` ausentes del registro y genera un `models.json` propio |
 | Instalación | App (Settings) | `url` (tar.gz) + `checksum` + `version` → descarga, verifica, extrae |
 | CI / Release | `.github/workflows/build.yml` | Compila, test de humo y genera el `.deb`; Release automático al tag `v*` |
 | Vigilancia semanal | `.github/workflows/watchdog.yml` | Cron ejecutando `check-model-updates.py --no-write` |
@@ -42,7 +42,8 @@ tools/check-model-updates.py --no-write   # ver familia = cambios
 
 # 2. espejo local/publicable
 tools/mirror-models.py --out models-mirror --all
-tools/mirror-models.py --out models-mirror --models en-es-tiny,es-en-tiny,...
+tools/mirror-models.py --out models-mirror --models en-es-tiny,es-en-tiny,en-fr-tiny,fr-en-tiny,en-pt-tiny,pt-en-tiny
+# el script añade los pares pt desde bundled-models.json y avisa si falta algún id
 
 # 3. apuntar la app a tu registro
 ELEMENTS_EXTRACT_MODEL_REGISTRY="file:///ruta/models-mirror/models.json" ./elements-extract
@@ -56,8 +57,14 @@ en `models/` al compilar (`CMakeLists.txt:60`). El "bundle por defecto" actual
 (6 pares: es/en/fr + pt) se mantiene tal cual mientras exista en esa carpeta.
 
 En la CI los modelos llegan vía `mirror-models.py` (los seis pares
-`en-es-tiny`, `es-en-tiny`, `en-fr-tiny`, `fr-en-tiny`, `en-pt-tiny`, `pt-en-tiny`)
-y el motor bergamot **se compila en el propio run** con el workflow reutilizable
+`en-es-tiny`, `es-en-tiny`, `en-fr-tiny`, `fr-en-tiny`, `en-pt-tiny`, `pt-en-tiny`).
+Los cuatro primeros salen del registro público; `en-pt-tiny` y `pt-en-tiny` no
+existen en él y se reconstruyen desde `tools/bundled-models.json`: tres ficheros
+del bucket `bergamot-models-sandbox/0.2.14/` de Firefox Translations con
+SHA-256 fijado (idénticos a los modelos incluidos), más config y `model_info.json`.
+El script genera los `.tar.gz` con directorio raíz `<id>/` para que el workflow
+extraiga con `--strip-components=1`, y devuelve error si un id pedido no aparece
+en ninguna fuente. El motor bergamot **se compila en el propio run** con el workflow reutilizable
 `bergamot-linux.yml` (`browsermt/bergamot-translator` v0.4.5, `USE_MKL=OFF` →
 OpenBLAS, `BUILD_ARCH=x86-64` portable, Ubuntu 22.04). Los workflows `build`
 (.deb) y `appimage` lo consumen vía `download-artifact` (`bergamot-linux64.tar.gz`
@@ -183,7 +190,8 @@ Si quieres blindar los 6 pares contra la desaparición de las fuentes, guarda
 una copia estática (no requiere sincronizar con Firefox):
 
 ```bash
-tools/mirror-models.py --out /respaldo/models-mirror --all        # los 5-6 de statmt
-tar -czf /respaldo/en-pt-tiny.tar.gz -C models en-pt-tiny        # pt no existe en catálogos
-tar -czf /respaldo/pt-en-tiny.tar.gz -C models pt-en-tiny        # (respaldo manual del bundle local)
+tools/mirror-models.py --out /respaldo/models-mirror --all        # registro + pares pt
+# Si además quieres una copia exacta del bundle local (incluye tokenizer.json):
+tar -czf /respaldo/en-pt-tiny.tar.gz -C models en-pt-tiny
+tar -czf /respaldo/pt-en-tiny.tar.gz -C models pt-en-tiny
 ```

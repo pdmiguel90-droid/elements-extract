@@ -16,6 +16,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - Panel lateral plegable: **Formato de salida** empieza plegado (se abre solo al desactivar *Copiar pista original*), **Traducción** muestra el par `EN→ES` y sus botones aunque esté plegada (se abre al activar traducción/remux o al iniciar una traducción) y **Destino** permanece siempre visible. El estado se guarda entre sesiones.
 
 ### Corregido
+- **CI de modelos completa**: `mirror-models.py` ya genera también `en-pt-tiny` y `pt-en-tiny` (ausentes del registro público) desde `tools/bundled-models.json`, con las URL y SHA-256 fijadas de Firefox Translations 0.2.14; antes callaba sobre esos dos IDs y los workflows fallaban al buscar sus `.tar.gz`. Ahora además termina con error si falta cualquier ID solicitado.
 - **Windows ya traduce**: los workflows extraen los tar.gz con `--strip-components=1` y empaquetan los seis modelos en la ruta plana que busca la app. El zip de v1.2.12 dejaba la configuración en `models/en-es-tiny/enes.student.tiny11/` y `isModelInstalled()` devolvía falso.
 - Compatibilidad con instalaciones antiguas: el traductor y el gestor de modelos reconocen también el layout anidado de v1.2.12, así que no hace falta reinstalar para volver a traducir.
 - Resolución de alias de idioma: un modelo del registro con ID `hbs-eng-tiny` se usa correctamente para `hbs→en`, y se respeta el directorio de modelos personalizado al detectar idiomas y rutas.

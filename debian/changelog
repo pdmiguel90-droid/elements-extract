@@ -7,6 +7,7 @@ elements-extract (1.2.13) unstable; urgency=medium
   * AppImage: los modelos incluidos se detectan en el directorio de solo lectura y se marcan activos; la lista online carga igual que en el binario del sistema
   * Al cerrar Ajustes la ventana principal ya no se recoloca ni se maximiza de nuevo
   * Panel lateral plegable con resumen visible y estado persistido; Destino siempre visible
+  * CI: mirror de modelos completo (pares pt desde Firefox Translations 0.2.14 con SHA-256 fijado) y error si falta un id solicitado
   * Acerca de rediseñado, capturas en inglés y documentación/traducciones actualizadas
 
  -- pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>  Wed, 25 Nov 2026 18:00:00 +0000

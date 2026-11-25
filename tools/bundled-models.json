@@ -1,0 +1,81 @@
+{
+  "_comment": "Modelos incluidos que NO están en el registro de Bergamot/translateLocally. Localizados en Firefox Translations 0.2.14 (bucket bergamot-models-sandbox); hashes fijados de los tres archivos de cada par. mirror-models.py los empaqueta como tar.gz con el mismo esquema que el resto.",
+  "en-pt-tiny": {
+    "modelName": "English-Portuguese tiny",
+    "shortName": "en-pt-tiny",
+    "type": "tiny",
+    "srcTags": {"en": "English"},
+    "trgTag": "pt",
+    "version": "2.0",
+    "repository": "Firefox Translations 0.2.14",
+    "config": "relative-paths: true\nmodels:\n  - model.intgemm.alphas.bin\nvocabs:\n  - vocab.spm\n  - vocab.spm\nshortlist:\n    - lex.s2t.bin\n    - false\nbeam-size: 1\nnormalize: 1.0\nword-penalty: 0\nmini-batch: 64\nmaxi-batch: 1000\nmaxi-batch-sort: src\nworkspace: 2000\nmax-length-factor: 2.5\nskip-cost: true\ngemm-precision: int8shiftAlphaAll\nmini-batch-words: -1\nmax-length-break: 200\n",
+    "model_info": {
+      "modelName": "English-Portuguese tiny",
+      "shortName": "en-pt-tiny",
+      "type": "tiny",
+      "src": "English",
+      "trg": "Portuguese",
+      "version": 2.0,
+      "API": 1.0
+    },
+    "files": [
+      {
+        "name": "model.intgemm.alphas.bin",
+        "url": "https://storage.googleapis.com/bergamot-models-sandbox/0.2.14/enpt/model.enpt.intgemm.alphas.bin",
+        "sha256": "d968735704c75e33c2e183b9241f14c0b2a560d01d88a2728e5c0119a4d7fb22",
+        "size": 17140836
+      },
+      {
+        "name": "lex.s2t.bin",
+        "url": "https://storage.googleapis.com/bergamot-models-sandbox/0.2.14/enpt/lex.50.50.enpt.s2t.bin",
+        "sha256": "1e96599123d275afa37353dfe84677a4070f013494fbdc9c52a28445cc9bc38d",
+        "size": 4472528
+      },
+      {
+        "name": "vocab.spm",
+        "url": "https://storage.googleapis.com/bergamot-models-sandbox/0.2.14/enpt/vocab.enpt.spm",
+        "sha256": "633a3d782c79f7d5e4b94ab96848f47c2fdf8ba82dd99efd1742b8a696bbd0cc",
+        "size": 812781
+      }
+    ]
+  },
+  "pt-en-tiny": {
+    "modelName": "Portuguese-English tiny",
+    "shortName": "pt-en-tiny",
+    "type": "tiny",
+    "srcTags": {"pt": "Portuguese"},
+    "trgTag": "en",
+    "version": "2.0",
+    "repository": "Firefox Translations 0.2.14",
+    "config": "relative-paths: true\nmodels:\n  - model.intgemm.alphas.bin\nvocabs:\n  - vocab.spm\n  - vocab.spm\nshortlist:\n    - lex.s2t.bin\n    - false\nbeam-size: 1\nnormalize: 1.0\nword-penalty: 0\nmini-batch: 64\nmaxi-batch: 1000\nmaxi-batch-sort: src\nworkspace: 2000\nmax-length-factor: 2.5\nskip-cost: true\ngemm-precision: int8shiftAlphaAll\nmini-batch-words: -1\nmax-length-break: 200\n",
+    "model_info": {
+      "modelName": "Portuguese-English tiny",
+      "shortName": "pt-en-tiny",
+      "type": "tiny",
+      "src": "Portuguese",
+      "trg": "English",
+      "version": 2.0,
+      "API": 1.0
+    },
+    "files": [
+      {
+        "name": "model.intgemm.alphas.bin",
+        "url": "https://storage.googleapis.com/bergamot-models-sandbox/0.2.14/pten/model.pten.intgemm.alphas.bin",
+        "sha256": "6c3b7af01772022a19712410c63342ba581468c2f1aac34d7488409c4043e697",
+        "size": 17140836
+      },
+      {
+        "name": "lex.s2t.bin",
+        "url": "https://storage.googleapis.com/bergamot-models-sandbox/0.2.14/pten/lex.50.50.pten.s2t.bin",
+        "sha256": "212ed0ae44a6f920cd6d17ca02f0a523ba6c4b0ef5078ae310c20bc4c51484c5",
+        "size": 5001420
+      },
+      {
+        "name": "vocab.spm",
+        "url": "https://storage.googleapis.com/bergamot-models-sandbox/0.2.14/pten/vocab.pten.spm",
+        "sha256": "8389979e3c965688b07aeb712a7e44406e5dcdb2b84087229d26fcc71448c4ed",
+        "size": 812889
+      }
+    ]
+  }
+}
