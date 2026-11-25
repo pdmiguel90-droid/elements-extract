@@ -4,10 +4,12 @@
 
 **Elements Extract** es un extractor gráfico de pistas de audio, vídeo y subtítulos con procesamiento en lote, que además **traduce subtítulos a tu idioma de forma 100 % offline**, directamente en tu equipo.
 
-![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)
-![Qt6](https://img.shields.io/badge/Qt-6.x-green.svg)
-![Platform](https://img.shields.io/badge/Platform-Linux-orange.svg)
-![Build](https://img.shields.io/badge/Build-CMake-lightgrey.svg)
+[![Build Linux](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/build.yml/badge.svg)](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/build.yml)
+[![Build Windows](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/windows.yml/badge.svg)](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/windows.yml)
+[![AppImage](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/appimage.yml/badge.svg)](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/appimage.yml)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![Qt6](https://img.shields.io/badge/Qt-6.x-green.svg)](https://www.qt.io/)
+![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-orange.svg)
 
 ---
 
@@ -23,7 +25,7 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 
 **Elements Extract** es exactamente eso: una herramienta **offline** que extrae las pistas de tu archivo y **traduce los subtítulos al idioma que quieras con tu propio equipo**, sin depender de internet para encontrarlos.
 
-> 🔒 **Privacidad:** tus archivos nunca salen de tu máquina. La búsqueda online es opcional y solo envía el hash y los metadatos del archivo, nunca el vídeo. La traducción se realiza localmente con modelos de traducción neuronal (vía [bergamot-translator](https://github.com/browsermt/bergamot-translator)). Solo necesitas internet **una vez**, para descargar el modelo de idioma; después puedes traducir todo lo que quieras, estés donde estés.
+> 🔒 **Privacidad:** tus archivos nunca salen de tu máquina. La búsqueda online es opcional y solo envía el hash y los metadatos del archivo, nunca el vídeo. La traducción se realiza localmente con modelos de traducción neuronal (vía [bergamot-translator](https://github.com/browsermt/bergamot-translator)). Los seis modelos tiny para en↔es/fr/pt vienen incluidos, así que esos pares no requieren descarga.
 
 ---
 
@@ -34,6 +36,8 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 | ![Ventana principal](screenshots/main-window.png) | ![Filtro Solo subs](screenshots/subtitle-filter.png) |
 | Búsqueda de subtítulos online | Ajustes: backend XML-RPC |
 | ![Subtítulos online](screenshots/online-subtitles.png) | ![Backend XML-RPC](screenshots/settings-online-subtitles.png) |
+| Modelos de traducción | Acerca de |
+| ![Modelos de traducción](screenshots/models.png) | ![Acerca de](screenshots/about.png) |
 
 ---
 
@@ -57,7 +61,7 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 - 🎯 **Filtro de subtítulos por idioma** — selecciona y traduce solo los subtítulos de un idioma concreto en todos los archivos del lote
 - 🔄 **Traducción triangular** — si no hay modelo directo (ej. pt→es), usa intermediarios (pt→en→es)
 - 🤖 **Detección automática de idioma** — detecta el idioma de los subtítulos desde la metadata del archivo
-- ⬇️ **Modelos descargables** — descarga modelos de traducción desde translatelocally.com (solo una vez)
+- ⬇️ **Gestión de modelos** — los incluidos aparecen como tales; los descargables se agrupan por idioma y los `base` de idiomas no soportados se ocultan con una nota
 
 ---
 
@@ -104,6 +108,10 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 | Português → Español | ↻ Via triangular (pt→en→es) |
 | Español → Português | ↻ Via triangular (es→en→pt) |
 | Francés → Español | ↻ Via triangular (fr→en→es) |
+
+Los seis pares directos de arriba vienen **incluidos** en el instalador, el AppImage y el zip.
+No se empaqueta ningún modelo `base`; las entradas `base` de cs/de/is del registro remoto se ocultan
+porque la app no soporta esos idiomas.
 
 ---
 
@@ -209,9 +217,9 @@ sudo dpkg -i elements-extract-*.deb
 
 1. Ve a **Ajustes → Configuración y Modelos** (`Ctrl+,`)
 2. En la pestaña **Modelos de Traducción**:
-   - **Instalados**: modelos descargados — doble clic para activar/desactivar
-   - **Online**: modelos disponibles — doble clic para descargar
-3. El diálogo muestra qué pares tienen modelo directo (✓) y cuáles requieren traducción triangular (↻)
+   - **Instalados — incluidos y descargados**: los seis modelos `tiny` incluidos se nombran primero y se marcan como `incluidos`; doble clic para activar/desactivar
+   - **Disponibles para descargar — doble clic para descargar**: solo idiomas soportados, ordenados y agrupados, con `↻ actualizar` si hay versión nueva
+3. Una cabecera resume las rutas directas/triangulares; los modelos `base` no soportados se ocultan con una nota como «5 modelos ocultos (idiomas no soportados: cs, de, is)»
 
 ### Atajos de teclado
 

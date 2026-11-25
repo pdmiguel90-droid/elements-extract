@@ -12,7 +12,7 @@ y publica la ficha (no hay que redactar nada más).
 2. El bot comenta el resultado: captura si pasa, error con pista si falla.
    Re-test con el comentario `/retest`.
 
-## Checklist verificado en este repo (v1.2.12)
+## Checklist verificado en este repo (v1.2.13)
 
 - [x] AppImage tipo 2 autónomo, construido en Ubuntu 22.04 (glibc 2.35,
       LTS más antiguo con soporte) → `error-glibc-too-new` OK.
@@ -21,13 +21,17 @@ y publica la ficha (no hay que redactar nada más).
 - [x] Interfaz en inglés con locale C (fallback `C/POSIX → en` en
       `main.cpp` + `changeUILanguage`; verificado con `LC_ALL=C`).
 - [x] Ventana principal visible < 30 s (probado).
-- [x] Capturas en inglés (hechas con `LC_ALL=C` y `language=en`) en `screenshots/`; AppImageHub exige capturas en inglés.
+- [x] Capturas en inglés (hechas con `LC_ALL=C` y `language=en`) en `screenshots/`:
+      ventana principal, filtro de subs, búsqueda online, backend XML-RPC,
+      modelos de traducción y About; AppImageHub exige capturas en inglés.
 - [x] `desktop-file-validate` limpio.
 - [x] Metainfo AppStream embebido (`usr/share/metainfo/*.metainfo.xml`),
       `appstreamcli` limpio salvo URLs que requieren push.
 - [x] `appdir-lint.sh` sin fatales (el aviso `*appdata.xml` es de su versión
       vieja: Flathub exige `*.metainfo.xml`, que es lo que llevamos).
 - [x] `update-info` zsync embebido + `.zsync` publicado en cada Release `v*`.
+- [x] Los seis modelos `tiny` se empaquetan en la ruta plana que espera la app
+      (`--strip-components=1` en los workflows), también en el zip de Windows.
 - [x] `README.en.md` presente (el repo es ES-primero con README en inglés).
 
 ## Tareas al publicar cada versión

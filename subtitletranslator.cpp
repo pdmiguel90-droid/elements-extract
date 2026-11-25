@@ -127,12 +127,48 @@ QList<LanguagePair> SubtitleTranslator::installedModels()
     return installed;
 }
 
+namespace {
+bool hasBergamotConfig(const QString &dir)
+{
+    return QFile::exists(dir + "/config.intgemm8bitalpha.yml") ||
+           QFile::exists(dir + "/config.yml");
+}
+
+// Devuelve el directorio que contiene la configuración bergamot de un modelo.
+// Acepta el layout plano (models/<id>/config...) y el anidado que dejaban los
+// tar.gz antes de usar --strip-components=1 (zip de Windows v1.2.12).
+QString locateModelDir(const QString &modelId, const QString &primaryDir)
+{
+    QStringList bases;
+    bases << primaryDir;
+    bases << QCoreApplication::applicationDirPath() + "/../models";
+    bases << QCoreApplication::applicationDirPath() + "/models";
+    bases << QCoreApplication::applicationDirPath() + "/../share/elements-extract/models";
+    bases << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
+
+    for (const QString &base : bases) {
+        if (base.isEmpty()) continue;
+        const QString dir = base + "/" + modelId;
+        if (hasBergamotConfig(dir)) return dir;
+
+        QDir parent(dir);
+        if (!parent.exists()) continue;
+        for (const QString &sub : parent.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+            const QString nested = dir + "/" + sub;
+            if (hasBergamotConfig(nested)) return nested;
+        }
+    }
+    return QString();
+}
+} // namespace
+
 bool SubtitleTranslator::isModelInstalled(const QString &sourceLang, const QString &targetLang)
 {
-    QString modelPath = modelPathForPair(sourceLang, targetLang);
-    // Check for model config file (bergamot format)
-    return QFile::exists(modelPath + "/config.intgemm8bitalpha.yml") ||
-           QFile::exists(modelPath + "/config.yml");
+    const QString pairCode = sourceLang + "-" + targetLang;
+    for (const QString &size : {QStringLiteral("tiny"), QStringLiteral("base"), QStringLiteral("big")}) {
+        if (!locateModelDir(pairCode + "-" + size, m_modelDir).isEmpty()) return true;
+    }
+    return false;
 }
 
 QStringList SubtitleTranslator::findTranslationPath(const QString &sourceLang, const QString &targetLang)
@@ -606,59 +642,28 @@ QString SubtitleTranslator::findBergamotBinary()
 
 QString SubtitleTranslator::modelPathForPair(const QString &src, const QString &trg)
 {
-    QString pairCode = src + "-" + trg;
+    const QString pairCode = src + "-" + trg;
+    const QStringList sizes = {QStringLiteral("tiny"), QStringLiteral("base"), QStringLiteral("big")};
 
     // Check which model size is active (from settings)
     QSettings s("LocalApp", "FFmpegExtractor");
-    QStringList activeModelsList = s.value("activeModels").toStringList();
-    QSet<QString> activeModels(activeModelsList.begin(), activeModelsList.end());
+    const QStringList activeModelsList = s.value("activeModels").toStringList();
+    const QSet<QString> activeModels(activeModelsList.begin(), activeModelsList.end());
 
-    // Try active models first
-    QStringList sizes = {"tiny", "base", "big"};
+    // Prefer the active model, then any installed model for this pair.
     for (const QString &size : sizes) {
-        QString modelId = pairCode + "-" + size;
+        const QString modelId = pairCode + "-" + size;
         if (activeModels.contains(modelId)) {
-            // Find this model in the filesystem
-            QStringList searchPaths;
-            searchPaths << m_modelDir;
-            searchPaths << QCoreApplication::applicationDirPath() + "/../models";
-            searchPaths << QCoreApplication::applicationDirPath() + "/models";
-            searchPaths << QCoreApplication::applicationDirPath() + "/../share/elements-extract/models";
-
-            for (const QString &basePath : searchPaths) {
-                QString fullPath = basePath + "/" + modelId;
-                if (QDir(fullPath).exists()) return fullPath;
-            }
+            const QString dir = locateModelDir(modelId, m_modelDir);
+            if (!dir.isEmpty()) return dir;
         }
     }
-
-    // Fallback: find any installed model for this pair
     for (const QString &size : sizes) {
-        QString modelDir = m_modelDir + "/" + pairCode + "-" + size;
-        if (QDir(modelDir).exists()) return modelDir;
+        const QString dir = locateModelDir(pairCode + "-" + size, m_modelDir);
+        if (!dir.isEmpty()) return dir;
     }
 
-    // Check development paths
-    QStringList devPaths;
-    devPaths << QCoreApplication::applicationDirPath() + "/../models";
-    devPaths << QCoreApplication::applicationDirPath() + "/models";
-    devPaths << QCoreApplication::applicationDirPath() + "/../share/elements-extract/models";
-
-    for (const QString &basePath : devPaths) {
-        for (const QString &size : sizes) {
-            QString devDir = basePath + "/" + pairCode + "-" + size;
-            if (QDir(devDir).exists()) return devDir;
-        }
-    }
-
-    // Scan for any matching directory
-    QDir modelRoot(m_modelDir);
-    QStringList dirs = modelRoot.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    for (const QString &dir : dirs) {
-        if (dir.startsWith(pairCode)) {
-            return m_modelDir + "/" + dir;
-        }
-    }
-
+    // No config found: keep the old fallback so error messages point to the
+    // expected location.
     return m_modelDir + "/" + pairCode + "-tiny";
 }

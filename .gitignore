@@ -77,4 +77,7 @@ repo/
 
 # Build artifacts (untracked)
 stage-deb/
+_CPack_Packages/
+SHA256SUMS
+SHA256SUMS-appimage
 tools/__pycache__/

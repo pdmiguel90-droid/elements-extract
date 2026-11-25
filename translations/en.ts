@@ -4,104 +4,166 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../aboutdialog.cpp" line="19"/>
+        <location filename="../aboutdialog.cpp" line="20"/>
         <source>Acerca de Elements Extract FFmpeg</source>
         <translation>About Elements Extract FFmpeg</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="41"/>
-        <source>Versión 1.2.12  ·  2026</source>
-        <translation>Version 1.2.12  ·  2026</translation>
-    </message>
-    <message>
-        <location filename="../aboutdialog.cpp" line="98"/>
+        <location filename="../aboutdialog.cpp" line="140"/>
         <source>Desarrollado por</source>
         <translation>Developed by</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="99"/>
+        <location filename="../aboutdialog.cpp" line="141"/>
         <source>Repositorio</source>
         <translation>Repository</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="101"/>
+        <location filename="../aboutdialog.cpp" line="143"/>
         <source>Licencia</source>
         <translation>License</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="115"/>
+        <location filename="../aboutdialog.cpp" line="157"/>
         <source>Qt %1
 Interfaz</source>
         <translation>Qt %1 Interface</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="130"/>
+        <location filename="../aboutdialog.cpp" line="175"/>
         <source>DONAR</source>
         <translation>DONATE</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="144"/>
+        <location filename="../aboutdialog.cpp" line="189"/>
         <source>Donar con PayPal</source>
         <translation>Donate with PayPal</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="168"/>
-        <location filename="../aboutdialog.cpp" line="174"/>
+        <location filename="../aboutdialog.cpp" line="213"/>
+        <location filename="../aboutdialog.cpp" line="219"/>
         <source>Copiar</source>
         <translation>Copy</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="172"/>
+        <location filename="../aboutdialog.cpp" line="217"/>
         <source>¡Copiada!</source>
         <translation>Copied!</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="162"/>
+        <location filename="../aboutdialog.cpp" line="207"/>
         <source>Donar con PIX</source>
         <translation>Donate with PIX</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="107"/>
+        <location filename="../aboutdialog.cpp" line="50"/>
+        <source>Versión 1.2.13  ·  2026</source>
+        <translation>Version 1.2.13  ·  2026</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="66"/>
+        <source>Extrae pistas de audio, vídeo y subtítulos de varios archivos a la vez. Traduce los subtítulos en tu equipo y vuelve a incrustarlos en el vídeo sin recodificar.</source>
+        <translation>Extract audio, video and subtitle tracks from several files at once. Translate the subtitles on your computer and embed them back into the video without re-encoding.</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="75"/>
+        <source>Lote y selección de pistas</source>
+        <translation>Batch and track selection</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="76"/>
+        <source>Elige qué extraer de cada archivo y filtra «Solo subs» por idioma.</source>
+        <translation>Choose what to extract from each file and filter “Only subs” by language.</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="77"/>
+        <source>Traducción offline</source>
+        <translation>Offline translation</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="78"/>
+        <source>Modelos neuronales locales en↔es/fr/pt, con ruta triangular vía inglés.</source>
+        <translation>Local neural models en↔es/fr/pt, with a triangular route via English.</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="79"/>
+        <source>Subtítulos online y OCR</source>
+        <translation>Online subtitles and OCR</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="80"/>
+        <source>Búsqueda opcional en OpenSubtitles y OCR experimental de PGS/VobSub.</source>
+        <translation>Optional OpenSubtitles search and experimental PGS/VobSub OCR.</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="81"/>
+        <source>Remux y actualizaciones</source>
+        <translation>Remux and updates</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="82"/>
+        <source>Incrusta la traducción sin re-codificar y avisa de versiones nuevas desde GitHub Releases.</source>
+        <translation>Embeds the translation without re-encoding and notifies you of new versions from GitHub Releases.</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="100"/>
+        <source>🔒 Privacidad: tus vídeos nunca salen del equipo. La traducción es local; la búsqueda online es opcional.</source>
+        <translation>🔒 Privacy: your videos never leave your computer. Translation is local; online search is optional.</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="149"/>
         <source>TECNOLOGÍAS</source>
         <translation>TECHNOLOGY</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="196"/>
+        <location filename="../aboutdialog.cpp" line="161"/>
+        <source>nOCR
+OCR de imagen</source>
+        <translation>nOCR
+Image OCR</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="162"/>
+        <source>OpenSubtitles
+Subtítulos online</source>
+        <translation>OpenSubtitles
+Online subtitles</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="163"/>
+        <source>GitHub Releases
+Actualizaciones</source>
+        <translation>GitHub Releases
+Updates</translation>
+    </message>
+    <message>
+        <location filename="../aboutdialog.cpp" line="241"/>
         <source>© 2026 pdmiguel90-droid  —  GPL-3.0</source>
         <translation>© 2026 pdmiguel90-droid  —  GPL-3.0</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="116"/>
+        <location filename="../aboutdialog.cpp" line="159"/>
         <source>FFmpeg
 Extracción</source>
         <translation>FFmpeg
 Extraction</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="57"/>
-        <source>Extractor gráfico de pistas de audio, vídeo y subtítulos.
-Procesamiento por lotes, filtro de subtítulos por idioma
-y traducción automática con incrustación (remux) sin conexión.</source>
-        <translation>Graphical extractor for audio, video and subtitle tracks.
-Batch processing, subtitle filtering by language
-and automatic translation with embedding (remux), offline.</translation>
-    </message>
-    <message>
-        <location filename="../aboutdialog.cpp" line="117"/>
+        <location filename="../aboutdialog.cpp" line="160"/>
         <source>bergamot
 Traducción</source>
         <translation>bergamot
 Translation</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="118"/>
+        <location filename="../aboutdialog.cpp" line="158"/>
         <source>C++17
 Lenguaje</source>
         <translation>C++17
 Language</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="192"/>
+        <location filename="../aboutdialog.cpp" line="237"/>
         <source>Cerrar</source>
         <translation>Close</translation>
     </message>
@@ -119,19 +181,14 @@ Language</translation>
         <translation>Extraction</translation>
     </message>
     <message>
-        <location filename="../helpdialog.cpp" line="143"/>
+        <location filename="../helpdialog.cpp" line="146"/>
         <source>&lt;h3&gt;8. Subtítulos online&lt;/h3&gt;&lt;p&gt;Pulsa &lt;b&gt;Buscar subs online&lt;/b&gt; junto a los botones Añadir/Quitar, usa &lt;b&gt;Archivo → Buscar subtítulos en internet…&lt;/b&gt; (Ctrl+Shift+S) o el &lt;b&gt;clic derecho&lt;/b&gt; sobre un archivo de la lista. Puedes seleccionar varios vídeos a la vez para procesarlos en lote.&lt;/p&gt;&lt;p&gt;En el diálogo, marca los archivos y pulsa &lt;b&gt;Buscar en seleccionados&lt;/b&gt; o &lt;b&gt;Buscar en todos&lt;/b&gt;. Haz doble clic en la columna &lt;b&gt;Consulta&lt;/b&gt; para cambiar el título buscado de uno solo; el idioma del desplegable se aplica a toda la búsqueda.&lt;/p&gt;&lt;p&gt;La búsqueda combina dos pasos: primero busca por hash de archivo (la coincidencia exacta de esa versión) y después por título, temporada y capítulo. Se unen los resultados de ambos sin repetir los iguales, porque el hash de un BluRay suele devolver solo los subtítulos en inglés de esa edición aunque el mismo capítulo tenga subtítulos en otros idiomas. Si eliges un idioma concreto, se aplica como filtro en los dos pasos.&lt;/p&gt;&lt;p&gt;El idioma de destino configurado en &lt;b&gt;Ajustes&lt;/b&gt; aparece marcado como &lt;b&gt;(preferido)&lt;/b&gt; en el desplegable y sus resultados se ordenan primero. Si algún archivo no tiene subtítulos en ese idioma, la app lo avisa; al pulsar &lt;b&gt;Descargar y traducir seleccionados&lt;/b&gt; te preguntará si quieres descargar el mejor subtítulo disponible (p. ej. en inglés) y traducirlo al idioma destino mediante la ruta triangular, siempre que los modelos intermedios estén instalados.&lt;/p&gt;&lt;p&gt;Marca las casillas de los resultados que quieres y elige &lt;b&gt;Descargar y traducir seleccionados&lt;/b&gt; o &lt;b&gt;Solo descargar seleccionados&lt;/b&gt;. Puedes combinar varios archivos y varios subtítulos en la misma selección; las descargas se hacen en secuencia y se informa del resultado de cada archivo.&lt;/p&gt;&lt;p&gt;Por defecto se usa el backend &lt;b&gt;XML-RPC de opensubtitles.org&lt;/b&gt; (el mismo que VLSub en VLC): permite buscar y descargar sin cuenta ni registro, usando el enlace directo que devuelve cada resultado. En &lt;b&gt;Ajustes → Subtítulos online&lt;/b&gt; puedes cambiar a la &lt;b&gt;API REST de opensubtitles.com&lt;/b&gt;, que requiere tu propia clave API, usuario y contraseña. Las credenciales se guardan en el almacén seguro del sistema.&lt;/p&gt;</source>
         <translation>&lt;h3&gt;8. Online subtitles&lt;/h3&gt;&lt;p&gt;Click &lt;b&gt;Search online subs&lt;/b&gt; next to the Add/Remove buttons, use &lt;b&gt;File → Search subtitles online…&lt;/b&gt; (Ctrl+Shift+S) or &lt;b&gt;right-click&lt;/b&gt; a file in the list. You can select several videos at once to process them as a batch.&lt;/p&gt;&lt;p&gt;In the dialog, tick the files and press &lt;b&gt;Search selected&lt;/b&gt; or &lt;b&gt;Search all&lt;/b&gt;. Double-click the &lt;b&gt;Query&lt;/b&gt; column to change the title searched for one file; the language chosen applies to the whole search.&lt;/p&gt;&lt;p&gt;Search runs in two steps: first by file hash (the exact match for that release), then by title, season and episode. Results from both are merged without duplicates, because the hash of a BluRay usually returns only the English subtitles for that edition even when the same episode has subtitles in other languages. If you pick a specific language, it is used as a filter in both steps.&lt;/p&gt;&lt;p&gt;The target language configured in &lt;b&gt;Settings&lt;/b&gt; is marked as &lt;b&gt;(preferred)&lt;/b&gt; in the dropdown and its results are sorted first. If a file has no subtitles in that language, the app warns you; pressing &lt;b&gt;Download and translate selected&lt;/b&gt; asks whether to download the best available subtitle (e.g. English) and translate it into the target language using the triangular path, provided the intermediate models are installed.&lt;/p&gt;&lt;p&gt;Tick the result checkboxes and choose &lt;b&gt;Download and translate selected&lt;/b&gt; or &lt;b&gt;Download selected only&lt;/b&gt;. You can combine several files and subtitles in one selection; downloads run sequentially and the result of each file is reported.&lt;/p&gt;&lt;p&gt;By default the &lt;b&gt;XML-RPC backend of opensubtitles.org&lt;/b&gt; is used (the same one VLSub uses in VLC): you can search and download without an account or registration, using the direct link returned by each result. In &lt;b&gt;Settings → Online subtitles&lt;/b&gt; you can switch to the &lt;b&gt;REST API of opensubtitles.com&lt;/b&gt;, which requires your own API key, username and password. Credentials are stored in the system secure credential store.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../helpdialog.cpp" line="174"/>
+        <location filename="../helpdialog.cpp" line="177"/>
         <source>Traducción</source>
         <translation>Translation</translation>
-    </message>
-    <message>
-        <location filename="../helpdialog.cpp" line="84"/>
-        <source>&lt;h2&gt;Traducción de Subtítulos&lt;/h2&gt;&lt;h3&gt;1. Elegir idiomas&lt;/h3&gt;&lt;p&gt;Selecciona el &lt;b&gt;idioma origen&lt;/b&gt; y el &lt;b&gt;destino&lt;/b&gt; en el panel de traducción. El idioma origen se &lt;b&gt;detecta automáticamente&lt;/b&gt; al seleccionar una pista de subtítulos.&lt;/p&gt;&lt;h3&gt;2. Traducir al extraer&lt;/h3&gt;&lt;p&gt;Marca &lt;b&gt;Traducir al extraer&lt;/b&gt; para traducir automáticamente los subtítulos extraídos. Se guardan dos archivos: &lt;b&gt;archivo.srt&lt;/b&gt; (original) y &lt;b&gt;archivo.IDIOMA.srt&lt;/b&gt; (traducido), donde IDIOMA es el idioma de destino elegido.&lt;/p&gt;&lt;p&gt;Con &lt;b&gt;Traducir subtítulos&lt;/b&gt; puedes traducir en lote subtítulos ya existentes en disco.&lt;/p&gt;&lt;h3&gt;3. Trabajar con un solo idioma&lt;/h3&gt;&lt;p&gt;El desplegable &lt;b&gt;Solo subs&lt;/b&gt; (panel izquierdo) selecciona a la vez los subtítulos de un idioma concreto en todos los archivos del lote; los archivos sin ese idioma se omiten. Con el filtro activo, la traducción usa ese idioma como origen automáticamente.&lt;/p&gt;&lt;h3&gt;4. Incrustar la traducción (remux)&lt;/h3&gt;&lt;p&gt;Marca &lt;b&gt;Incrustar la traducción (remux)&lt;/b&gt; para generar un &lt;b&gt;archivo.IDIOMA.mkv&lt;/b&gt; (o .mp4 si el original es .mp4) con el vídeo y el audio originales y los subtítulos traducidos dentro, sin re-codificar. Si un vídeo tiene varias pistas traducidas, van todas en el mismo archivo (cada una conserva su título original cuando lo tiene).&lt;/p&gt;&lt;p&gt;La app valida cada archivo antes de incrustar: si falta pista de vídeo lo omite, y si el .mp4 tiene códecs no copiables (audio pcm_*, vorbis, flac, dts, truehd…) cambia a .mkv automáticamente. Al terminar se muestra un resumen con los incrustados/omitidos y el motivo de cada fallo. Con &lt;b&gt;Ajustes → Eliminar los .srt intermedios tras incrustarlos&lt;/b&gt; se borran los subtítulos extraídos y traducidos de cada vídeo cuyo remux terminó bien.&lt;/p&gt;&lt;h3&gt;5. Traducción triangular&lt;/h3&gt;&lt;p&gt;Si no existe un modelo directo (p. ej. Portugués → Español), se usa &lt;b&gt;traducción triangular&lt;/b&gt;: Portugués → Inglés → Español. Se te informará antes de empezar y requieren los modelos intermedios instalados.&lt;/p&gt;&lt;p&gt;También se aplica a subtítulos descargados de internet.&lt;/p&gt;&lt;h3&gt;6. Gestionar modelos&lt;/h3&gt;&lt;p&gt;Abre &lt;b&gt;Ajustes → Configuración y Modelos…&lt;/b&gt; (o el botón &lt;b&gt;Modelos&lt;/b&gt;) y revisa la pestaña &lt;b&gt;Modelos de Traducción&lt;/b&gt;:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;Instalados&lt;/b&gt; — modelos descargados; doble clic para activar/desactivar.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Online&lt;/b&gt; — modelos disponibles; doble clic para descargar.&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;El panel señala qué pares tienen modelo directo (✓), cuáles requieren triangulación (↻) y cuáles no están disponibles (✗).&lt;/p&gt;&lt;h3&gt;7. Descarga de modelos&lt;/h3&gt;&lt;p&gt;Los modelos se descargan de &lt;b&gt;translatelocally.com&lt;/b&gt;. Los modelos &lt;b&gt;tiny&lt;/b&gt; (~20 MB) son rápidos y los &lt;b&gt;base&lt;/b&gt; (~50 MB) ofrecen mejor calidad. La traducción funciona &lt;b&gt;sin conexión&lt;/b&gt;.&lt;/p&gt;&lt;h3&gt;Idiomas soportados&lt;/h3&gt;&lt;p&gt;Inglés, Español, Francés, Portugués, Alemán, Italiano, Japonés, Chino, Coreano, Ruso, Árabe, Hindi, Holandés, Sueco, Polaco y Turco.&lt;/p&gt;</source>
-        <translation>&lt;h2&gt;Subtitle Translation&lt;/h2&gt;&lt;h3&gt;1. Choose languages&lt;/h3&gt;&lt;p&gt;Select the &lt;b&gt;source&lt;/b&gt; and &lt;b&gt;target&lt;/b&gt; language in the translation panel. The source language is &lt;b&gt;detected automatically&lt;/b&gt; when you select a subtitle track.&lt;/p&gt;&lt;h3&gt;2. Translate when extracting&lt;/h3&gt;&lt;p&gt;Tick &lt;b&gt;Translate when extracting&lt;/b&gt; to automatically translate the extracted subtitles. Two files are saved: &lt;b&gt;file.srt&lt;/b&gt; (original) and &lt;b&gt;file.LANG.srt&lt;/b&gt; (translated), where LANG is the chosen target language.&lt;/p&gt;&lt;p&gt;With &lt;b&gt;Translate subtitles&lt;/b&gt; you can batch-translate subtitles that already exist on disk.&lt;/p&gt;&lt;h3&gt;3. Work with a single language&lt;/h3&gt;&lt;p&gt;The &lt;b&gt;Only subs&lt;/b&gt; dropdown (left panel) selects the subtitles of a specific language across all batch files at once; files without that language are skipped. While the filter is active, translation uses that language as source automatically.&lt;/p&gt;&lt;h3&gt;4. Embed the translation (remux)&lt;/h3&gt;&lt;p&gt;Tick &lt;b&gt;Embed the translation (remux)&lt;/b&gt; to produce a &lt;b&gt;file.LANG.mkv&lt;/b&gt; (or .mp4 if the original is .mp4) with the original video and audio and the translated subtitles embedded, without re-encoding. If a video has several translated tracks, they all go into the same file (each keeps its original title when it has one).&lt;/p&gt;&lt;p&gt;The app validates each file before embedding: files without a video track are skipped, and if the .mp4 has codecs that can&apos;t be stream-copied (audio pcm_*, vorbis, flac, dts, truehd…) it switches to .mkv automatically. At the end a summary shows the embedded/skipped files and the reason for each failure. With &lt;b&gt;Settings → Delete intermediate .srt files after embedding&lt;/b&gt;, the extracted and translated subtitles of each video whose remux finished correctly are deleted.&lt;/p&gt;&lt;h3&gt;5. Triangular translation&lt;/h3&gt;&lt;p&gt;If no direct model exists (e.g. Portuguese → Spanish), &lt;b&gt;triangular translation&lt;/b&gt; is used: Portuguese → English → Spanish. You will be informed before starting and it requires the intermediate models installed.&lt;/p&gt;&lt;p&gt;It also applies to subtitles downloaded from the internet.&lt;/p&gt;&lt;h3&gt;6. Manage models&lt;/h3&gt;&lt;p&gt;Open &lt;b&gt;Settings → Settings and Models…&lt;/b&gt; (or the &lt;b&gt;Models&lt;/b&gt; button) and check the &lt;b&gt;Translation Models&lt;/b&gt; tab:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;Installed&lt;/b&gt; — downloaded models; double-click to enable/disable.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Online&lt;/b&gt; — available models; double-click to download.&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;The panel shows which pairs have a direct model (✓), which require triangulation (↻) and which are not available (✗).&lt;/p&gt;&lt;h3&gt;7. Downloading models&lt;/h3&gt;&lt;p&gt;Models are downloaded from &lt;b&gt;translatelocally.com&lt;/b&gt;. &lt;b&gt;tiny&lt;/b&gt; models (~20 MB) are fast and &lt;b&gt;base&lt;/b&gt; models (~50 MB) offer better quality. Translation works &lt;b&gt;offline&lt;/b&gt;.&lt;/p&gt;&lt;h3&gt;Supported languages&lt;/h3&gt;&lt;p&gt;English, Spanish, French, Portuguese, German, Italian, Japanese, Chinese, Korean, Russian, Arabic, Hindi, Dutch, Swedish, Polish and Turkish.&lt;/p&gt;</translation>
     </message>
     <message>
         <location filename="../helpdialog.cpp" line="30"/>
@@ -139,22 +196,27 @@ Language</translation>
         <translation>&lt;h2&gt;Track Extraction&lt;/h2&gt;&lt;h3&gt;1. Add files&lt;/h3&gt;&lt;p&gt;Press &lt;b&gt;Add&lt;/b&gt; or drag the files directly into the list in the left panel. MKV, MP4, AVI, MOV, TS, M2TS and WebM are supported.&lt;/p&gt;&lt;h3&gt;2. Select tracks&lt;/h3&gt;&lt;p&gt;Click a file to see its tracks (video, audio and subtitles) with format, language and resolution. Tick the ones you want to extract.&lt;/p&gt;&lt;p&gt;Use the &lt;b&gt;VIDEO / AUDIO / SUBS&lt;/b&gt; buttons to check (or uncheck) all tracks of a type at once, and &lt;b&gt;Clear&lt;/b&gt; to remove them all.&lt;/p&gt;&lt;h3&gt;3. Configure the format&lt;/h3&gt;&lt;p&gt;In &lt;b&gt;Output Format&lt;/b&gt; choose the container for each type: audio (MKA, M4A, AAC, MP3, FLAC, Opus, WAV), video (MKV, MP4, AVI) and subtitles (SRT, ASS, VTT), plus the video resolution.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Copy original track without re-encoding&lt;/b&gt; (recommended) makes extraction fast and lossless: the container is kept or remuxed to the selected one.&lt;/p&gt;&lt;p&gt;Without OCR, image subtitles (PGS, VobSub, DVB, XSUB) are extracted as-is to &lt;b&gt;.mks&lt;/b&gt; by stream copy, without re-encoding, and cannot be translated. Text subtitles keep the srt/ass/vtt stream and can be translated.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Image subtitle OCR&lt;/b&gt; is experimental and off by default. It uses &lt;b&gt;nOCR&lt;/b&gt;, the Subtitle Edit template engine, without Tesseract or neural models. It reads the subtitle images with ffmpeg and writes a &lt;b&gt;.srt&lt;/b&gt; you can translate and mux like any other text subtitle. A full episode can take several minutes and the app reports progress in the log. If OCR fails, the original .mks copy is kept so the track is not lost. Accuracy depends on the language and image quality (resolution, antialiasing, noise); always review the result.&lt;/p&gt;&lt;p&gt;Template database: Latin.nocr from Subtitle Edit (MIT licence). Details and attribution in share/ocr/NOTICE.txt.&lt;/p&gt;&lt;h3&gt;4. Choose destination and extract&lt;/h3&gt;&lt;p&gt;Set the output folder in &lt;b&gt;Destination&lt;/b&gt;. Files are saved in an &lt;b&gt;Elements Extract&lt;/b&gt; subfolder.&lt;/p&gt;&lt;p&gt;Press &lt;b&gt;START EXTRACTION&lt;/b&gt; or &lt;b&gt;Ctrl+Enter&lt;/b&gt;. You can cancel with &lt;b&gt;Cancel&lt;/b&gt; or &lt;b&gt;Escape&lt;/b&gt;.&lt;/p&gt;&lt;h3&gt;Batch processing&lt;/h3&gt;&lt;p&gt;If you add several files they are processed in order. The top bar shows progress and the &lt;b&gt;LOG&lt;/b&gt; button expands the activity log.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../helpdialog.cpp" line="182"/>
+        <location filename="../helpdialog.cpp" line="84"/>
+        <source>&lt;h2&gt;Traducción de Subtítulos&lt;/h2&gt;&lt;h3&gt;1. Elegir idiomas&lt;/h3&gt;&lt;p&gt;Selecciona el &lt;b&gt;idioma origen&lt;/b&gt; y el &lt;b&gt;destino&lt;/b&gt; en el panel de traducción. El idioma origen se &lt;b&gt;detecta automáticamente&lt;/b&gt; al seleccionar una pista de subtítulos.&lt;/p&gt;&lt;h3&gt;2. Traducir al extraer&lt;/h3&gt;&lt;p&gt;Marca &lt;b&gt;Traducir al extraer&lt;/b&gt; para traducir automáticamente los subtítulos extraídos. Se guardan dos archivos: &lt;b&gt;archivo.srt&lt;/b&gt; (original) y &lt;b&gt;archivo.IDIOMA.srt&lt;/b&gt; (traducido), donde IDIOMA es el idioma de destino elegido.&lt;/p&gt;&lt;p&gt;Con &lt;b&gt;Traducir subtítulos&lt;/b&gt; puedes traducir en lote subtítulos ya existentes en disco.&lt;/p&gt;&lt;h3&gt;3. Trabajar con un solo idioma&lt;/h3&gt;&lt;p&gt;El desplegable &lt;b&gt;Solo subs&lt;/b&gt; (panel izquierdo) selecciona a la vez los subtítulos de un idioma concreto en todos los archivos del lote; los archivos sin ese idioma se omiten. Con el filtro activo, la traducción usa ese idioma como origen automáticamente.&lt;/p&gt;&lt;h3&gt;4. Incrustar la traducción (remux)&lt;/h3&gt;&lt;p&gt;Marca &lt;b&gt;Incrustar la traducción (remux)&lt;/b&gt; para generar un &lt;b&gt;archivo.IDIOMA.mkv&lt;/b&gt; (o .mp4 si el original es .mp4) con el vídeo y el audio originales y los subtítulos traducidos dentro, sin re-codificar. Si un vídeo tiene varias pistas traducidas, van todas en el mismo archivo (cada una conserva su título original cuando lo tiene).&lt;/p&gt;&lt;p&gt;La app valida cada archivo antes de incrustar: si falta pista de vídeo lo omite, y si el .mp4 tiene códecs no copiables (audio pcm_*, vorbis, flac, dts, truehd…) cambia a .mkv automáticamente. Al terminar se muestra un resumen con los incrustados/omitidos y el motivo de cada fallo. Con &lt;b&gt;Ajustes → Eliminar los .srt intermedios tras incrustarlos&lt;/b&gt; se borran los subtítulos extraídos y traducidos de cada vídeo cuyo remux terminó bien.&lt;/p&gt;&lt;h3&gt;5. Traducción triangular&lt;/h3&gt;&lt;p&gt;Si no existe un modelo directo (p. ej. Portugués → Español), se usa &lt;b&gt;traducción triangular&lt;/b&gt;: Portugués → Inglés → Español. Se te informará antes de empezar y requieren los modelos intermedios instalados.&lt;/p&gt;&lt;p&gt;También se aplica a subtítulos descargados de internet.&lt;/p&gt;&lt;h3&gt;6. Gestionar modelos&lt;/h3&gt;&lt;p&gt;Abre &lt;b&gt;Ajustes → Configuración y Modelos…&lt;/b&gt; (o el botón &lt;b&gt;Modelos&lt;/b&gt;) y revisa la pestaña &lt;b&gt;Modelos de Traducción&lt;/b&gt;:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;Instalados — incluidos y descargados&lt;/b&gt;: los seis modelos &lt;code&gt;tiny&lt;/code&gt; que vienen con la app se nombran primero y se marcan como &lt;b&gt;incluidos&lt;/b&gt;; doble clic para activar/desactivar.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Disponibles para descargar — doble clic para descargar&lt;/b&gt;: solo idiomas soportados, ordenados por par; &lt;b&gt;↻ actualizar&lt;/b&gt; aparece si hay versión nueva.&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Una cabecera resume las rutas directas y triangulares. No hay modelos &lt;b&gt;base&lt;/b&gt; incluidos: los del registro remoto de idiomas no soportados (cs/de/is) se ocultan con una nota.&lt;/p&gt;&lt;h3&gt;7. Idiomas y descarga de modelos&lt;/h3&gt;&lt;p&gt;La traducción local cubre &lt;b&gt;inglés, español, francés y portugués&lt;/b&gt; (en↔es/fr/pt, con ruta triangular vía inglés). Los seis modelos directos &lt;code&gt;tiny&lt;/code&gt; vienen incluidos (~142 MB en total), así que puedes traducir sin conexión desde el primer momento. Otros modelos compatibles se descargan de &lt;b&gt;translatelocally.com&lt;/b&gt;; los &lt;b&gt;base&lt;/b&gt; (~50 MB) ofrecen mejor calidad, pero no están empaquetados.&lt;/p&gt;</source>
+        <translation>&lt;h2&gt;Subtitle Translation&lt;/h2&gt;&lt;h3&gt;1. Choose languages&lt;/h3&gt;&lt;p&gt;Select the &lt;b&gt;source&lt;/b&gt; and &lt;b&gt;target&lt;/b&gt; language in the translation panel. The source language is &lt;b&gt;detected automatically&lt;/b&gt; when you select a subtitle track.&lt;/p&gt;&lt;h3&gt;2. Translate when extracting&lt;/h3&gt;&lt;p&gt;Tick &lt;b&gt;Translate when extracting&lt;/b&gt; to automatically translate the extracted subtitles. Two files are saved: &lt;b&gt;file.srt&lt;/b&gt; (original) and &lt;b&gt;file.LANG.srt&lt;/b&gt; (translated), where LANG is the chosen target language.&lt;/p&gt;&lt;p&gt;With &lt;b&gt;Translate subtitles&lt;/b&gt; you can batch-translate subtitles that already exist on disk.&lt;/p&gt;&lt;h3&gt;3. Work with a single language&lt;/h3&gt;&lt;p&gt;The &lt;b&gt;Only subs&lt;/b&gt; dropdown (left panel) selects the subtitles of a specific language across all batch files at once; files without that language are skipped. While the filter is active, translation uses that language as source automatically.&lt;/p&gt;&lt;h3&gt;4. Embed the translation (remux)&lt;/h3&gt;&lt;p&gt;Tick &lt;b&gt;Embed the translation (remux)&lt;/b&gt; to produce a &lt;b&gt;file.LANG.mkv&lt;/b&gt; (or .mp4 if the original is .mp4) with the original video and audio and the translated subtitles embedded, without re-encoding. If a video has several translated tracks, they all go into the same file (each keeps its original title when it has one).&lt;/p&gt;&lt;p&gt;The app validates each file before embedding: files without a video track are skipped, and if the .mp4 has codecs that can't be stream-copied (audio pcm_*, vorbis, flac, dts, truehd…) it switches to .mkv automatically. At the end a summary shows the embedded/skipped files and the reason for each failure. With &lt;b&gt;Settings → Delete intermediate .srt files after embedding&lt;/b&gt;, the extracted and translated subtitles of each video whose remux finished correctly are deleted.&lt;/p&gt;&lt;h3&gt;5. Triangular translation&lt;/h3&gt;&lt;p&gt;If no direct model exists (e.g. Portuguese → Spanish), &lt;b&gt;triangular translation&lt;/b&gt; is used: Portuguese → English → Spanish. You will be informed before starting and it requires the intermediate models installed.&lt;/p&gt;&lt;p&gt;It also applies to subtitles downloaded from the internet.&lt;/p&gt;&lt;h3&gt;6. Manage models&lt;/h3&gt;&lt;p&gt;Open &lt;b&gt;Settings → Settings and Models…&lt;/b&gt; (or the &lt;b&gt;Models&lt;/b&gt; button) and check the &lt;b&gt;Translation Models&lt;/b&gt; tab:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;Installed — bundled and downloaded&lt;/b&gt;: the six &lt;code&gt;tiny&lt;/code&gt; models shipped with the app are listed first and marked &lt;b&gt;included&lt;/b&gt;; double-click to enable/disable.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Available to download — double-click to download&lt;/b&gt;: only supported languages, sorted by pair; &lt;b&gt;↻ update&lt;/b&gt; appears when a newer version exists.&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;A header summarises direct and triangular routes. No &lt;b&gt;base&lt;/b&gt; models are included: entries for unsupported languages in the remote registry (cs/de/is) are hidden with a note.&lt;/p&gt;&lt;h3&gt;7. Languages and model downloads&lt;/h3&gt;&lt;p&gt;Local translation covers &lt;b&gt;English, Spanish, French and Portuguese&lt;/b&gt; (en↔es/fr/pt, with a triangular route via English). The six direct &lt;code&gt;tiny&lt;/code&gt; models are bundled (~142 MB total), so you can translate offline from the first launch. Other compatible models are downloaded from &lt;b&gt;translatelocally.com&lt;/b&gt;; &lt;b&gt;base&lt;/b&gt; models (~50 MB) can offer better quality but are not packaged.&lt;/p&gt;</translation>
+    </message>
+    <message>
+        <location filename="../helpdialog.cpp" line="185"/>
         <source>&lt;h2&gt;Atajos de Teclado&lt;/h2&gt;&lt;table cellpadding=&apos;6&apos; cellspacing=&apos;0&apos; border=&apos;0&apos;&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+O&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Añadir archivos&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Supr&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Quitar archivos seleccionados&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+Enter&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Iniciar extracción&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Escape&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Cancelar el proceso en curso&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+,&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Abrir Configuración y Modelos&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+Shift+S&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Buscar subtítulos en internet…&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;F1&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Mostrar esta ayuda&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+Q&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Salir&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;h2&gt;Ajustes&lt;/h2&gt;&lt;h3&gt;Configuración y Modelos&lt;/h3&gt;&lt;p&gt;En &lt;b&gt;Ajustes → Configuración y Modelos…&lt;/b&gt; (Ctrl+,) puedes:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Cambiar el directorio de modelos de traducción&lt;/li&gt;&lt;li&gt;Establecer los idiomas origen y destino por defecto&lt;/li&gt;&lt;li&gt;Activar la traducción automática al extraer&lt;/li&gt;&lt;li&gt;Gestionar la descarga y activación de modelos&lt;/li&gt;&lt;/ul&gt;&lt;h3&gt;Apariencia e idioma&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;Tema&lt;/b&gt; — Automático, Oscuro o Claro (se aplica al instante).&lt;/li&gt;&lt;li&gt;&lt;b&gt;Idioma de interfaz&lt;/b&gt; — Español, Inglés o Portugués; el cambio se aplica en caliente, sin reiniciar.&lt;/li&gt;&lt;/ul&gt;&lt;h3&gt;Soporte&lt;/h3&gt;&lt;p&gt;Repositorio: &lt;b&gt;github.com/pdmiguel90-droid/elements-extract&lt;/b&gt;&lt;/p&gt;&lt;p&gt;Para reportar errores o sugerencias, abre un issue en GitHub.&lt;/p&gt;</source>
         <translation>&lt;h2&gt;Keyboard Shortcuts&lt;/h2&gt;&lt;table cellpadding=&apos;6&apos; cellspacing=&apos;0&apos; border=&apos;0&apos;&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+O&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Add files&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Del&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Remove selected files&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+Enter&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Start extraction&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Escape&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Cancel the running process&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+,&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Open Settings and Models&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+Shift+S&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Search subtitles online…&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;F1&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Show this help&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;b&gt;Ctrl+Q&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Quit&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;h2&gt;Settings&lt;/h2&gt;&lt;h3&gt;Settings and Models&lt;/h3&gt;&lt;p&gt;In &lt;b&gt;Settings &amp;#8594; Settings and Models…&lt;/b&gt; (Ctrl+,) you can:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Change the translation models directory&lt;/li&gt;&lt;li&gt;Set the default source and target languages&lt;/li&gt;&lt;li&gt;Enable automatic translation on extract&lt;/li&gt;&lt;li&gt;Manage model download and activation&lt;/li&gt;&lt;/ul&gt;&lt;h3&gt;Appearance and language&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;Theme&lt;/b&gt; &amp;#8212; Automatic, Dark or Light (applies instantly).&lt;/li&gt;&lt;li&gt;&lt;b&gt;Interface language&lt;/b&gt; &amp;#8212; Spanish, English or Portuguese; the change applies on the fly, no restart needed.&lt;/li&gt;&lt;/ul&gt;&lt;h3&gt;Support&lt;/h3&gt;&lt;p&gt;Repository: &lt;b&gt;github.com/pdmiguel90-droid/elements-extract&lt;/b&gt;&lt;/p&gt;&lt;p&gt;To report bugs or suggestions, open an issue on GitHub.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../helpdialog.cpp" line="220"/>
+        <location filename="../helpdialog.cpp" line="223"/>
         <source>&lt;h3&gt;Actualizaciones&lt;/h3&gt;&lt;p&gt;La aplicación comprueba si hay versiones nuevas al arrancar. También puedes usar &lt;b&gt;Ayuda → Buscar actualizaciones…&lt;/b&gt; cuando quieras. El aviso muestra las notas de la versión y un enlace de descarga; si eliges «No mostrar esta versión», no volverá a aparecer.&lt;/p&gt;</source>
         <translation>&lt;h3&gt;Updates&lt;/h3&gt;&lt;p&gt;The application checks for new versions at startup. You can also use &lt;b&gt;Help → Check for updates…&lt;/b&gt; at any time. The notice shows the release notes and a download link; if you choose &quot;Don&apos;t show this version again&quot;, it will not appear again.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../helpdialog.cpp" line="227"/>
+        <location filename="../helpdialog.cpp" line="230"/>
         <source>Atajos y Ajustes</source>
         <translation>Shortcuts and Settings</translation>
     </message>
     <message>
-        <location filename="../helpdialog.cpp" line="234"/>
+        <location filename="../helpdialog.cpp" line="237"/>
         <source>Cerrar</source>
         <translation>Close</translation>
     </message>
@@ -1611,337 +1673,369 @@ y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin 
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../settingsdialog.cpp" line="36"/>
-        <location filename="../settingsdialog.cpp" line="381"/>
+        <location filename="../settingsdialog.cpp" line="44"/>
+        <location filename="../settingsdialog.cpp" line="391"/>
         <source>Ajustes — Elements Extract</source>
         <translation>Settings — Elements Extract</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="54"/>
-        <location filename="../settingsdialog.cpp" line="387"/>
+        <location filename="../settingsdialog.cpp" line="62"/>
+        <location filename="../settingsdialog.cpp" line="397"/>
         <source>Directorio de Modelos</source>
         <translation>Models Directory</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="59"/>
-        <location filename="../settingsdialog.cpp" line="388"/>
+        <location filename="../settingsdialog.cpp" line="67"/>
+        <location filename="../settingsdialog.cpp" line="398"/>
         <source>Examinar...</source>
         <translation>Browse...</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="67"/>
-        <location filename="../settingsdialog.cpp" line="389"/>
+        <location filename="../settingsdialog.cpp" line="75"/>
+        <location filename="../settingsdialog.cpp" line="399"/>
         <source>Idiomas por Defecto</source>
         <translation>Default Languages</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="69"/>
-        <location filename="../settingsdialog.cpp" line="390"/>
+        <location filename="../settingsdialog.cpp" line="77"/>
+        <location filename="../settingsdialog.cpp" line="400"/>
         <source>Origen:</source>
         <translation>Source:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="76"/>
-        <location filename="../settingsdialog.cpp" line="391"/>
+        <location filename="../settingsdialog.cpp" line="84"/>
+        <location filename="../settingsdialog.cpp" line="401"/>
         <source>Destino:</source>
         <translation>Target:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="88"/>
-        <location filename="../settingsdialog.cpp" line="392"/>
+        <location filename="../settingsdialog.cpp" line="96"/>
+        <location filename="../settingsdialog.cpp" line="402"/>
         <source>Opciones</source>
         <translation>Options</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="90"/>
-        <location filename="../settingsdialog.cpp" line="394"/>
+        <location filename="../settingsdialog.cpp" line="98"/>
+        <location filename="../settingsdialog.cpp" line="404"/>
         <source>Traducir subtítulos automáticamente al extraer</source>
         <translation>Automatically translate subtitles when extracting</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="97"/>
-        <location filename="../settingsdialog.cpp" line="396"/>
+        <location filename="../settingsdialog.cpp" line="105"/>
+        <location filename="../settingsdialog.cpp" line="406"/>
         <source>Eliminar los .srt intermedios tras incrustarlos (remux)</source>
         <translation>Delete intermediate .srt files after embedding (remux)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="98"/>
-        <location filename="../settingsdialog.cpp" line="397"/>
+        <location filename="../settingsdialog.cpp" line="106"/>
+        <location filename="../settingsdialog.cpp" line="407"/>
         <source>Borra los subtítulos extraídos y traducidos de cada vídeo cuando su remux termina correctamente. Sin remux no se borra nada.</source>
         <translation>Deletes the extracted and translated subtitles of each video when its remux finishes correctly. Nothing is deleted without remux.</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="108"/>
-        <location filename="../settingsdialog.cpp" line="399"/>
+        <location filename="../settingsdialog.cpp" line="116"/>
+        <location filename="../settingsdialog.cpp" line="409"/>
         <source>Apariencia</source>
         <translation>Appearance</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="111"/>
-        <location filename="../settingsdialog.cpp" line="400"/>
+        <location filename="../settingsdialog.cpp" line="119"/>
+        <location filename="../settingsdialog.cpp" line="410"/>
         <source>Tema:</source>
         <translation>Theme:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="114"/>
-        <location filename="../settingsdialog.cpp" line="126"/>
+        <location filename="../settingsdialog.cpp" line="122"/>
+        <location filename="../settingsdialog.cpp" line="134"/>
         <source>Automático (detectar del sistema)</source>
         <translation>Automatic (detect from system)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="115"/>
+        <location filename="../settingsdialog.cpp" line="123"/>
         <source>Oscuro</source>
         <translation>Dark</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="116"/>
+        <location filename="../settingsdialog.cpp" line="124"/>
         <source>Claro</source>
         <translation>Light</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="123"/>
-        <location filename="../settingsdialog.cpp" line="401"/>
+        <location filename="../settingsdialog.cpp" line="131"/>
+        <location filename="../settingsdialog.cpp" line="411"/>
         <source>Idioma de interfaz:</source>
         <translation>Interface language:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="140"/>
-        <location filename="../settingsdialog.cpp" line="383"/>
+        <location filename="../settingsdialog.cpp" line="148"/>
+        <location filename="../settingsdialog.cpp" line="393"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="150"/>
+        <location filename="../settingsdialog.cpp" line="158"/>
         <source>Modelos instalados</source>
         <translation>Installed models</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="152"/>
-        <location filename="../settingsdialog.cpp" line="403"/>
+        <location filename="../settingsdialog.cpp" line="160"/>
+        <location filename="../settingsdialog.cpp" line="413"/>
         <source>Buscar online</source>
         <translation>Search online</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="153"/>
-        <location filename="../settingsdialog.cpp" line="404"/>
+        <location filename="../settingsdialog.cpp" line="161"/>
+        <location filename="../settingsdialog.cpp" line="414"/>
         <source>Buscar modelos disponibles en translatelocally.com</source>
         <translation>Search for available models on translatelocally.com</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="173"/>
-        <location filename="../settingsdialog.cpp" line="406"/>
-        <source>INSTALADOS — doble clic para activar/desactivar</source>
-        <translation>INSTALLED — double-click to enable/disable</translation>
+        <location filename="../settingsdialog.cpp" line="687"/>
+        <location filename="../settingsdialog.cpp" line="781"/>
+        <source>★ base</source>
+        <translation>★ base</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="185"/>
-        <location filename="../settingsdialog.cpp" line="189"/>
-        <location filename="../settingsdialog.cpp" line="408"/>
+        <location filename="../settingsdialog.cpp" line="687"/>
+        <location filename="../settingsdialog.cpp" line="781"/>
+        <source>⚡ tiny</source>
+        <translation>⚡ tiny</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="688"/>
+        <source>incluido</source>
+        <translation>included</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="688"/>
+        <source>descargado</source>
+        <translation>downloaded</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="695"/>
+        <source>activo</source>
+        <translation>active</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="712"/>
+        <source>%1 instalados · %2 activos · %3 incluidos</source>
+        <translation>%1 installed · %2 active · %3 included</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="745"/>
+        <source>&lt;b&gt;Rutas de traducción&lt;/b&gt;&lt;br&gt;%1 directas · %2 triangulares&lt;br&gt;Los pares sin modelo directo usan inglés como puente.</source>
+        <translation>&lt;b&gt;Translation routes&lt;/b&gt;&lt;br&gt;%1 direct · %2 triangular&lt;br&gt;Pairs without a direct model use English as a bridge.</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="785"/>
+        <source> · incluido</source>
+        <translation> · included</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="785"/>
+        <source> · ya instalado</source>
+        <translation> · already installed</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="789"/>
+        <source>  ↻ actualizar</source>
+        <translation>  ↻ update</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="807"/>
+        <source>%1 modelos ocultos (idiomas no soportados: %2)</source>
+        <translation>%1 hidden models (unsupported languages: %2)</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="193"/>
+        <location filename="../settingsdialog.cpp" line="197"/>
+        <location filename="../settingsdialog.cpp" line="418"/>
         <source>Eliminar</source>
         <translation>Remove</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="189"/>
+        <location filename="../settingsdialog.cpp" line="197"/>
         <source>¿Eliminar </source>
         <translation>Remove </translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="201"/>
-        <location filename="../settingsdialog.cpp" line="407"/>
-        <source>ONLINE — doble clic para descargar</source>
-        <translation>ONLINE — double-click to download</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="219"/>
-        <location filename="../settingsdialog.cpp" line="411"/>
-        <source>&lt;b&gt;tiny&lt;/b&gt; ~15-25MB rápido · &lt;b&gt;base&lt;/b&gt; ~50MB mejor calidad&lt;br&gt;Doble clic = activar/desactivar (solo activos se usan para traducir)</source>
-        <translation>&lt;b&gt;tiny&lt;/b&gt; ~15-25MB fast · &lt;b&gt;base&lt;/b&gt; ~50MB better quality&lt;br&gt;Double-click = enable/disable (only enabled models are used for translating)</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="225"/>
-        <location filename="../settingsdialog.cpp" line="384"/>
+        <location filename="../settingsdialog.cpp" line="233"/>
+        <location filename="../settingsdialog.cpp" line="394"/>
         <source>Modelos de Traducción</source>
         <translation>Translation Models</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="235"/>
-        <location filename="../settingsdialog.cpp" line="414"/>
+        <location filename="../settingsdialog.cpp" line="243"/>
+        <location filename="../settingsdialog.cpp" line="424"/>
         <source>Backend:</source>
         <translation>Backend:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="237"/>
-        <location filename="../settingsdialog.cpp" line="419"/>
+        <location filename="../settingsdialog.cpp" line="245"/>
+        <location filename="../settingsdialog.cpp" line="429"/>
         <source>XML-RPC (enlaces directos, tipo VLC)</source>
         <translation>XML-RPC (direct links, VLC-style)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="238"/>
-        <location filename="../settingsdialog.cpp" line="420"/>
+        <location filename="../settingsdialog.cpp" line="246"/>
+        <location filename="../settingsdialog.cpp" line="430"/>
         <source>API REST (oficial)</source>
         <translation>REST API (official)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="268"/>
-        <location filename="../settingsdialog.cpp" line="429"/>
+        <location filename="../settingsdialog.cpp" line="276"/>
+        <location filename="../settingsdialog.cpp" line="439"/>
         <source>Cerrar</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="444"/>
+        <location filename="../settingsdialog.cpp" line="368"/>
+        <source>%1 instalados · %2 online</source>
+        <translation>%1 installed · %2 online</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="454"/>
         <source>XML-RPC permite buscar sin credenciales, pero sin una cuenta con permisos de descarga los enlaces devuelven un subtítulo de prueba VIP.</source>
         <translation>XML-RPC allows searching without credentials, but without an account with download permissions the links return a VIP sample subtitle.</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="491"/>
+        <location filename="../settingsdialog.cpp" line="501"/>
         <source>Directorio de modelos</source>
         <translation>Models directory</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="505"/>
+        <location filename="../settingsdialog.cpp" line="515"/>
         <source>Buscando...</source>
         <translation>Searching...</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="532"/>
+        <location filename="../settingsdialog.cpp" line="542"/>
         <source>Volver a descargar</source>
         <translation>Download again</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="533"/>
+        <location filename="../settingsdialog.cpp" line="543"/>
         <source>El modelo &apos;%1&apos; ya está instalado.
 ¿Descargarlo de nuevo? (reemplaza la copia local)</source>
         <translation>Model &apos;%1&apos; is already installed.
 Download it again? (replaces the local copy)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="598"/>
+        <location filename="../settingsdialog.cpp" line="608"/>
         <source>Descargando %1...</source>
         <translation>Downloading %1...</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="626"/>
+        <location filename="../settingsdialog.cpp" line="636"/>
         <source>Error: </source>
         <translation>Error: </translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="745"/>
-        <source>↻ actualizar</source>
-        <translation>↻ update</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="360"/>
-        <source>%1 modelos online</source>
-        <translation>%1 models online</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="513"/>
+        <location filename="../settingsdialog.cpp" line="523"/>
         <source>No disponible</source>
         <translation>Not available</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="513"/>
+        <location filename="../settingsdialog.cpp" line="523"/>
         <source>Gestor de modelos no disponible.</source>
         <translation>Model manager not available.</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="525"/>
-        <location filename="../settingsdialog.cpp" line="627"/>
+        <location filename="../settingsdialog.cpp" line="535"/>
+        <location filename="../settingsdialog.cpp" line="637"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="525"/>
+        <location filename="../settingsdialog.cpp" line="535"/>
         <source>Modelo no encontrado en la lista online.</source>
         <translation>Model not found in the online list.</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="540"/>
+        <location filename="../settingsdialog.cpp" line="550"/>
         <source>Descargando: </source>
         <translation>Downloading: </translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="594"/>
+        <location filename="../settingsdialog.cpp" line="604"/>
         <source>Descargando %1: %2%</source>
         <translation>Downloading %1: %2%</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="619"/>
+        <location filename="../settingsdialog.cpp" line="629"/>
         <source>Descargado y activado: </source>
         <translation>Downloaded and enabled: </translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="627"/>
+        <location filename="../settingsdialog.cpp" line="637"/>
         <source>No se pudo descargar </source>
         <translation>Could not download </translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="694"/>
-        <source>%1 instalados, %2 activos</source>
-        <translation>%1 installed, %2 enabled</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="705"/>
-        <source>&lt;b&gt;Modelos disponibles:&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Available models:&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="723"/>
-        <source>(no disponible)</source>
-        <translation>(not available)</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="742"/>
-        <source>(ya instalado)</source>
-        <translation>(already installed)</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog.cpp" line="233"/>
-        <location filename="../settingsdialog.cpp" line="413"/>
+        <location filename="../settingsdialog.cpp" line="241"/>
+        <location filename="../settingsdialog.cpp" line="423"/>
         <source>Credenciales de OpenSubtitles</source>
         <translation>OpenSubtitles credentials</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="240"/>
-        <location filename="../settingsdialog.cpp" line="425"/>
+        <location filename="../settingsdialog.cpp" line="248"/>
+        <location filename="../settingsdialog.cpp" line="435"/>
         <source>Clave API:</source>
         <translation>API key:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="241"/>
-        <location filename="../settingsdialog.cpp" line="426"/>
+        <location filename="../settingsdialog.cpp" line="249"/>
+        <location filename="../settingsdialog.cpp" line="436"/>
         <source>Usuario:</source>
         <translation>Username:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="242"/>
-        <location filename="../settingsdialog.cpp" line="427"/>
+        <location filename="../settingsdialog.cpp" line="250"/>
+        <location filename="../settingsdialog.cpp" line="437"/>
         <source>Contraseña:</source>
         <translation>Password:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="440"/>
+        <location filename="../settingsdialog.cpp" line="450"/>
         <source>La búsqueda de subtítulos en &lt;a href=&quot;https://www.opensubtitles.com&quot;&gt;OpenSubtitles.com&lt;/a&gt; es opcional: necesitas una cuenta y tu propia clave API.</source>
         <translation>Subtitle search on &lt;a href=&quot;https://www.opensubtitles.com&quot;&gt;OpenSubtitles.com&lt;/a&gt; is optional: you need an account and your own API key.</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="450"/>
+        <location filename="../settingsdialog.cpp" line="460"/>
         <source>Las credenciales se guardan en el almacén seguro del sistema.</source>
         <translation>Credentials are stored in the system&apos;s secure credential store.</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="451"/>
+        <location filename="../settingsdialog.cpp" line="461"/>
         <source>El almacén seguro del sistema no está disponible. Las credenciales no se guardarán: tendrás que introducirlas cada vez.</source>
         <translation>The system credential store is unavailable. Credentials will not be saved: you will need to enter them every time.</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="447"/>
+        <location filename="../settingsdialog.cpp" line="457"/>
         <source>No se pudieron guardar las credenciales en el almacén seguro: %1</source>
         <translation>Could not save the credentials to the secure store: %1</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="261"/>
-        <location filename="../settingsdialog.cpp" line="385"/>
+        <location filename="../settingsdialog.cpp" line="181"/>
+        <location filename="../settingsdialog.cpp" line="416"/>
+        <source>INSTALADOS — incluidos y descargados</source>
+        <translation>INSTALLED — bundled and downloaded</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="209"/>
+        <location filename="../settingsdialog.cpp" line="417"/>
+        <source>DISPONIBLES PARA DESCARGAR — doble clic para descargar</source>
+        <translation>AVAILABLE TO DOWNLOAD — double-click to download</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="227"/>
+        <location filename="../settingsdialog.cpp" line="421"/>
+        <source>&lt;b&gt;Incluidos&lt;/b&gt;: 6 modelos tiny listos para usar · &lt;b&gt;Activo&lt;/b&gt; = preferido si hay varias opciones&lt;br&gt;Doble clic = activar/desactivar</source>
+        <translation>&lt;b&gt;Bundled&lt;/b&gt;: 6 ready-to-use tiny models · &lt;b&gt;Active&lt;/b&gt; = preferred when several options exist&lt;br&gt;Double-click = enable/disable</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.cpp" line="269"/>
+        <location filename="../settingsdialog.cpp" line="395"/>
         <source>Subtítulos online</source>
         <translation>Online subtitles</translation>
     </message>
@@ -2191,14 +2285,14 @@ Download it again? (replaces the local copy)</translation>
 <context>
     <name>SubtitleTranslator</name>
     <message>
-        <location filename="../subtitletranslator.cpp" line="175"/>
-        <location filename="../subtitletranslator.cpp" line="272"/>
+        <location filename="../subtitletranslator.cpp" line="211"/>
+        <location filename="../subtitletranslator.cpp" line="308"/>
         <source>No se pudieron leer los subtítulos del archivo: </source>
         <translation>Could not read the subtitles from file: </translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="184"/>
-        <location filename="../subtitletranslator.cpp" line="281"/>
+        <location filename="../subtitletranslator.cpp" line="220"/>
+        <location filename="../subtitletranslator.cpp" line="317"/>
         <source>No se encontró el motor de traducción (bergamot).
 Asegúrese de que está instalado correctamente.
 Buscado en: </source>
@@ -2207,7 +2301,7 @@ Make sure it is installed correctly.
 Searched in: </translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="194"/>
+        <location filename="../subtitletranslator.cpp" line="230"/>
         <source>No se encontró un modelo de traducción para %1→%2.
 Ni modelo directo ni ruta triangular disponible.
 Modelos instalados disponibles para: en, es, fr, pt.</source>
@@ -2216,49 +2310,49 @@ Neither direct model nor pivot path available.
 Installed models available for: en, es, fr, pt.</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="293"/>
+        <location filename="../subtitletranslator.cpp" line="329"/>
         <source>El modelo de traducción %1→%2 no está instalado.
 Directorio buscado: %3</source>
         <translation>Translation model %1→%2 is not installed.
 Directory searched: %3</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="325"/>
-        <location filename="../subtitletranslator.cpp" line="381"/>
-        <location filename="../subtitletranslator.cpp" line="463"/>
+        <location filename="../subtitletranslator.cpp" line="361"/>
+        <location filename="../subtitletranslator.cpp" line="417"/>
+        <location filename="../subtitletranslator.cpp" line="499"/>
         <source>Error al escribir el archivo de salida: </source>
         <translation>Error writing the output file: </translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="350"/>
-        <location filename="../subtitletranslator.cpp" line="405"/>
-        <location filename="../subtitletranslator.cpp" line="480"/>
+        <location filename="../subtitletranslator.cpp" line="386"/>
+        <location filename="../subtitletranslator.cpp" line="441"/>
+        <location filename="../subtitletranslator.cpp" line="516"/>
         <source>No se pudo iniciar el motor de traducción</source>
         <translation>Could not start the translation engine</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="358"/>
+        <location filename="../subtitletranslator.cpp" line="394"/>
         <source>Tiempo de espera agotado del motor de traducción</source>
         <translation>Translation engine timed out</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="364"/>
-        <location filename="../subtitletranslator.cpp" line="440"/>
+        <location filename="../subtitletranslator.cpp" line="400"/>
+        <location filename="../subtitletranslator.cpp" line="476"/>
         <source>Error del motor de traducción (código %1).</source>
         <translation>Translation engine error (code %1).</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="483"/>
+        <location filename="../subtitletranslator.cpp" line="519"/>
         <source>El motor de traducción terminó inesperadamente</source>
         <translation>The translation engine terminated unexpectedly</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="486"/>
+        <location filename="../subtitletranslator.cpp" line="522"/>
         <source>El motor de traducción excedió el tiempo límite</source>
         <translation>The translation engine exceeded the time limit</translation>
     </message>
     <message>
-        <location filename="../subtitletranslator.cpp" line="489"/>
+        <location filename="../subtitletranslator.cpp" line="525"/>
         <source>Error desconocido del motor de traducción</source>
         <translation>Unknown translation engine error</translation>
     </message>

@@ -13,25 +13,37 @@
       Elements Extract is a graphical batch extractor for audio, video and
       subtitle tracks, with offline neural subtitle translation
       (bergamot-translator) and embedding of the translation back into the
-      video (remux) without re-encoding. Your files never leave your machine.
+      video (remux) without re-encoding. Six tiny models for English, Spanish,
+      French and Portuguese are bundled, so those pairs work offline from the
+      first launch. Your files never leave your machine.
     </p>
     <p xml:lang="es">
       Elements Extract es un extractor gráfico por lotes de pistas de audio,
       vídeo y subtítulos, con traducción neuronal de subtítulos sin conexión
       (bergamot-translator) e incrustación de la traducción en el vídeo
-      (remux) sin re-codificar. Tus archivos nunca salen de tu máquina.
+      (remux) sin re-codificar. Se incluyen seis modelos tiny para inglés,
+      español, francés y portugués, por lo que esos pares funcionan sin conexión
+      desde el primer arranque. Tus archivos nunca salen de tu máquina.
     </p>
     <ul>
       <li>Batch extraction of audio, video and subtitle tracks</li>
       <li>Subtitle filter by language across all batch files</li>
       <li>Offline translation (English, Spanish, French, Portuguese + triangular)</li>
       <li>Single-file remux with all translated tracks, MP4-safe fallback to MKV</li>
+      <li>Optional OpenSubtitles search (anonymous XML-RPC or REST) without uploading the video</li>
+      <li>Experimental OCR of PGS/VobSub subtitles with nOCR, off by default</li>
+      <li>Bundled tiny translation models; supported downloadable models shown by language</li>
+      <li>Update notifier backed by GitHub Releases</li>
     </ul>
     <ul xml:lang="es">
       <li>Extracción por lotes de pistas de audio, vídeo y subtítulos</li>
       <li>Filtro de subtítulos por idioma en todo el lote</li>
       <li>Traducción sin conexión (inglés, español, francés, portugués + triangular)</li>
       <li>Remux en un solo archivo con todas las pistas, con repliegue MP4→MKV</li>
+      <li>Búsqueda opcional en OpenSubtitles (XML-RPC anónima o REST) sin subir el vídeo</li>
+      <li>OCR experimental de PGS/VobSub con nOCR, desactivado por defecto</li>
+      <li>Modelos tiny incluidos; descargables compatibles agrupados por idioma</li>
+      <li>Aviso de versiones nuevas desde GitHub Releases</li>
     </ul>
   </description>
 
@@ -69,9 +81,26 @@
       <caption xml:lang="es">Ajustes: backend XML-RPC de opensubtitles.org</caption>
       <image>https://raw.githubusercontent.com/pdmiguel90-droid/elements-extract/main/screenshots/settings-online-subtitles.png</image>
     </screenshot>
+    <screenshot>
+      <caption>Translation models: bundled, downloaded and available</caption>
+      <caption xml:lang="es">Modelos de traducción: incluidos, descargados y disponibles</caption>
+      <image>https://raw.githubusercontent.com/pdmiguel90-droid/elements-extract/main/screenshots/models.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>About dialog with features and technologies</caption>
+      <caption xml:lang="es">Diálogo Acerca de con funcionalidades y tecnologías</caption>
+      <image>https://raw.githubusercontent.com/pdmiguel90-droid/elements-extract/main/screenshots/about.png</image>
+    </screenshot>
   </screenshots>
 
   <releases>
+    <release version="1.2.13" date="2026-11-25">
+      <description>
+        <p>Fixed Windows subtitle translation: release workflows now flatten model archives with --strip-components=1 and bundle all six tiny language pairs. Older nested v1.2.12 installs are also detected, so reinstalling is not required.</p>
+        <p>The model manager names the six bundled models as included, groups supported downloadable pairs with update hints, and hides unsupported base models with an explanatory note.</p>
+        <p>Redesigned About dialog, updated help and READMEs, new English screenshots, and completed English/Portuguese translations.</p>
+      </description>
+    </release>
     <release version="1.2.12" date="2026-11-22">
       <description>
         <p>Windows build fix: use the Qt 6 redirect API supported by Qt 6.8, stop passing the GCC-only -s flag to MSVC, and remove deprecated API warnings.</p>
@@ -175,6 +204,10 @@
     <keyword>traduccion</keyword>
     <keyword>remux</keyword>
     <keyword>mkv</keyword>
+    <keyword>offline</keyword>
+    <keyword>opensubtitles</keyword>
+    <keyword>ocr</keyword>
+    <keyword>bergamot</keyword>
   </keywords>
 
   <url type="homepage">https://github.com/pdmiguel90-droid/elements-extract</url>

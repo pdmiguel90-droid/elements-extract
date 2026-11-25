@@ -29,10 +29,10 @@ jobs:
 
       - name: Fetch bundled models via mirror
         run: |
-          python3 tools/mirror-models.py --out mirror --models en-es-tiny,es-en-tiny
-          for id in en-es-tiny es-en-tiny; do
+          python3 tools/mirror-models.py --out mirror --models en-es-tiny,es-en-tiny,en-fr-tiny,fr-en-tiny,en-pt-tiny,pt-en-tiny
+          for id in en-es-tiny es-en-tiny en-fr-tiny fr-en-tiny en-pt-tiny pt-en-tiny; do
             mkdir -p "models/$id"
-            tar -xzf "mirror/$id.tar.gz" -C "models/$id"
+            tar -xzf "mirror/$id.tar.gz" -C "models/$id" --strip-components=1
           done
 
       - name: Download bergamot engine (built in this run)

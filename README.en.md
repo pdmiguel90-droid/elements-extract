@@ -4,10 +4,12 @@
 
 **Elements Extract** is a graphical track extractor for audio, video and subtitles with batch processing that also **translates subtitles into your language 100 % offline**, right on your own machine.
 
-![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)
-![Qt6](https://img.shields.io/badge/Qt-6.x-green.svg)
-![Platform](https://img.shields.io/badge/Platform-Linux-orange.svg)
-![Build](https://img.shields.io/badge/Build-CMake-lightgrey.svg)
+[![Build Linux](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/build.yml/badge.svg)](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/build.yml)
+[![Build Windows](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/windows.yml/badge.svg)](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/windows.yml)
+[![AppImage](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/appimage.yml/badge.svg)](https://github.com/pdmiguel90-droid/elements-extract/actions/workflows/appimage.yml)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![Qt6](https://img.shields.io/badge/Qt-6.x-green.svg)](https://www.qt.io/)
+![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-orange.svg)
 
 ---
 
@@ -23,7 +25,7 @@ So I thought: *what if I could take the file I already have on disk and translat
 
 **Elements Extract** is exactly that: an **offline** tool that extracts the tracks from your file and **translates the subtitles into the language you want using your own computer**, with no need to rely on the internet to find them.
 
-> 🔒 **Privacy:** your files never leave your machine. Online search is optional and only sends the file hash and metadata, never the video. Translation runs locally using neural translation models (via [bergamot-translator](https://github.com/browsermt/bergamot-translator)). You only need internet **once**, to download the language model; after that you can translate as much as you want, wherever you are.
+> 🔒 **Privacy:** your files never leave your machine. Online search is optional and only sends the file hash and metadata, never the video. Translation runs locally using neural translation models (via [bergamot-translator](https://github.com/browsermt/bergamot-translator)). The six tiny models for en↔es/fr/pt are bundled, so no download is needed for those pairs.
 
 ---
 
@@ -34,6 +36,8 @@ So I thought: *what if I could take the file I already have on disk and translat
 | ![Main window](screenshots/main-window.png) | ![Subtitle filter](screenshots/subtitle-filter.png) |
 | Online subtitle search | Settings: XML-RPC backend |
 | ![Online subtitles](screenshots/online-subtitles.png) | ![XML-RPC backend](screenshots/settings-online-subtitles.png) |
+| Translation models | About |
+| ![Translation models](screenshots/models.png) | ![About](screenshots/about.png) |
 
 
 ---
@@ -50,7 +54,7 @@ So I thought: *what if I could take the file I already have on disk and translat
 - 💾 **Persistence** — remembers output folder, formats and window size between sessions
 - 🖱️ **Drag & Drop** — drop files straight onto the window
 - ⌨️ **Keyboard shortcuts** — `Ctrl+O`, `Del`, `Ctrl+Enter`, `Escape`, `F1`
-- 🌐 **Offline subtitle translation** — translate extracted subtitles to the language you want (en, es, fr, pt)
+- 🌐 **Offline subtitle translation** — translate extracted subtitles to the language you want (en, es, fr, pt), with 6 bundled tiny models and no `base` model packaged by default
 - 🌐 **Online subtitles** — manual and batch search on opensubtitles.org (VLC-style XML-RPC, no API key) or opensubtitles.com (REST), with download and later translation
 - 🅾️ **Optional OCR (experimental)** — converts PGS/VobSub to `.srt` with nOCR; off by default and reports progress in the log
 - 🔔 **Update notifier** — checks GitHub Releases at startup, or on demand from Help → Check for updates…
@@ -58,7 +62,7 @@ So I thought: *what if I could take the file I already have on disk and translat
 - 🎯 **Subtitle language filter** — select and translate only the subtitles of a given language across the whole batch
 - 🔄 **Triangular translation** — when no direct model exists (e.g. pt→es), it uses intermediates (pt→en→es)
 - 🤖 **Automatic language detection** — detects subtitle language from file metadata
-- ⬇️ **Downloadable models** — download translation models from translatelocally.com (once only)
+- ⬇️ **Model manager** — bundled models are marked as included; downloadable models are grouped by language and unsupported-language `base` models are hidden with a note
 
 ---
 
@@ -96,15 +100,19 @@ So I thought: *what if I could take the file I already have on disk and translat
 
 | Pair | Availability |
 |-----|---------------|
-| English → Español | ✅ Direct model |
-| Español → English | ✅ Direct model |
-| English → Français | ✅ Direct model |
-| Français → English | ✅ Direct model |
-| English → Português | ✅ Direct model |
-| Português → English | ✅ Direct model |
-| Português → Español | ↻ Triangular (pt→en→es) |
-| Español → Português | ↻ Triangular (es→en→pt) |
-| Francés → Español | ↻ Triangular (fr→en→es) |
+| English → Spanish | ✅ Direct model |
+| Spanish → English | ✅ Direct model |
+| English → French | ✅ Direct model |
+| French → English | ✅ Direct model |
+| English → Portuguese | ✅ Direct model |
+| Portuguese → English | ✅ Direct model |
+| Portuguese → Spanish | ↻ Triangular (pt→en→es) |
+| Spanish → Portuguese | ↻ Triangular (es→en→pt) |
+| French → Spanish | ↻ Triangular (fr→en→es) |
+
+All six direct pairs above are **included** in the installer/AppImage/zip. No `base` models are
+bundled; the remote `base` entries for cs/de/is are hidden because the app does not support
+those languages.
 
 ---
 
@@ -210,9 +218,9 @@ sudo dpkg -i elements-extract-*.deb
 
 1. Go to **Settings → Settings and Models** (`Ctrl+,`)
 2. In the **Translation Models** tab:
-   - **Installed**: downloaded models — double-click to enable/disable
-   - **Online**: available models — double-click to download
-3. The dialog shows which pairs have a direct model (✓) and which need triangular translation (↻)
+   - **Installed — bundled and downloaded**: the six included `tiny` models are named first and marked `included`; double-click to enable/disable
+   - **Available to download — double-click to download**: only supported languages, grouped and sorted, with `↻ update` when a newer version exists
+3. A header summarizes direct/triangular routes; unsupported `base` models are hidden with a note such as “5 hidden models (unsupported languages: cs, de, is)”
 
 ### Keyboard shortcuts
 

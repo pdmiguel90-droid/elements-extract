@@ -25,6 +25,14 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QTimer>
+#include <algorithm>
+
+// Modelos tiny incluidos en la app (instalados por defecto en todos los builds).
+static const QStringList kBundledModelIds = {
+    QStringLiteral("en-es-tiny"), QStringLiteral("es-en-tiny"),
+    QStringLiteral("en-fr-tiny"), QStringLiteral("fr-en-tiny"),
+    QStringLiteral("en-pt-tiny"), QStringLiteral("pt-en-tiny")
+};
 
 SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
                                ModelDownloader *downloader,
@@ -170,7 +178,7 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
     QWidget *leftW = new QWidget();
     QVBoxLayout *leftLay = new QVBoxLayout(leftW);
     leftLay->setContentsMargins(0,0,0,0);
-    m_leftTitle = new QLabel(tr("INSTALADOS — doble clic para activar/desactivar"));
+    m_leftTitle = new QLabel(tr("INSTALADOS — incluidos y descargados"));
     m_leftTitle->setProperty("labelColor", "green");
     leftLay->addWidget(m_leftTitle);
 
@@ -198,7 +206,7 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
     QWidget *rightW = new QWidget();
     QVBoxLayout *rightLay = new QVBoxLayout(rightW);
     rightLay->setContentsMargins(0,0,0,0);
-    m_rightTitle = new QLabel(tr("ONLINE — doble clic para descargar"));
+    m_rightTitle = new QLabel(tr("DISPONIBLES PARA DESCARGAR — doble clic para descargar"));
     m_rightTitle->setProperty("labelColor", "normal");
     rightLay->addWidget(m_rightTitle);
 
@@ -216,8 +224,8 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
 
     // Info
     m_infoLbl = new QLabel(
-        tr("<b>tiny</b> ~15-25MB rápido · <b>base</b> ~50MB mejor calidad<br>"
-        "Doble clic = activar/desactivar (solo activos se usan para traducir)"));
+        tr("<b>Incluidos</b>: 6 modelos tiny listos para usar · <b>Activo</b> = preferido si hay varias opciones<br>"
+        "Doble clic = activar/desactivar"));
     m_infoLbl->setProperty("labelColor", "muted");
     m_infoLbl->setWordWrap(true);
     modLay->addWidget(m_infoLbl);
@@ -357,7 +365,9 @@ SettingsDialog::SettingsDialog(SubtitleTranslator *translator,
         connect(m_downloader, &ModelDownloader::modelsFetched, this, [this](const QList<RemoteModel> &models) {
             m_onlineModels = models;
             refreshOnlineModels();
-            m_statusLabel->setText(tr("%1 modelos online").arg(m_onlineModels.size()));
+            m_statusLabel->setText(tr("%1 instalados · %2 online")
+                                       .arg(m_installedIds.size())
+                                       .arg(m_onlineModels.size()));
         });
     }
 
@@ -403,13 +413,13 @@ void SettingsDialog::retranslateUi()
         m_fetchBtn->setText(tr("Buscar online"));
         m_fetchBtn->setToolTip(tr("Buscar modelos disponibles en translatelocally.com"));
     }
-    if (m_leftTitle)    m_leftTitle->setText(tr("INSTALADOS — doble clic para activar/desactivar"));
-    if (m_rightTitle)   m_rightTitle->setText(tr("ONLINE — doble clic para descargar"));
+    if (m_leftTitle)    m_leftTitle->setText(tr("INSTALADOS — incluidos y descargados"));
+    if (m_rightTitle)   m_rightTitle->setText(tr("DISPONIBLES PARA DESCARGAR — doble clic para descargar"));
     if (m_deleteBtn)    m_deleteBtn->setText(tr("Eliminar"));
     if (m_infoLbl)
         m_infoLbl->setText(
-            tr("<b>tiny</b> ~15-25MB rápido · <b>base</b> ~50MB mejor calidad<br>"
-            "Doble clic = activar/desactivar (solo activos se usan para traducir)"));
+            tr("<b>Incluidos</b>: 6 modelos tiny listos para usar · <b>Activo</b> = preferido si hay varias opciones<br>"
+            "Doble clic = activar/desactivar"));
     if (m_onlineSubsBox) m_onlineSubsBox->setTitle(tr("Credenciales de OpenSubtitles"));
     if (m_backendLbl)    m_backendLbl->setText(tr("Backend:"));
     if (m_backendCombo) {
@@ -634,140 +644,172 @@ void SettingsDialog::refreshLocalModels()
     m_installedIds.clear();
 
     QSettings s("LocalApp", "FFmpegExtractor");
-    QStringList activeList = s.value("activeModels").toStringList();
+    const QStringList activeList = s.value("activeModels").toStringList();
 
-    // Scan all possible model directories
     QStringList searchDirs;
     searchDirs << m_translator->modelDirectory();
     searchDirs << QCoreApplication::applicationDirPath() + "/../models";
     searchDirs << QCoreApplication::applicationDirPath() + "/models";
     searchDirs << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
 
+    QMap<QString, QString> found;
     for (const QString &baseDir : searchDirs) {
         QDir d(baseDir);
         if (!d.exists()) continue;
         for (const QString &entry : d.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-            if (m_installedIds.contains(entry)) continue;
-            QString full = d.absolutePath() + "/" + entry;
-
-            // B4: un modelo instalado requiere la config bergamot (model_info.json no basta)
+            if (found.contains(entry)) continue;
+            const QString full = d.absolutePath() + "/" + entry;
+            // Un modelo instalado requiere la config bergamot, directa o en
+            // el subdirectorio que traían los tar.gz antiguos (v1.2.12).
             bool hasConfig = QFile::exists(full + "/config.intgemm8bitalpha.yml") ||
                              QFile::exists(full + "/config.yml");
-            if (!hasConfig) continue;
-
-            m_installedIds.insert(entry);
-
-            // Try to parse language pair from directory name (e.g., "en-es-tiny")
-            QStringList parts = entry.split('-');
-            QString displayName = entry;
-            QString src, trg, sz;
-            if (parts.size() >= 3) {
-                src = parts[0];
-                trg = parts[1];
-                sz = parts[2];
-                displayName = QString("%1\n   %2 → %3  ·  %4")
-                    .arg(entry)
-                    .arg(SubtitleTranslator::languageName(src))
-                    .arg(SubtitleTranslator::languageName(trg))
-                    .arg(sz == "tiny" ? "⚡ tiny" : "★ base");
-            } else if (parts.size() == 2) {
-                src = parts[0];
-                trg = parts[1];
-                displayName = QString("%1\n   %2 → %3")
-                    .arg(entry)
-                    .arg(SubtitleTranslator::languageName(src))
-                    .arg(SubtitleTranslator::languageName(trg));
+            if (!hasConfig) {
+                QDir modelDir(full);
+                for (const QString &sub : modelDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+                    const QString nested = full + "/" + sub;
+                    if (QFile::exists(nested + "/config.intgemm8bitalpha.yml") ||
+                        QFile::exists(nested + "/config.yml")) {
+                        hasConfig = true;
+                        break;
+                    }
+                }
             }
-
-            bool active = activeList.contains(entry);
-            if (active) displayName += "  ✓ ACTIVO";
-
-            QListWidgetItem *item = new QListWidgetItem(displayName);
-            item->setData(Qt::UserRole, entry);
-            if (active) item->setForeground(QBrush(QColor("#39FF14")));
-            m_localListWidget->addItem(item);
+            if (!hasConfig) continue;
+            found.insert(entry, full);
+            m_installedIds.insert(entry);
         }
     }
 
-    int n = m_localListWidget->count();
-    int na = activeList.size();
-    m_statusLabel->setText(tr("%1 instalados, %2 activos").arg(n).arg(na));
+    auto addItem = [&](const QString &id, bool bundled) {
+        const QString src = id.section('-', 0, 0);
+        const QString trg = id.section('-', 1, 1);
+        const QString sizeText = id.contains(QStringLiteral("-base"))
+                                     ? tr("★ base") : tr("⚡ tiny");
+        const QString origin = bundled ? tr("incluido") : tr("descargado");
+        const bool active = activeList.contains(id);
+        const QString label = QString("%1\n   %2 → %3  ·  %4 · %5%6")
+            .arg(id)
+            .arg(SubtitleTranslator::languageName(src))
+            .arg(SubtitleTranslator::languageName(trg))
+            .arg(sizeText, origin,
+                 active ? QString("  ✓ ") + tr("activo") : QString());
+        QListWidgetItem *item = new QListWidgetItem(label);
+        item->setData(Qt::UserRole, id);
+        if (active) item->setForeground(QBrush(QColor("#39FF14")));
+        else if (bundled) item->setForeground(QBrush(QColor("#A8D8A0")));
+        m_localListWidget->addItem(item);
+    };
+
+    // Primero los incluidos, con nombre y orden legibles; luego los descargados.
+    int bundledCount = 0;
+    for (const QString &id : kBundledModelIds) {
+        if (found.contains(id)) { addItem(id, true); ++bundledCount; }
+    }
+    for (const QString &id : found.keys()) {
+        if (!kBundledModelIds.contains(id)) addItem(id, false);
+    }
+
+    m_statusLabel->setText(tr("%1 instalados · %2 activos · %3 incluidos")
+                               .arg(found.size()).arg(activeList.size())
+                               .arg(bundledCount));
 }
 
 void SettingsDialog::refreshOnlineModels()
 {
     m_onlineListWidget->clear();
 
-    // Show available translation paths header
-    QStringList sources = SubtitleTranslator::supportedSourceLanguages();
-    QStringList targets = SubtitleTranslator::supportedTargetLanguages();
-    QStringList headerLines;
-    headerLines << tr("<b>Modelos disponibles:</b>");
-    for (const QString &src : sources) {
-        for (const QString &trg : targets) {
+    const QStringList supported = SubtitleTranslator::supportedSourceLanguages();
+    const auto isSupported = [&supported](const QString &code) {
+        return supported.contains(code);
+    };
+
+    // ── Cabecera compacta con el resumen de rutas ──
+    int direct = 0, triangular = 0;
+    for (const QString &src : supported) {
+        for (const QString &trg : supported) {
             if (src == trg) continue;
-            QStringList path = m_translator->findTranslationPath(src, trg);
-            QString srcName = SubtitleTranslator::languageName(src);
-            QString trgName = SubtitleTranslator::languageName(trg);
-            if (path.size() == 2) {
-                headerLines << QString("  <span style='color:#66BB6A'>✓</span> %1 → %2").arg(srcName, trgName);
-            } else if (path.size() > 2) {
-                QString pathStr;
-                for (int i = 0; i < path.size(); ++i) {
-                    if (i > 0) pathStr += " → ";
-                    pathStr += SubtitleTranslator::languageName(path[i]);
-                }
-                headerLines << QString("  <span style='color:#FFD700'>↻</span> %1 → %2 <span style='color:#888'>(via %3)</span>")
-                    .arg(srcName, trgName, SubtitleTranslator::languageName(path[1]));
-            } else {
-                headerLines << QString("  <span style='color:#FF5555'>✗</span> %1 → %2 <span style='color:#888'>") + tr("(no disponible)") + QString("</span>")
-                    .arg(srcName, trgName);
-            }
+            const QStringList path = m_translator->findTranslationPath(src, trg);
+            if (path.size() == 2) ++direct;
+            else if (path.size() > 2) ++triangular;
         }
     }
-    // Leak: eliminar QLabel huérfano y la fila vacía (item 0)
+
     QListWidgetItem *headerItem = new QListWidgetItem();
     headerItem->setFlags(headerItem->flags() & ~Qt::ItemIsSelectable);
     m_onlineListWidget->addItem(headerItem);
 
-    // Separator
+    QWidget *headerW = new QWidget();
+    QVBoxLayout *hdrLay = new QVBoxLayout(headerW);
+    hdrLay->setContentsMargins(8, 8, 8, 8);
+    QLabel *hdrLabel = new QLabel(
+        tr("<b>Rutas de traducción</b><br>"
+           "%1 directas · %2 triangulares<br>"
+           "Los pares sin modelo directo usan inglés como puente.")
+            .arg(direct).arg(triangular));
+    hdrLabel->setStyleSheet("color:#AAA;font-size:11px;");
+    hdrLabel->setWordWrap(true);
+    hdrLay->addWidget(hdrLabel);
+    headerItem->setSizeHint(headerW->sizeHint());
+    m_onlineListWidget->setItemWidget(headerItem, headerW);
+
     QListWidgetItem *sepItem = new QListWidgetItem("─────────────────────────────");
     sepItem->setFlags(sepItem->flags() & ~Qt::ItemIsSelectable);
     sepItem->setForeground(QBrush(QColor("#444")));
     m_onlineListWidget->addItem(sepItem);
 
-    // Add models from registry
+    // ── Solo modelos de idiomas que la app sabe traducir ──
+    QList<RemoteModel> visible;
+    QSet<QString> hiddenLangs;
     for (const RemoteModel &m : m_onlineModels) {
-        QString sz = (m.type == "tiny") ? "⚡ tiny" : "★ base";
-        QString inst = m.isInstalled ? "  " + tr("(ya instalado)") : "";
-        QString szStr = m.sizeBytes > 0 ? formatSize(m.sizeBytes) : "";
-        bool canUpdate = m.isInstalled && m_downloader && m_downloader->isModelUpdateAvailable(m);
-        QString upd = canUpdate ? "  " + tr("↻ actualizar") : "";
-        QString txt = QString("%1\n   %2 → %3  ·  %4 %5%6%7")
+        if (!isSupported(m.sourceLang) || !isSupported(m.targetLang)) {
+            const QString code = m.sourceLang.isEmpty()
+                                     ? m.id.section('-', 0, 0) : m.sourceLang;
+            hiddenLangs.insert(code);
+            continue;
+        }
+        visible.append(m);
+    }
+    std::sort(visible.begin(), visible.end(), [](const RemoteModel &a, const RemoteModel &b) {
+        if (a.sourceLang != b.sourceLang) return a.sourceLang < b.sourceLang;
+        if (a.targetLang != b.targetLang) return a.targetLang < b.targetLang;
+        if (a.type != b.type) return a.type < b.type;
+        return a.id < b.id;
+    });
+
+    for (const RemoteModel &m : visible) {
+        const QString type = m.type == QStringLiteral("base")
+                                 ? tr("★ base") : tr("⚡ tiny");
+        QString inst;
+        if (m.isInstalled) {
+            inst = kBundledModelIds.contains(m.id)
+                       ? tr(" · incluido") : tr(" · ya instalado");
+        }
+        const bool canUpdate = m.isInstalled && m_downloader
+                               && m_downloader->isModelUpdateAvailable(m);
+        const QString upd = canUpdate ? tr("  ↻ actualizar") : QString();
+        const QString szStr = m.sizeBytes > 0 ? formatSize(m.sizeBytes) : QString();
+        const QString txt = QString("%1\n   %2 → %3  ·  %4 %5%6%7")
             .arg(m.id)
             .arg(SubtitleTranslator::languageName(m.sourceLang))
             .arg(SubtitleTranslator::languageName(m.targetLang))
-            .arg(sz).arg(szStr).arg(inst).arg(upd);
+            .arg(type, szStr, inst, upd);
         QListWidgetItem *item = new QListWidgetItem(txt);
         item->setData(Qt::UserRole, m.id);
-        if (m.isInstalled && !canUpdate) item->setForeground(QBrush(QColor("#666")));
         if (canUpdate) item->setForeground(QBrush(QColor("#FFD700")));
+        else if (m.isInstalled) item->setForeground(QBrush(QColor("#666")));
         m_onlineListWidget->addItem(item);
     }
 
-    // Set the header widget on the first item
-    if (m_onlineListWidget->count() > 0) {
-        // Use a custom widget for the header
-        QWidget *headerW = new QWidget();
-        QVBoxLayout *hdrLay = new QVBoxLayout(headerW);
-        hdrLay->setContentsMargins(8, 8, 8, 8);
-        QLabel *hdrLabel = new QLabel(headerLines.join("<br>"));
-        hdrLabel->setStyleSheet("color:#AAA;font-size:11px;");
-        hdrLabel->setWordWrap(true);
-        hdrLay->addWidget(hdrLabel);
-        QListWidgetItem *firstItem = m_onlineListWidget->item(0);
-        firstItem->setSizeHint(headerW->sizeHint());
-        m_onlineListWidget->setItemWidget(firstItem, headerW);
+    if (!hiddenLangs.isEmpty()) {
+        QStringList langs = hiddenLangs.values();
+        langs.sort();
+        QListWidgetItem *note = new QListWidgetItem(
+            tr("%1 modelos ocultos (idiomas no soportados: %2)")
+                .arg(m_onlineModels.size() - visible.size())
+                .arg(langs.join(", ")));
+        note->setFlags(note->flags() & ~Qt::ItemIsSelectable);
+        note->setForeground(QBrush(QColor("#666")));
+        m_onlineListWidget->addItem(note);
     }
 }
 

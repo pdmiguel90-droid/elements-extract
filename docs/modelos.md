@@ -7,7 +7,8 @@ describe la infra que ya existe y la única vía real de refresco.
 ## 1. Estado actual (verificado)
 
 - La app es independiente del motor: descarga "registro" (models.json), descarga
-  el tar.gz, valida SHA-256 y lo desempaqueta en `models/<id>`.
+  el tar.gz, valida SHA-256 y lo desempaqueta en `models/<id>` con
+  `--strip-components=1` (v1.2.13; antes los tar.gz dejaban un subdirectorio).
 - Todo el artefacto "tiny" que hoy distribuye el proyecto (es/en/fr/de) es la
   generación `student.tiny11` de Bergamot, **congelada**:
   - `data.statmt.org/bergamot/models/` (2023-12-16, últimos archivos).
@@ -54,7 +55,8 @@ el `.deb` empaqueta lo que haya
 en `models/` al compilar (`CMakeLists.txt:60`). El "bundle por defecto" actual
 (6 pares: es/en/fr + pt) se mantiene tal cual mientras exista en esa carpeta.
 
-En la CI los modelos llegan vía `mirror-models.py` (pares `en-es-tiny`/`es-en-tiny`)
+En la CI los modelos llegan vía `mirror-models.py` (los seis pares
+`en-es-tiny`, `es-en-tiny`, `en-fr-tiny`, `fr-en-tiny`, `en-pt-tiny`, `pt-en-tiny`)
 y el motor bergamot **se compila en el propio run** con el workflow reutilizable
 `bergamot-linux.yml` (`browsermt/bergamot-translator` v0.4.5, `USE_MKL=OFF` →
 OpenBLAS, `BUILD_ARCH=x86-64` portable, Ubuntu 22.04). Los workflows `build`
@@ -77,6 +79,25 @@ No existe binario oficial de `bergamot` para Windows, así que el build de Windo
 Para compilar el motor por separado y publicarlo como asset (por ejemplo para
 reutilizarlo), ejecuta el workflow `bergamot-windows` manualmente o haz push de
 un tag `bergamot-*`.
+
+### Layout de modelos y compatibilidad (v1.2.13)
+
+Los tar.gz del catálogo traen una carpeta raíz (`enes.student.tiny11/`). Hasta
+v1.2.12 los workflows extraían con `tar -xzf ... -C models/$id`, sin aplanar, y
+el zip de Windows dejaba la configuración en
+`models/en-es-tiny/enes.student.tiny11/config.intgemm8bitalpha.yml`. La app
+busca `models/en-es-tiny/config.intgemm8bitalpha.yml`, por lo que
+`isModelInstalled()` devolvía falso y la traducción fallaba con el mensaje
+genérico «No se pudo iniciar el motor de traducción».
+
+En v1.2.13:
+
+- los tres workflows (`build.yml`, `appimage.yml`, `windows.yml`) extraen con
+  `--strip-components=1` y empaquetan los seis pares `tiny` en los tres artefactos;
+- `SubtitleTranslator` acepta tanto el layout plano como el anidado, de modo que
+  una instalación de Windows v1.2.12 traduce sin reinstallar;
+- Ajustes → Modelos de Traducción nombra los seis modelos incluidos, marca los
+  descargados y oculta los `base` de idiomas no soportados (cs/de/is) con una nota.
 
 ### Mirror público en GitHub Pages (opcional)
 

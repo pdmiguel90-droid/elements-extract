@@ -13,6 +13,7 @@
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QTimer>
+#include <QScrollArea>
 
 AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 {
@@ -20,7 +21,15 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     setFixedSize(600, 630);
     setModal(true);
 
-    QVBoxLayout *root = new QVBoxLayout(this);
+    // Contenido dentro de un scroll: el diálogo mantiene su tamaño pero la
+    // carta de presentación puede crecer sin recortar nada.
+    QScrollArea *scroll = new QScrollArea(this);
+    scroll->setWidgetResizable(true);
+    scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    QWidget *content = new QWidget();
+    QVBoxLayout *root = new QVBoxLayout(content);
     root->setSpacing(8);
     root->setContentsMargins(32, 24, 32, 18);
 
@@ -38,7 +47,7 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     title->setAlignment(Qt::AlignCenter);
     root->addWidget(title);
 
-    QLabel *ver = new QLabel(tr("Versión 1.2.12  ·  2026"));
+    QLabel *ver = new QLabel(tr("Versión 1.2.13  ·  2026"));
     ver->setObjectName("appVersion");
     ver->setAlignment(Qt::AlignCenter);
     root->addWidget(ver);
@@ -54,12 +63,45 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 
     // ── Descripción ─────────────────────────────────────────────────────────
     QLabel *desc = new QLabel(
-        tr("Extractor gráfico de pistas de audio, vídeo y subtítulos.\n"
-        "Procesamiento por lotes, filtro de subtítulos por idioma\n"
-        "y traducción automática con incrustación (remux) sin conexión."));
+        tr("Extrae pistas de audio, vídeo y subtítulos de varios archivos a la vez. "
+           "Traduce los subtítulos en tu equipo y vuelve a incrustarlos en el vídeo sin recodificar."));
     desc->setAlignment(Qt::AlignCenter);
     desc->setWordWrap(true);
     root->addWidget(desc);
+
+    // ── Funcionalidades en bloques legibles ──
+    struct Feature { const char *icon; QString title; QString text; };
+    const QList<Feature> features = {
+        {"📼", tr("Lote y selección de pistas"),
+               tr("Elige qué extraer de cada archivo y filtra «Solo subs» por idioma.")},
+        {"🌍", tr("Traducción offline"),
+               tr("Modelos neuronales locales en↔es/fr/pt, con ruta triangular vía inglés.")},
+        {"🌐", tr("Subtítulos online y OCR"),
+               tr("Búsqueda opcional en OpenSubtitles y OCR experimental de PGS/VobSub.")},
+        {"📦", tr("Remux y actualizaciones"),
+               tr("Incrusta la traducción sin re-codificar y avisa de versiones nuevas desde GitHub Releases.")}
+    };
+    for (const Feature &f : features) {
+        QHBoxLayout *rowLay = new QHBoxLayout();
+        rowLay->setSpacing(10);
+        QLabel *iconLbl = new QLabel(QString::fromUtf8(f.icon));
+        iconLbl->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+        iconLbl->setFixedWidth(28);
+        QLabel *textLbl = new QLabel(QString("<b>%1</b><br>%2")
+            .arg(f.title.toHtmlEscaped(), f.text.toHtmlEscaped()));
+        textLbl->setWordWrap(true);
+        textLbl->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+        rowLay->addWidget(iconLbl);
+        rowLay->addWidget(textLbl, 1);
+        root->addLayout(rowLay);
+    }
+
+    QLabel *privacy = new QLabel(
+        tr("🔒 Privacidad: tus vídeos nunca salen del equipo. La traducción es local; la búsqueda online es opcional."));
+    privacy->setWordWrap(true);
+    privacy->setAlignment(Qt::AlignCenter);
+    privacy->setProperty("labelColor", "green");
+    root->addWidget(privacy);
 
     root->addWidget(makeSep());
 
@@ -109,21 +151,24 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     techTitle->setAlignment(Qt::AlignCenter);
     root->addWidget(techTitle);
 
-    QHBoxLayout *techRow = new QHBoxLayout();
-    techRow->setSpacing(8);
+    QGridLayout *techGrid = new QGridLayout();
+    techGrid->setSpacing(8);
     const QStringList techs = {
         tr("Qt %1\nInterfaz").arg(qVersion()),
+        tr("C++17\nLenguaje"),
         tr("FFmpeg\nExtracción"),
         tr("bergamot\nTraducción"),
-        tr("C++17\nLenguaje")
+        tr("nOCR\nOCR de imagen"),
+        tr("OpenSubtitles\nSubtítulos online"),
+        tr("GitHub Releases\nActualizaciones")
     };
-    for (const QString &t : techs) {
-        QLabel *lbl = new QLabel(t);
+    for (int i = 0; i < techs.size(); ++i) {
+        QLabel *lbl = new QLabel(techs.at(i));
         lbl->setObjectName("tech");
         lbl->setAlignment(Qt::AlignCenter);
-        techRow->addWidget(lbl);
+        techGrid->addWidget(lbl, i / 4, i % 4);
     }
-    root->addLayout(techRow);
+    root->addLayout(techGrid);
 
     root->addWidget(makeSep());
 
@@ -197,4 +242,9 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
     copy->setObjectName("copy");
     copy->setAlignment(Qt::AlignCenter);
     root->addWidget(copy);
+
+    scroll->setWidget(content);
+    QVBoxLayout *outer = new QVBoxLayout(this);
+    outer->setContentsMargins(0, 0, 0, 0);
+    outer->addWidget(scroll);
 }

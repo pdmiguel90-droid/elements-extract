@@ -5,6 +5,26 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.2.13] - 2026-11-25
+
+### Añadido
+- Ajustes → Modelos de Traducción distingue claramente los seis modelos `tiny` **incluidos** (`en↔es/fr/pt`, ~142 MB) de los descargados, con nombres legibles, badges `⚡ tiny` / `★ base` y marca `activo`.
+- La lista de modelos disponibles se agrupa y ordena por idioma, añade una cabecera con el resumen de rutas directas/triangulares y muestra `↻ actualizar` cuando hay versión nueva.
+- Los modelos `base` del registro remoto de idiomas no soportados (cs/de/is) se ocultan con una nota: «5 modelos ocultos (idiomas no soportados: cs, de, is)».
+- Diálogo **Acerca de** rediseñado: scroll, carta de presentación por bloques, aviso de privacidad y siete chips tecnológicos (Qt, C++17, FFmpeg, bergamot, nOCR, OpenSubtitles y GitHub Releases).
+- Nuevas capturas en inglés de modelos y About, referenciadas en los README y en el metainfo; documento `docs/github-metadata.md` con la descripción/topics/homepage pendientes de aplicar en GitHub.
+
+### Corregido
+- **Windows ya traduce**: los workflows extraen los tar.gz con `--strip-components=1` y empaquetan los seis modelos en la ruta plana que busca la app. El zip de v1.2.12 dejaba la configuración en `models/en-es-tiny/enes.student.tiny11/` y `isModelInstalled()` devolvía falso.
+- Compatibilidad con instalaciones antiguas: el traductor y el gestor de modelos reconocen también el layout anidado de v1.2.12, así que no hace falta reinstalar para volver a traducir.
+- CMake solo instala el launcher `bergamot` y `libopenblas` de Linux en builds UNIX; el zip de Windows no mezcla binarios de otros sistemas.
+- Ayuda, READMEs (es/en/pt), `models/README.md`, `docs/modelos.md`, metainfo y traducciones en/pt actualizados con el estado real de los modelos incluidos.
+
+### Nota
+- No se empaquetan modelos `base`: los incluidos son los seis `tiny`. No se requiere descarga inicial para en↔es/fr/pt.
+
+---
+
 ## [1.2.12] - 2026-11-22
 
 ### Corregido
