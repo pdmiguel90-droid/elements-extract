@@ -33,6 +33,7 @@
 class SubtitleTranslator;
 class ModelDownloader;
 class SettingsDialog;
+class CollapsibleGroupBox;
 class SubtitleDownloader;
 class UpdateChecker;
 struct UpdateInfo;
@@ -154,6 +155,9 @@ private:
     void loadSettings();
     void saveSettings();
     void restoreWindowGeometry();
+    void restorePanelStates();
+    void updatePanelSummaries();
+    void ensureTranslationSectionVisible();
     // Repuebla los selectores con los idiomas de los modelos instalados.
     void refreshTranslationLanguageCombos();
     QString getUniqueFilePath(const QString &fullPath);
@@ -217,18 +221,18 @@ private:
     QPushButton  *subsAllButton;
     QPushButton  *clearAllButton;
     QPushButton  *logToggleButton;
-    QGroupBox    *formatGroupBox;
+    CollapsibleGroupBox *formatGroupBox;
     QLabel       *audioFmtLabel;
     QLabel       *videoFmtLabel;
     QLabel       *resFmtLabel;
     QLabel       *subsFmtLabel;
     QLabel       *srcPromptLabel;
     QLabel       *dstPromptLabel;
-    QGroupBox    *destGroupBox;
+    CollapsibleGroupBox *destGroupBox;
     QPushButton  *browseButton;
 
     // ── Translation widgets ─────────────────────────────────────────────────
-    QGroupBox    *translationGroupBox;
+    CollapsibleGroupBox *translationGroupBox;
     QComboBox    *srcLangCombo;
     QComboBox    *dstLangCombo;
     QCheckBox    *translateOnExtractCheck;

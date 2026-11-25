@@ -62,6 +62,7 @@ Entonces pensé: *¿y si pudiera tomar el archivo que ya tengo en el disco y tra
 - 🔄 **Traducción triangular** — si no hay modelo directo (ej. pt→es), usa intermediarios (pt→en→es)
 - 🤖 **Detección automática de idioma** — detecta el idioma de los subtítulos desde la metadata del archivo
 - ⬇️ **Gestión de modelos** — incluidos no eliminables, descargados y todos los modelos online con buscador; al instalar un par, su idioma aparece en los selectores
+- 🧩 **Panel plegable** — Formato plegado por defecto, Traducción muestra el par en la cabecera y mantiene visibles sus botones, Destino siempre a la vista; el estado se recuerda
 
 ---
 

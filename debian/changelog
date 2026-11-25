@@ -6,6 +6,7 @@ elements-extract (1.2.13) unstable; urgency=medium
   * Selectores de idioma dinámicos: al instalar un modelo se añade su idioma a origen/destino
   * AppImage: los modelos incluidos se detectan en el directorio de solo lectura y se marcan activos; la lista online carga igual que en el binario del sistema
   * Al cerrar Ajustes la ventana principal ya no se recoloca ni se maximiza de nuevo
+  * Panel lateral plegable con resumen visible y estado persistido; Destino siempre visible
   * Acerca de rediseñado, capturas en inglés y documentación/traducciones actualizadas
 
  -- pdmiguel90-droid <pdmiguel90-droid@users.noreply.github.com>  Wed, 25 Nov 2026 18:00:00 +0000

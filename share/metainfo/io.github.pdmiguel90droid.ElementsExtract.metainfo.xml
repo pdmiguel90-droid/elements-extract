@@ -99,6 +99,7 @@
         <p>Fixed Windows subtitle translation: release workflows now flatten model archives with --strip-components=1 and bundle all six tiny language pairs. Older nested v1.2.12 installs are also detected, so reinstalling is not required.</p>
         <p>The model manager separates bundled models (included, not deletable) from downloaded ones, lists every registry model with a search box and details, and makes any newly installed language available in the source/target selectors.</p>
         <p>Redesigned About dialog, updated help and READMEs, new English screenshots, and completed English/Portuguese translations.</p>
+        <p>The side panel is now collapsible: output format starts folded, translation keeps its language pair and action buttons visible, destination stays visible, and the state is remembered.</p>
       </description>
     </release>
     <release version="1.2.12" date="2026-11-22">

@@ -7,6 +7,7 @@
 #include "subtitledownloader.h"
 #include "onlinesubsdialog.h"
 #include "updatechecker.h"
+#include "collapsiblegroupbox.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -172,6 +173,7 @@ MainWindow::MainWindow(QWidget *parent)
     setAcceptDrops(true);
     loadSettings();
     restoreWindowGeometry();
+    restorePanelStates();
 
     // Los seis modelos incluidos están activos en la primera ejecución; si no,
     // el gestor mostraría "0 en uso" aunque puedan traducir.
@@ -487,8 +489,8 @@ void MainWindow::setupUi()
     configPanel->setSpacing(6);
 
     // ▶ FORMATO DE SALIDA (grilla 2x2)
-    formatGroupBox = new QGroupBox(tr("FORMATO DE SALIDA"));
-    QVBoxLayout *fmtMainLayout = new QVBoxLayout(formatGroupBox);
+    formatGroupBox = new CollapsibleGroupBox(tr("FORMATO DE SALIDA"), configWidget);
+    QVBoxLayout *fmtMainLayout = formatGroupBox->contentLayout();
 
     auto makeFormatCombo = [&](const QStringList &items) -> QComboBox* {
         QComboBox *cb = new QComboBox();
@@ -526,11 +528,21 @@ void MainWindow::setupUi()
     fmtMainLayout->addWidget(copyModeCheckBox);
     configPanel->addWidget(formatGroupBox);
 
+    connect(formatGroupBox, &CollapsibleGroupBox::expandedChanged, this, [this](bool expanded) {
+        QSettings s("LocalApp", "FFmpegExtractor");
+        s.setValue("ui/formatExpanded", expanded);
+        s.sync();
+    });
+
     connect(copyModeCheckBox, &QCheckBox::toggled, this, [this](bool checked){
         audioFormatCombo->setEnabled(!checked);
         videoFormatCombo->setEnabled(!checked);
         videoResCombo->setEnabled(!checked);
         subsFormatCombo->setEnabled(!checked);
+        // Los formatos solo importan cuando se va a re-codificar: mostrarlos
+        // automáticamente evita tener que adivinar que la cabecera es clicable.
+        if (!checked) formatGroupBox->setExpanded(true);
+        updatePanelSummaries();
     });
     audioFormatCombo->setEnabled(false);
     videoFormatCombo->setEnabled(false);
@@ -538,8 +550,8 @@ void MainWindow::setupUi()
     subsFormatCombo->setEnabled(false);
 
     // ▶ TRADUCCIÓN DE SUBTÍTULOS
-    translationGroupBox = new QGroupBox(tr("TRADUCCIÓN DE SUBTÍTULOS"));
-    QVBoxLayout *transMainLayout = new QVBoxLayout(translationGroupBox);
+    translationGroupBox = new CollapsibleGroupBox(tr("TRADUCCIÓN DE SUBTÍTULOS"), configWidget);
+    QVBoxLayout *transMainLayout = translationGroupBox->contentLayout();
 
     QHBoxLayout *transLangLayout = new QHBoxLayout();
     transLangLayout->setSpacing(8);
@@ -561,6 +573,8 @@ void MainWindow::setupUi()
     connect(translateOnExtractCheck, &QCheckBox::toggled, this, [this](bool checked) {
         QSettings s("LocalApp", "FFmpegExtractor");
         s.setValue("autoTranslate", checked);
+        if (checked) translationGroupBox->setExpanded(true);
+        updatePanelSummaries();
     });
     transMainLayout->addWidget(translateOnExtractCheck);
 
@@ -580,7 +594,13 @@ void MainWindow::setupUi()
         "y la pista de subtítulos traducida incrustada, sin re-codificar (rápido y sin pérdida)."));
     transMainLayout->addWidget(muxOnExtractCheck);
 
-    QHBoxLayout *transBtns = new QHBoxLayout();
+    connect(muxOnExtractCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        if (checked) translationGroupBox->setExpanded(true);
+        updatePanelSummaries();
+    });
+
+    QWidget *transActions = new QWidget(translationGroupBox);
+    QHBoxLayout *transBtns = new QHBoxLayout(transActions);
     transBtns->setSpacing(6);
     manageModelsButton = new QPushButton(QIcon(":/icons/model.svg"), tr("Modelos"));
     manageModelsButton->setToolTip(tr("Gestionar modelos de traducción"));
@@ -591,7 +611,17 @@ void MainWindow::setupUi()
     connect(translateFilesButton, &QPushButton::clicked, this, &MainWindow::translateExistingFiles);
     transBtns->addWidget(manageModelsButton);
     transBtns->addWidget(translateFilesButton, 1);
-    transMainLayout->addLayout(transBtns);
+    translationGroupBox->addPermanentWidget(transActions);
+
+    connect(translationGroupBox, &CollapsibleGroupBox::expandedChanged, this, [this](bool expanded) {
+        QSettings s("LocalApp", "FFmpegExtractor");
+        s.setValue("ui/translationExpanded", expanded);
+        s.sync();
+    });
+    connect(srcLangCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int){ updatePanelSummaries(); });
+    connect(dstLangCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int){ updatePanelSummaries(); });
 
     QHBoxLayout *transProgressLayout = new QHBoxLayout();
     translationProgressBar = new QProgressBar();
@@ -609,8 +639,10 @@ void MainWindow::setupUi()
     configPanel->addWidget(translationGroupBox);
 
     // ▶ DESTINO
-    destGroupBox = new QGroupBox(tr("DESTINO"));
-    QVBoxLayout *destLay = new QVBoxLayout(destGroupBox);
+    destGroupBox = new CollapsibleGroupBox(tr("DESTINO"), configWidget);
+    // La carpeta de salida es obligatoria: nunca se oculta.
+    destGroupBox->setCollapsible(false);
+    QVBoxLayout *destLay = destGroupBox->contentLayout();
     outputLineEdit = new QLineEdit();
     outputLineEdit->setPlaceholderText(tr("Carpeta donde se guardarán los archivos extraídos…"));
     destLay->addWidget(outputLineEdit);
@@ -624,7 +656,10 @@ void MainWindow::setupUi()
     connect(browseButton,        &QPushButton::clicked, this, &MainWindow::selectOutputDir);
     connect(openFolderButton, &QPushButton::clicked, this, &MainWindow::openOutputFolder);
     connect(outputLineEdit,   &QLineEdit::textChanged, this,
-            [this](const QString &t){ openFolderButton->setEnabled(!t.isEmpty()); });
+            [this](const QString &t){
+                openFolderButton->setEnabled(!t.isEmpty());
+                updatePanelSummaries();
+            });
     destBtns->addWidget(browseButton);
     destBtns->addWidget(openFolderButton, 1);
     destLay->addLayout(destBtns);
@@ -1592,6 +1627,7 @@ void MainWindow::processNextInBatch()
                     cancelButton->setEnabled(true);
                     logArea->append(QString("<br><font color='#00BFFF'><b>" + tr("Traduciendo %1 archivo(s) de subtítulos...") + "</b></font>")
                         .arg(subPaths.size()));
+                    ensureTranslationSectionVisible();
                     translationProgressBar->setVisible(true);
                     translationProgressBar->setValue(0);
 
@@ -2266,6 +2302,7 @@ void MainWindow::onOnlineSubtitleReady(const QString &filePath, const QString &v
     QDir().mkpath(outDir);
     const QString outputPath = outDir + "/" + fi.completeBaseName() + "." + dstLang + ".srt";
 
+    ensureTranslationSectionVisible();
     translationProgressBar->setVisible(true);
     translationProgressBar->setValue(0);
     translationStatusLabel->setText(tr("Traduciendo..."));
@@ -2761,7 +2798,6 @@ void MainWindow::retranslateUi()
     }
 
     // ── Formato de salida ──
-    if (formatGroupBox) formatGroupBox->setTitle(tr("FORMATO DE SALIDA"));
     if (audioFmtLabel)  audioFmtLabel->setText(tr("Audio:"));
     if (videoFmtLabel)  videoFmtLabel->setText(tr("Video:"));
     if (resFmtLabel)    resFmtLabel->setText(tr("Res:"));
@@ -2777,7 +2813,6 @@ void MainWindow::retranslateUi()
     }
 
     // ── Traducción ──
-    if (translationGroupBox) translationGroupBox->setTitle(tr("TRADUCCIÓN DE SUBTÍTULOS"));
     if (srcPromptLabel) srcPromptLabel->setText(tr("Origen:"));
     if (dstPromptLabel) dstPromptLabel->setText(tr("Destino:"));
     if (translateOnExtractCheck) {
@@ -2811,7 +2846,6 @@ void MainWindow::retranslateUi()
         translationStatusLabel->setText(tr("Selecciona subtítulos y marca \"Traducir al extraer\""));
 
     // ── Destino ──
-    if (destGroupBox) destGroupBox->setTitle(tr("DESTINO"));
     if (outputLineEdit)
         outputLineEdit->setPlaceholderText(tr("Carpeta donde se guardarán los archivos extraídos…"));
     if (browseButton) {
@@ -2838,6 +2872,8 @@ void MainWindow::retranslateUi()
     }
     if (logArea)
         logArea->setPlaceholderText(tr("Sistema listo. Añade archivos y selecciona las pistas a extraer."));
+
+    updatePanelSummaries();
 }
 
 void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -2935,6 +2971,70 @@ void MainWindow::restoreWindowGeometry()
     }
 }
 
+void MainWindow::restorePanelStates()
+{
+    QSettings s("LocalApp", "FFmpegExtractor");
+
+    // Formato: plegado por defecto porque "Copiar original" deja los combos
+    // desactivados. Si el usuario re-codifica, se fuerza abierto.
+    bool formatExpanded = s.value("ui/formatExpanded", false).toBool();
+    if (!copyModeCheckBox->isChecked()) formatExpanded = true;
+    if (formatGroupBox) formatGroupBox->setExpanded(formatExpanded);
+
+    // Traducción: abierta si ya se usa; si no, cerrada pero con resumen visible.
+    const bool transDefault = translateOnExtractCheck->isChecked() ||
+                              muxOnExtractCheck->isChecked();
+    const bool transExpanded = s.value("ui/translationExpanded", transDefault).toBool();
+    if (translationGroupBox) translationGroupBox->setExpanded(transExpanded);
+
+    if (destGroupBox) destGroupBox->setExpanded(true);
+    updatePanelSummaries();
+}
+
+void MainWindow::updatePanelSummaries()
+{
+    if (formatGroupBox) {
+        formatGroupBox->setTitleText(tr("FORMATO DE SALIDA"));
+        if (copyModeCheckBox && copyModeCheckBox->isChecked()) {
+            formatGroupBox->setSummary(tr("Copiar original"));
+        } else {
+            formatGroupBox->setSummary(tr("%1 / %2 / %3")
+                .arg(audioFormatCombo ? audioFormatCombo->currentText() : QStringLiteral("mka"))
+                .arg(videoFormatCombo ? videoFormatCombo->currentText() : QStringLiteral("mkv"))
+                .arg(subsFormatCombo  ? subsFormatCombo->currentText()  : QStringLiteral("srt")));
+        }
+    }
+
+    if (translationGroupBox) {
+        translationGroupBox->setTitleText(tr("TRADUCCIÓN DE SUBTÍTULOS"));
+        const QString src = srcLangCombo ? srcLangCombo->currentData().toString() : QStringLiteral("en");
+        const QString dst = dstLangCombo ? dstLangCombo->currentData().toString() : QStringLiteral("es");
+        QStringList bits;
+        bits << QStringLiteral("%1→%2").arg(src.toUpper(), dst.toUpper());
+        if (translateOnExtractCheck && translateOnExtractCheck->isChecked()) bits << tr("traducir");
+        if (muxOnExtractCheck && muxOnExtractCheck->isChecked()) bits << tr("remux");
+        if (imageOcrCheck && imageOcrCheck->isChecked()) bits << tr("OCR");
+        translationGroupBox->setSummary(bits.join(QStringLiteral(" · ")));
+    }
+
+    if (destGroupBox) {
+        destGroupBox->setTitleText(tr("DESTINO"));
+        const QString dir = outputLineEdit ? outputLineEdit->text().trimmed() : QString();
+        if (dir.isEmpty()) {
+            destGroupBox->setSummary(tr("sin configurar"));
+        } else {
+            const QString name = QFileInfo(dir).fileName();
+            destGroupBox->setSummary(name.isEmpty() ? dir : name);
+        }
+    }
+}
+
+void MainWindow::ensureTranslationSectionVisible()
+{
+    if (translationGroupBox && !translationGroupBox->isExpanded())
+        translationGroupBox->setExpanded(true);
+}
+
 void MainWindow::saveSettings()
 {
     QSettings s("LocalApp", "FFmpegExtractor");
@@ -2948,6 +3048,8 @@ void MainWindow::saveSettings()
     s.setValue("dstLang",     dstLangCombo->currentData().toString());
     s.setValue("autoTranslate", translateOnExtractCheck->isChecked());
     s.setValue("subtitles/imageOcr", imageOcrCheck->isChecked());
+    if (formatGroupBox)      s.setValue("ui/formatExpanded", formatGroupBox->isExpanded());
+    if (translationGroupBox) s.setValue("ui/translationExpanded", translationGroupBox->isExpanded());
 
     // Save window geometry (use normalGeometry when maximized)
     s.setValue("windowMaximized", isMaximized());
@@ -2984,6 +3086,7 @@ void MainWindow::translateExtractedSubtitles(const QString &subtitlePath)
 
     QString outputPath = fi.absolutePath() + "/" + fi.completeBaseName() + "." + dstLang + "." + fi.suffix();
 
+    ensureTranslationSectionVisible();
     translationProgressBar->setVisible(true);
     translationProgressBar->setValue(0);
     translationStatusLabel->setText(tr("Traduciendo..."));
@@ -3070,6 +3173,7 @@ void MainWindow::startBatchTranslation(const QStringList &files)
         return;
     }
 
+    ensureTranslationSectionVisible();
     translationProgressBar->setVisible(true);
     translationProgressBar->setValue(0);
     translationStatusLabel->setText(tr("Traduciendo en lote..."));

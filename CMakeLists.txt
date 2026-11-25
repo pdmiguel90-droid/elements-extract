@@ -41,6 +41,8 @@ add_executable(elements-extract
     main.cpp
     mainwindow.cpp
     mainwindow.h
+    collapsiblegroupbox.cpp
+    collapsiblegroupbox.h
     aboutdialog.cpp
     aboutdialog.h
     helpdialog.cpp

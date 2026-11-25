@@ -40,6 +40,7 @@ La interfaz también habla inglés y portugués (detección automática del sist
 - 🎯 **Filtro "Solo subs"** por idioma en todo el lote.
 - 📦 **Remux**: un solo `.mkv`/`.mp4` con todas las pistas traducidas, sin re-codificar (repliegue MP4→MKV, limpieza opcional de intermedios).
 - 🖥️ Qt6, tema oscuro/claro, español/inglés/portugués.
+- 🧩 **Panel lateral plegable**: formato plegado por defecto, traducción con el par visible en la cabecera y destino siempre a la vista; el estado se recuerda.
 
 ### 🧠 Modelos incluidos (v1.2.13)
 

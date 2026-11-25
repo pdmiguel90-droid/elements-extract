@@ -63,6 +63,7 @@ So I thought: *what if I could take the file I already have on disk and translat
 - 🔄 **Triangular translation** — when no direct model exists (e.g. pt→es), it uses intermediates (pt→en→es)
 - 🤖 **Automatic language detection** — detects subtitle language from file metadata
 - ⬇️ **Model manager** — bundled models are non-deletable, downloaded models are separate, every online model is downloadable with a search box, and installing a pair adds its language to the selectors
+- 🧩 **Collapsible side panel** — output format starts collapsed, translation keeps its language pair and action buttons visible in the header, destination is always shown, and the state is remembered
 
 ---
 

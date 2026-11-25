@@ -62,6 +62,7 @@ Então pensei: *e se eu pudesse pegar o arquivo que já tenho no disco e traduzi
 - 🔄 **Tradução triangular** — quando não há modelo direto (ex.: pt→es), usa intermediários (pt→en→es)
 - 🤖 **Detecção automática de idioma** — detecta o idioma das legendas a partir dos metadados do arquivo
 - ⬇️ **Gerenciamento de modelos** — incluídos não removíveis, baixados e todos os modelos online com buscador; ao instalar um par, o idioma aparece nos seletores
+- 🧩 **Painel recolhível** — formato recolhido por padrão, tradução mantém o par e os botões visíveis no cabeçalho, destino sempre à vista; o estado é lembrado
 
 ---
 

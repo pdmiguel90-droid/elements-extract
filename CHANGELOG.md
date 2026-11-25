@@ -13,6 +13,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - Los idiomas dejan de estar fijos en `en/es/fr/pt`: al descargar un modelo de otro par (de, cs, is, pl…), ese idioma aparece automáticamente en los selectores de origen/destino y se usa en rutas directas o triangulares. Ya no se oculta ningún modelo.
 - Diálogo **Acerca de** rediseñado: scroll, carta de presentación por bloques, aviso de privacidad y siete chips tecnológicos (Qt, C++17, FFmpeg, bergamot, nOCR, OpenSubtitles y GitHub Releases).
 - Nuevas capturas en inglés de modelos y About, referenciadas en los README y en el metainfo; documento `docs/github-metadata.md` con la descripción/topics/homepage pendientes de aplicar en GitHub.
+- Panel lateral plegable: **Formato de salida** empieza plegado (se abre solo al desactivar *Copiar pista original*), **Traducción** muestra el par `EN→ES` y sus botones aunque esté plegada (se abre al activar traducción/remux o al iniciar una traducción) y **Destino** permanece siempre visible. El estado se guarda entre sesiones.
 
 ### Corregido
 - **Windows ya traduce**: los workflows extraen los tar.gz con `--strip-components=1` y empaquetan los seis modelos en la ruta plana que busca la app. El zip de v1.2.12 dejaba la configuración en `models/en-es-tiny/enes.student.tiny11/` y `isModelInstalled()` devolvía falso.

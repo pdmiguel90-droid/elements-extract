@@ -41,6 +41,10 @@ HelpDialog::HelpDialog(QWidget *parent) : QDialog(parent)
         "todas las pistas de un tipo a la vez, y <b>Limpiar</b> para quitarlas todas.</p>"
 
         "<h3>3. Configurar el formato</h3>"
+        "<p>Las secciones del panel derecho se pliegan haciendo clic en la cabecera o pulsando Espacio. "
+        "<b>Formato de Salida</b> aparece plegado porque con <b>Copiar pista original</b> los selectores "
+        "están desactivados; se abre automáticamente al desactivar esa opción. <b>Destino</b> siempre "
+        "permanece visible.</p>"
         "<p>En <b>Formato de Salida</b> elige el contenedor para cada tipo: "
         "audio (MKA, M4A, AAC, MP3, FLAC, Opus, WAV), video (MKV, MP4, AVI) "
         "y subtítulos (SRT, ASS, VTT), además de la resolución de vídeo.</p>"
@@ -85,6 +89,9 @@ HelpDialog::HelpDialog(QWidget *parent) : QDialog(parent)
         "<h2>Traducción de Subtítulos</h2>"
 
         "<h3>1. Elegir idiomas</h3>"
+        "<p>La sección de traducción puede estar plegada, pero su cabecera muestra el par activo "
+        "(p. ej. EN→ES) y los botones <b>Modelos</b> y <b>Traducir subtítulos</b> siguen visibles. "
+        "Se abre sola al marcar <b>Traducir al extraer</b>, activar <b>remux</b> o iniciar una traducción.</p>"
         "<p>Selecciona el <b>idioma origen</b> y el <b>destino</b> en el panel de "
         "traducción. El idioma origen se <b>detecta automáticamente</b> al "
         "seleccionar una pista de subtítulos.</p>"
